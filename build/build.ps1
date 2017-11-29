@@ -19,7 +19,12 @@ Task Build PackageRestore, {
 }
 
 Task Test {
-
+  try {
+    pushd $RootDir
+    exec { go test -v -race ./... }
+  } finally {
+    popd
+  }
 }
 
 Task . PackageRestore, Build
