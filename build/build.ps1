@@ -12,8 +12,7 @@ Task PackageRestore {
 Task Build PackageRestore, {
   try {
     pushd $RootDir
-    exec { go install }
-    Move-Item -Force "$env:GOPATH\bin\ch360.go.exe" "$env:GOPATH\bin\ch360.exe"
+    exec { go build -race -o "$env:GOPATH/bin/ch360" }
   } finally {
     popd
   }
