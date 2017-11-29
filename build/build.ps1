@@ -28,7 +28,8 @@ Task Test Build, {
     exec { go test -v -race ./... }
 
     $env:PATH += ";$($env:GOPATH)bin"
-    Invoke-Pester
+    $res = Invoke-Pester -PassThru
+    assert ($res.FailedCount -eq 0) 
   } finally {
     popd
   }
