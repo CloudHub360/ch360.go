@@ -12,7 +12,11 @@ Task PackageRestore {
 Task Build PackageRestore, {
   try {
     pushd $RootDir
-    exec { go build -race -o "$env:GOPATH/bin/ch360" }
+    $today=Get-Date -format "yyyy.MM.dd"
+    $rev="$(git rev-parse --short HEAD)"
+    $buildNum=([int]$env:BUILD_NUMBER)
+    $version="${today}-${rev}:${buildNum}"
+    exec { go install -ldflags "-X github.com/CloudHub360/ch360.go.Version=$version" ./... }
   } finally {
     popd
   }
