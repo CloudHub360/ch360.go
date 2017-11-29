@@ -22,7 +22,7 @@ Task Build PackageRestore, {
   }
 }
 
-Task Test {
+Task Test Build, {
   try {
     pushd $RootDir
     exec { go test -v -race ./... }
