@@ -27,9 +27,9 @@ Task Test Build, {
     pushd $RootDir
     exec { go test -v -race ./... }
 
-    $env:PATH += ";$($env:GOPATH)bin"
+    $env:PATH += "$([Io.Path]::PathSeparator)$env:GOPATH/bin"
     $res = Invoke-Pester -PassThru
-    assert ($res.FailedCount -eq 0) 
+    assert ($res.FailedCount -eq 0)
   } finally {
     popd
   }
