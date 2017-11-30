@@ -1,3 +1,9 @@
+param(
+  [String]$BuildDate = (Get-Date -Format "yyyy.MM.dd"),
+  [String]$GitRev = "$(git rev-parse --short HEAD)",
+  [String]$BuildNumber = "$([int]$env:BUILD_NUMBER)"
+)
+
 $RootDir = Join-Path $PsScriptRoot ".."
 
 Task PackageRestore {
@@ -12,19 +18,22 @@ Task PackageRestore {
 Task Build PackageRestore, {
   try {
     pushd $RootDir
-    exec { go build -race -o "$env:GOPATH/bin/ch360" }
+
+    $version="${BuildDate}-${GitRev}:${BuildNumber}"
+
+    exec { go install -ldflags "-X github.com/CloudHub360/ch360.go.Version=$version" ./... }
   } finally {
     popd
   }
 }
 
-Task Test {
+Task Test Build, {
   try {
     pushd $RootDir
     exec { go test -v -race ./... }
 
-    $env:PATH += ";$($env:GOPATH)bin"
-    Invoke-Pester
+    $env:PATH += "$([Io.Path]::PathSeparator)$env:GOPATH/bin"
+    assert ((Invoke-Pester -PassThru).FailedCount -eq 0)
   } finally {
     popd
   }
