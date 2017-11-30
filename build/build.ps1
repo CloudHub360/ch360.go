@@ -19,9 +19,25 @@ Task Build PackageRestore, {
   try {
     pushd $RootDir
 
-    $version="${BuildDate}-${GitRev}:${BuildNumber}"
+    if ($env:GOOS -eq $null) {
+      throw "Environment variable GOOS is not set. Possible values are listed here: https://golang.org/doc/install/source#environment"
+    }
 
-    exec { go install -ldflags "-X github.com/CloudHub360/ch360.go.Version=$version" ./... }
+    if ($env:GOARCH -eq $null) {
+      throw "Environment variable GOARCH is not set. Possible values are listed here: https://golang.org/doc/install/source#environment"
+    }
+
+    $version="${BuildDate}-${GitRev}:${BuildNumber}"
+    $outputDir = "../../../../bin/$env:GOOS-$env:GOARCH"
+    
+    if ($env:GOOS -eq "windows") {
+      $outputFile = Join-Path $outputDir "ch360.exe"
+    }
+    else {
+      $outputFile = Join-Path $outputDir "ch360"
+    }
+
+    exec { go build -ldflags "-X github.com/CloudHub360/ch360.go.Version=$version"  -o $outputFile ./cmd/ch360 }
   } finally {
     popd
   }
