@@ -1,16 +1,10 @@
+param(
+  [String]$BuildDate = (Get-Date -Format "yyyy.MM.dd"),
+  [String]$GitRev = "$(git rev-parse --short HEAD)",
+  [String]$BuildNumber = "$([int]$env:BUILD_NUMBER)"
+)
+
 $RootDir = Join-Path $PsScriptRoot ".."
-
-function Build-WithVersion([DateTime]$Date, [String]$GitRev, [int]$BuildNo) {
-  try {
-    pushd $RootDir
-    $dateStr = $Date.ToString("yyyy.MM.dd")
-    $version="${dateStr}-${GitRev}:${BuildNo}"
-
-    exec { go install -ldflags "-X github.com/CloudHub360/ch360.go.Version=$version" ./... }
-  } finally {
-    popd
-  }
-}
 
 Task PackageRestore {
   try {
@@ -22,10 +16,15 @@ Task PackageRestore {
 }
 
 Task Build PackageRestore, {
+  try {
     pushd $RootDir
-    $rev="$(git rev-parse --short HEAD)"
-    $buildNum=([int]$env:BUILD_NUMBER)
-    Build-WithVersion (Get-Date) $rev $buildNum
+
+    $version="${BuildDate}-${GitRev}:${BuildNumber}"
+
+    exec { go install -ldflags "-X github.com/CloudHub360/ch360.go.Version=$version" ./... }
+  } finally {
+    popd
+  }
 }
 
 Task Test Build, {

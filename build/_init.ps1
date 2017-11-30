@@ -65,14 +65,23 @@ function global:build() {
       [string[]] $Tasks = @(),
 
       [Parameter(Position=1)]
-      [string] $BuildNumber = '0'
+      [string] $BuildNumber = "$([int]$env:BUILD_NUMBER)",
+
+      [Parameter(Position=2)]
+      [String] $BuildDate = (Get-Date -Format "yyyy.MM.dd"),
+
+      [Parameter(Position=3)]
+      [String] $GitRev = "$(git rev-parse --short HEAD)"
   )
 
   RestoreBuildLevelPackages
 
   Invoke-Build `
       -File "build\build.ps1" `
-      -Task $Tasks
+      -Task $Tasks `
+      -BuildDate $BuildDate `
+      -GitRev $GitRev `
+      -BuildNumber $BuildNumber
 }
 
 Write-Host "This is the CloudHub360 Platform repo. And here are the available commands:" -Fore Magenta
