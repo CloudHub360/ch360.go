@@ -3,13 +3,11 @@ package authtoken
 import (
 	"net/http"
 	"net/url"
-	"bytes"
 	"encoding/json"
 	"github.com/pkg/errors"
-	"fmt"
+	"github.com/CloudHub360/ch360.go/response"
 )
 
-const ApiAddress = "https://api.cloudhub360.com"
 
 type Getter interface {
 	Get() (string, error) // todo custom type
@@ -20,6 +18,7 @@ type HttpGetter struct {
 	clientId     string
 	clientSecret string
 	httpClient   *http.Client
+	responseChecker response.Checker
 }
 
 func NewHttpGetter(clientId string, clientSecret string, httpClient *http.Client, apiUrl string) *HttpGetter {
@@ -28,16 +27,13 @@ func NewHttpGetter(clientId string, clientSecret string, httpClient *http.Client
 		httpClient:   httpClient,
 		clientSecret: clientSecret,
 		apiUrl:       apiUrl,
+		responseChecker: response.Checker{},
 	}
 }
 
 func (getter *HttpGetter) Get() (string, error) {
 	type tokenResponse struct {
 		AccessToken string `json:"access_token"`
-	}
-
-	type errorResponse struct {
-		Message string `json:"message"`
 	}
 
 	form := url.Values{
@@ -54,29 +50,14 @@ func (getter *HttpGetter) Get() (string, error) {
 
 	defer resp.Body.Close()
 
-	buf := bytes.Buffer{}
-	buf.ReadFrom(resp.Body)
+	bytes, err := getter.responseChecker.Check(resp, 200)
 
-	// Check status code
-	if resp.StatusCode >= 400 {
-		errResponse := errorResponse{}
-		err = json.Unmarshal(buf.Bytes(), &errResponse)
-
-		if err != nil || errResponse.Message == "" {
-			return "", errors.New(fmt.Sprintf("An error occurred when requesting an authentication token (HTTP %d)", resp.StatusCode))
-		}
-
-		return "", errors.New(errResponse.Message)
-	}
-
-	if resp.StatusCode != 200 {
-		return "", errors.New(fmt.Sprintf(
-			"An unexpected response code was received when requesting an authentication token (HTTP %d)",
-			resp.StatusCode))
+	if err != nil {
+		return "", errors.Wrap(err, "An error occurred when requesting an authentication token")
 	}
 
 	accessToken := tokenResponse{}
-	err = json.Unmarshal(buf.Bytes(), &accessToken)
+	err = json.Unmarshal(bytes, &accessToken)
 
 	if err != nil {
 		return "", errors.New("Failed to parse authentication token response")

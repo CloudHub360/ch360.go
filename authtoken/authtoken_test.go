@@ -70,16 +70,14 @@ var unsuccessfulRequestData = []struct {
 	responseBody    []byte
 	expectedErr		string
 }{
-	{201, nil, "An unexpected response code was received when " +
-		"requesting an authentication token (HTTP 201)"},
+	{201, nil, "An error occurred when requesting an authentication token: Received unexpected response code: 201"},
 	{200, []byte(`{"access_token": ""}`), "Received empty authentication token"},
 	{200, []byte(`<invalid json>`), "Failed to parse authentication token response"},
-	{400, []byte(`{"message": "error-message"}`), "error-message"},
-	{499, []byte(`{"message": "error-message"}`), "error-message"},
-	{403, []byte(`<Invalid json>`), "An error occurred when requesting an " +
-		"authentication token (HTTP 403)"},
-	{500, nil, "An error occurred when requesting an authentication token (HTTP 500)"},
-	{501, nil, "An error occurred when requesting an authentication token (HTTP 501)"},
+	{400, []byte(`{"message": "error-message"}`), "An error occurred when requesting an authentication token: error-message"},
+	{499, []byte(`{"message": "error-message"}`), "An error occurred when requesting an authentication token: error-message"},
+	{403, []byte(`<Invalid json>`), "An error occurred when requesting an authentication token: Received error response with HTTP code 403"},
+	{500, nil, "An error occurred when requesting an authentication token: Received error response with HTTP code 500"},
+	{501, nil, "An error occurred when requesting an authentication token: Received error response with HTTP code 501"},
 }
 func Test_HttpGetter_Returns_Err_On_Unsuccessful_Request(t *testing.T) {
 	for _, tp := range unsuccessfulRequestData {
