@@ -84,7 +84,34 @@ function global:build() {
       -BuildNumber $BuildNumber
 }
 
+function global:release() {
+  [CmdletBinding()]
+  param(
+    [Parameter(Position=0, Mandatory=$true)]
+    [string] $VersionNumber,
+
+    [Parameter(Position=1, Mandatory=$true)]
+    [string]$GitHubToken,
+
+    [Parameter(Position=2)]
+    [string]$Commit = "master",
+
+    [Parameter(Position=3, Mandatory=$true)]
+    [string]$ReleaseNotes
+  )
+
+  RestoreBuildLevelPackages
+
+  Invoke-Build `
+      -File "build\release.ps1" `
+      -VersionString $VersionNumber `
+      -GitHubToken $GitHubToken `
+      -Commit $Commit `
+      -ReleaseNotes $ReleaseNotes
+}
+
 Write-Host "This is the CloudHub360 Platform repo. And here are the available commands:" -Fore Magenta
 Write-Host "`t build" -Fore Green
+Write-Host "`t release" -Fore Green
 Write-Host "For more information about the commands, use Get-Help <command-name>" -Fore Magenta
 Write-Host "To learn view the tasks exposed by each command, use <command-name> help" -Fore Magenta
