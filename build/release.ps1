@@ -17,6 +17,10 @@ function Get-AssetName([Io.FileSystemInfo]$path) {
     $extensionIndex = $binaryName.IndexOf(".exe")
     $platform = Get-ParentDirectoryName $path
 
+    if ($platform -eq "bin") {
+        $platform = "$(go env GOHOSTOS)_$(go env GOHOSTARCH)"
+    }
+
     if ($extensionIndex -ge 0){
         return $binaryName.Insert($extensionIndex, "-$platform")
     } else {
