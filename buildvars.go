@@ -2,4 +2,4 @@ package ch360
 
 // This file contains build-time information
 
-var Version string
+var Version = "version-local"
