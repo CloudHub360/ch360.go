@@ -1,18 +1,19 @@
 package ch360
 
 import (
-	"bytes"
-	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"github.com/CloudHub360/ch360.go/authtoken"
+	"github.com/CloudHub360/ch360.go/response"
 )
+
+const ApiAddress = "https://api.cloudhub360.com"
 
 type ApiClient struct {
 	apiUrl       string
 	tokenGetter  authtoken.Getter
 	httpClient   *http.Client
+	responseChecker response.Checker
 }
 
 func NewApiClient(httpClient *http.Client, apiUrl string, tokenGetter authtoken.Getter) (*ApiClient) {
@@ -20,6 +21,7 @@ func NewApiClient(httpClient *http.Client, apiUrl string, tokenGetter authtoken.
 		apiUrl:       apiUrl,
 		httpClient:   httpClient,
 		tokenGetter:  tokenGetter,
+		responseChecker:response.Checker{},
 	}
 
 	return apiClient
@@ -44,15 +46,15 @@ func (ac *ApiClient) send(method string, path string, body io.Reader) ([]byte, e
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	if resp.StatusCode >= 400 {
-		return nil, errors.New(fmt.Sprintf("Request failed with code %d: [%s] %s", resp.StatusCode, method, path))
+	bytes, err := ac.responseChecker.Check(resp, 200)
+
+	if err != nil {
+		return nil, err
 	}
 
-	defer resp.Body.Close()
-	buf := bytes.Buffer{}
-	buf.ReadFrom(resp.Body)
-	return buf.Bytes(), nil
+	return bytes, nil
 }
 
 func (ac *ApiClient) CreateClassifier(name string) (error) {

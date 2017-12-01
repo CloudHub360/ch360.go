@@ -40,9 +40,9 @@ Options:
 		Timeout: time.Minute * 5,
 	}
 
-	tokenGetter := authtoken.NewHttpGetter(id, secret, httpClient, authtoken.ApiAddress)
+	tokenGetter := authtoken.NewHttpGetter(id, secret, httpClient, ch360.ApiAddress)
 
-	apiClient := ch360.NewApiClient(httpClient, authtoken.ApiAddress, tokenGetter)
+	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, tokenGetter)
 	err = apiClient.CreateClassifier("myclassifier")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
