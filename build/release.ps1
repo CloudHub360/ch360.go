@@ -12,20 +12,33 @@ function Get-ParentDirectoryName([string]$path) {
     Split-Path (Split-Path $path -Parent) -Leaf
 }
 
-function Get-AssetName([Io.FileSystemInfo]$path) {
-    $binaryName = $path.Name
-    $extensionIndex = $binaryName.IndexOf(".exe")
+function Get-PlatformName([string]$path){
     $platform = Get-ParentDirectoryName $path
 
     if ($platform -eq "bin") {
         $platform = "$(go env GOHOSTOS)_$(go env GOHOSTARCH)"
     }
 
+    return $platform
+}
+
+function Get-AssetName([Io.FileSystemInfo]$path) {
+    $binaryName = $path.Name
+    $extensionIndex = $binaryName.IndexOf(".exe")
+    $platform = Get-PlatformName $path
+
     if ($extensionIndex -ge 0){
         return $binaryName.Insert($extensionIndex, "-$platform")
     } else {
         return "$binaryName-$platform"
     }
+}
+
+function Get-UploadUrl([string]$urlTemplate, [string]$assetName) {
+    $queryParamsPosition = $urlTemplate.LastIndexOf("{")
+    $url = $urlTemplate.Substring(0, $queryParamsPosition)
+
+    return "$($url)?name=$assetName"
 }
 
 Task Release {
@@ -36,22 +49,24 @@ Task Release {
         "body" = $ReleaseNotes
     }
 
-    $release = Invoke-RestMethod `
+    $release = [PSCustomObject] (Invoke-RestMethod `
         -Method POST `
         -Headers @{ "Authorization"="token $GitHubToken" } `
         -Uri $GITHUB_RELEASES_URI `
         -ContentType "application/json" `
-        -Body (ConvertTo-Json $releaseMetadata)
+        -Body (ConvertTo-Json $releaseMetadata))
 
     $binaries = Get-ChildItem $GO_BIN -Recurse -Include ch360*
 
     $binaries |% {
+        $uploadUrl = Get-UploadUrl $release.upload_url (Get-AssetName $_)
+        Write-Information "Creating asset at $uploadUrl"
         Invoke-RestMethod `
             -Method POST `
             -Headers @{ "Authorization"="token $GitHubToken" } `
-            -Uri "$GITHUB_RELEASES_URI/$($release.id)/assets?name=$(Get-AssetName $_)" `
+            -Uri $uploadUrl `
             -ContentType "application/octet-stream" `
-            -Body (Get-Content $_.FullName)
+            -InFile $_.FullName
     }
 }
 
