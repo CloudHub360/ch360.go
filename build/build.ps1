@@ -9,7 +9,7 @@ $RootDir = Join-Path $PsScriptRoot ".."
 Task PackageRestore {
   try {
     pushd $RootDir
-    exec { go get -t }
+    exec { go get -t -d ./... }
   } finally {
     popd
   }
