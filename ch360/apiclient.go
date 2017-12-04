@@ -12,15 +12,16 @@ const ApiAddress = "https://api.cloudhub360.com"
 type ApiClient struct {
 	apiUrl          string
 	retriever       auth.TokenRetriever
-	httpClient      *http.Client
+	httpClient      DoRequester
 	responseChecker response.Checker
 	Classifiers     *ClassifiersClient
 }
 
-func NewApiClient(httpClient *http.Client, apiUrl string, tokenRetriever auth.TokenRetriever) *ApiClient {
+//TODO: Should this take a pointer to a requester (which is an httpClient)?
+func NewApiClient(requester DoRequester, apiUrl string, tokenRetriever auth.TokenRetriever) *ApiClient {
 	apiClient := &ApiClient{
 		apiUrl:          apiUrl,
-		httpClient:      httpClient,
+		httpClient:      requester,
 		retriever:       tokenRetriever,
 		responseChecker: response.Checker{},
 		Classifiers:     &ClassifiersClient{},
@@ -31,6 +32,10 @@ func NewApiClient(httpClient *http.Client, apiUrl string, tokenRetriever auth.To
 
 type Sender interface {
 	Send(method string, path string, body io.Reader) ([]byte, error)
+}
+
+type DoRequester interface {
+	Do(request *http.Request) (*http.Response, error)
 }
 
 func (client *ApiClient) Send(method string, path string, body io.Reader) ([]byte, error) {

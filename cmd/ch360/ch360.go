@@ -1,8 +1,6 @@
 package main
 
 import (
-	//"fmt"
-
 	"fmt"
 	"github.com/CloudHub360/ch360.go"
 	"github.com/CloudHub360/ch360.go/auth"
@@ -10,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	ch3602 "github.com/CloudHub360/ch360.go/ch360"
 )
 
 func main() {
@@ -40,9 +39,9 @@ Options:
 		Timeout: time.Minute * 5,
 	}
 
-	tokenGetter := auth.NewHttpTokenRetriever(id, secret, httpClient, ch360.ApiAddress)
+	tokenGetter := auth.NewHttpTokenRetriever(id, secret, httpClient, ch3602.ApiAddress)
 
-	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, tokenGetter)
+	apiClient := ch3602.NewApiClient(httpClient, ch3602.ApiAddress, tokenGetter)
 	err = apiClient.Classifiers.CreateClassifier("myclassifier")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
