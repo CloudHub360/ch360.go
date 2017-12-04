@@ -1,37 +1,36 @@
-package authtoken
+package auth
 
 import (
+	"encoding/json"
+	"github.com/CloudHub360/ch360.go/response"
+	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
-	"encoding/json"
-	"github.com/pkg/errors"
-	"github.com/CloudHub360/ch360.go/response"
 )
 
-
-type Getter interface {
-	Get() (string, error) // todo custom type
+type TokenRetriever interface {
+	RetrieveToken() (string, error) // todo custom type
 }
 
-type HttpGetter struct {
-	apiUrl       string
-	clientId     string
-	clientSecret string
-	httpClient   *http.Client
+type HttpTokenRetriever struct {
+	apiUrl          string
+	clientId        string
+	clientSecret    string
+	httpClient      *http.Client
 	responseChecker response.Checker
 }
 
-func NewHttpGetter(clientId string, clientSecret string, httpClient *http.Client, apiUrl string) *HttpGetter {
-	return &HttpGetter{
-		clientId:     clientId,
-		httpClient:   httpClient,
-		clientSecret: clientSecret,
-		apiUrl:       apiUrl,
+func NewHttpTokenRetriever(clientId string, clientSecret string, httpClient *http.Client, apiUrl string) *HttpTokenRetriever {
+	return &HttpTokenRetriever{
+		clientId:        clientId,
+		httpClient:      httpClient,
+		clientSecret:    clientSecret,
+		apiUrl:          apiUrl,
 		responseChecker: response.Checker{},
 	}
 }
 
-func (getter *HttpGetter) Get() (string, error) {
+func (getter *HttpTokenRetriever) RetrieveToken() (string, error) {
 	type tokenResponse struct {
 		AccessToken string `json:"access_token"`
 	}
@@ -47,7 +46,6 @@ func (getter *HttpGetter) Get() (string, error) {
 		// No response received
 		return "", err
 	}
-
 	defer resp.Body.Close()
 
 	bytes, err := getter.responseChecker.Check(resp, 200)
