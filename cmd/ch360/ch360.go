@@ -43,7 +43,7 @@ Options:
 	tokenGetter := auth.NewHttpTokenRetriever(id, secret, httpClient, ch360.ApiAddress)
 
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, tokenGetter)
-	err = apiClient.CreateClassifier("myclassifier")
+	err = apiClient.Classifiers.CreateClassifier("myclassifier")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)
