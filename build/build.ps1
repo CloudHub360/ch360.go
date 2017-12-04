@@ -9,7 +9,17 @@ $RootDir = Join-Path $PsScriptRoot ".."
 Task PackageRestore {
   try {
     pushd $RootDir
-    exec { go get -t -d ./... }
+    exec { go get -t ./... }
+  } finally {
+    popd
+  }
+}
+
+Task Gen {
+  try {
+    pushd $RootDir
+    exec { go get github.com/vektra/mockery/.../ }
+    exec { go generate }
   } finally {
     popd
   }

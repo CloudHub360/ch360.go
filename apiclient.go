@@ -1,63 +1,64 @@
 package ch360
 
 import (
+	"github.com/CloudHub360/ch360.go/auth"
+	"github.com/CloudHub360/ch360.go/response"
 	"io"
 	"net/http"
-	"github.com/CloudHub360/ch360.go/authtoken"
-	"github.com/CloudHub360/ch360.go/response"
 )
 
 const ApiAddress = "https://api.cloudhub360.com"
 
 type ApiClient struct {
-	apiUrl       string
-	tokenGetter  authtoken.Getter
-	httpClient   *http.Client
+	apiUrl          string
+	retriever       auth.TokenRetriever
+	httpClient      *http.Client
 	responseChecker response.Checker
+	Classifiers     *ClassifiersClient
 }
 
-func NewApiClient(httpClient *http.Client, apiUrl string, tokenGetter authtoken.Getter) (*ApiClient) {
+func NewApiClient(httpClient *http.Client, apiUrl string, tokenRetriever auth.TokenRetriever) *ApiClient {
 	apiClient := &ApiClient{
-		apiUrl:       apiUrl,
-		httpClient:   httpClient,
-		tokenGetter:  tokenGetter,
-		responseChecker:response.Checker{},
+		apiUrl:          apiUrl,
+		httpClient:      httpClient,
+		retriever:       tokenRetriever,
+		responseChecker: response.Checker{},
+		Classifiers:     &ClassifiersClient{},
 	}
 
 	return apiClient
 }
 
-func (ac *ApiClient) send(method string, path string, body io.Reader) ([]byte, error) {
-	token, err := ac.tokenGetter.Get()
+type Sender interface {
+	Send(method string, path string, body io.Reader) ([]byte, error)
+}
+
+func (client *ApiClient) Send(method string, path string, body io.Reader) ([]byte, error) {
+	token, err := client.retriever.RetrieveToken()
 
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest(method, ac.apiUrl+path, body)
+	req, err := http.NewRequest(method, client.apiUrl+path, body)
 
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", "Bearer "+ token)
+	req.Header.Add("Authorization", "Bearer "+token)
 
-	resp, err := ac.httpClient.Do(req)
+	resp, err := client.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	bytes, err := ac.responseChecker.Check(resp, 200)
+	bytes, err := client.responseChecker.Check(resp, 200)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return bytes, nil
-}
-
-func (ac *ApiClient) CreateClassifier(name string) (error) {
-	_, err := ac.send("POST", "/classifiers/" + name, nil)
-	return err
 }
