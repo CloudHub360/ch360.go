@@ -1,34 +1,34 @@
-package authtoken
+package auth
 
 import (
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"testing"
-	"net/http"
 )
 
 var fakeClientId = "fake-client-id"
 var fakeClientSecret = "fake-client-secret"
 
-func Test_HttpGetter_Sends_Client_Id_And_Secret(t *testing.T) {
+func Test_HttpTokenRetriever_Sends_Client_Id_And_Secret(t *testing.T) {
 	// Arrange
 	var receivedClientId string
 	var receivedClientSecret string
 
-	fakeServer := func(w http.ResponseWriter, r *http.Request) {
+	requestHandler := func(w http.ResponseWriter, r *http.Request) {
 		receivedClientId = r.FormValue("client_id")
 		receivedClientSecret = r.FormValue("client_secret")
 		w.WriteHeader(200)
 	}
 
-	// create test server with handler
-	ts := httptest.NewServer(http.HandlerFunc(fakeServer))
-	defer ts.Close()
+	// create test server with requestHandler
+	server := httptest.NewServer(http.HandlerFunc(requestHandler))
+	defer server.Close()
 
-	sut := NewHttpGetter(fakeClientId, fakeClientSecret, ts.Client(), ts.URL);
+	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, server.Client(), server.URL)
 
 	// Act
-	sut.Get()
+	sut.RetrieveToken()
 
 	// Assert
 	if receivedClientId != fakeClientId {
@@ -40,7 +40,7 @@ func Test_HttpGetter_Sends_Client_Id_And_Secret(t *testing.T) {
 	}
 }
 
-func Test_HttpGetter_Parses_Json_Response(t *testing.T) {
+func Test_HttpTokenRetriever_Parses_Json_Response(t *testing.T) {
 	// Arrange
 	fakeServer := func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{"access_token": "%s"}`, "fake-token")
@@ -50,10 +50,10 @@ func Test_HttpGetter_Parses_Json_Response(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(fakeServer))
 	defer ts.Close()
 
-	sut := NewHttpGetter(fakeClientId, fakeClientSecret, ts.Client(), ts.URL);
+	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, ts.Client(), ts.URL)
 
 	// Act
-	token, err := sut.Get()
+	token, err := sut.RetrieveToken()
 
 	// Assert
 	if err != nil {
@@ -66,9 +66,9 @@ func Test_HttpGetter_Parses_Json_Response(t *testing.T) {
 }
 
 var unsuccessfulRequestData = []struct {
-	responseCode  int
-	responseBody    []byte
-	expectedErr		string
+	responseCode int
+	responseBody []byte
+	expectedErr  string
 }{
 	{201, nil, "An error occurred when requesting an authentication token: Received unexpected response code: 201"},
 	{200, []byte(`{"access_token": ""}`), "Received empty authentication token"},
@@ -79,7 +79,8 @@ var unsuccessfulRequestData = []struct {
 	{500, nil, "An error occurred when requesting an authentication token: Received error response with HTTP code 500"},
 	{501, nil, "An error occurred when requesting an authentication token: Received error response with HTTP code 501"},
 }
-func Test_HttpGetter_Returns_Err_On_Unsuccessful_Request(t *testing.T) {
+
+func Test_HttpTokenRetriever_Returns_Err_On_Unsuccessful_Request(t *testing.T) {
 	for _, tp := range unsuccessfulRequestData {
 		// run an anonymous function to ensure defer is called on each iteration
 		func() {
@@ -92,30 +93,30 @@ func Test_HttpGetter_Returns_Err_On_Unsuccessful_Request(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(fakeServer))
 			defer ts.Close()
 
-			tokenGetter := NewHttpGetter(fakeClientId, fakeClientSecret, ts.Client(), ts.URL)
+			tokenGetter := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, ts.Client(), ts.URL)
 
 			// Act
-			_, err := tokenGetter.Get()
+			_, err := tokenGetter.RetrieveToken()
 
 			// Assert
 			if err == nil {
-				t.Error("HttpGetter.Get() didn't return an error, but should have.", tp.expectedErr)
+				t.Error("HttpTokenRetriever.RetrieveToken() didn't return an error, but should have.", tp.expectedErr)
 			} else if err.Error() != tp.expectedErr {
-				t.Error("Incorrect error message received" , tp.expectedErr, err.Error())
+				t.Error("Incorrect error message received", tp.expectedErr, err.Error())
 			}
 		}()
 	}
 }
 
-func Test_HttpGetter_Returns_Err_On_Client_Error(t *testing.T) {
+func Test_HttpTokenRetriever_Returns_Err_On_Client_Error(t *testing.T) {
 	// Arrange
-	tokenGetter := NewHttpGetter(fakeClientId, fakeClientSecret, &http.Client{}, "http://invalid-url:-1")
+	tokenGetter := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, &http.Client{}, "http://invalid-url:-1")
 
 	// Act
-	_, err := tokenGetter.Get()
+	_, err := tokenGetter.RetrieveToken()
 
 	// Assert
 	if err == nil {
-		t.Error("HttpGetter.Get() didn't return an error, but should have.")
+		t.Error("HttpTokenRetriever.RetrieveToken() didn't return an error, but should have.")
 	}
 }

@@ -3,13 +3,13 @@ package main
 import (
 	//"fmt"
 
-	"github.com/CloudHub360/ch360.go"
-	"github.com/docopt/docopt-go"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/authtoken"
+	"github.com/CloudHub360/ch360.go"
+	"github.com/CloudHub360/ch360.go/auth"
+	"github.com/docopt/docopt-go"
 	"net/http"
-	"time"
 	"os"
+	"time"
 )
 
 func main() {
@@ -40,7 +40,7 @@ Options:
 		Timeout: time.Minute * 5,
 	}
 
-	tokenGetter := authtoken.NewHttpGetter(id, secret, httpClient, ch360.ApiAddress)
+	tokenGetter := auth.NewHttpTokenRetriever(id, secret, httpClient, ch360.ApiAddress)
 
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, tokenGetter)
 	err = apiClient.CreateClassifier("myclassifier")
