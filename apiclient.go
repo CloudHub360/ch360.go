@@ -14,6 +14,7 @@ type ApiClient struct {
 	retriever       auth.TokenRetriever
 	httpClient      *http.Client
 	responseChecker response.Checker
+	Classifiers     *ClassifiersClient
 }
 
 func NewApiClient(httpClient *http.Client, apiUrl string, tokenRetriever auth.TokenRetriever) *ApiClient {
@@ -22,12 +23,17 @@ func NewApiClient(httpClient *http.Client, apiUrl string, tokenRetriever auth.To
 		httpClient:      httpClient,
 		retriever:       tokenRetriever,
 		responseChecker: response.Checker{},
+		Classifiers:     &ClassifiersClient{},
 	}
 
 	return apiClient
 }
 
-func (client *ApiClient) send(method string, path string, body io.Reader) ([]byte, error) {
+type Sender interface {
+	Send(method string, path string, body io.Reader) ([]byte, error)
+}
+
+func (client *ApiClient) Send(method string, path string, body io.Reader) ([]byte, error) {
 	token, err := client.retriever.RetrieveToken()
 
 	if err != nil {
@@ -55,9 +61,4 @@ func (client *ApiClient) send(method string, path string, body io.Reader) ([]byt
 	}
 
 	return bytes, nil
-}
-
-func (client *ApiClient) CreateClassifier(name string) error {
-	_, err := client.send("POST", "/classifiers/"+name, nil)
-	return err
 }
