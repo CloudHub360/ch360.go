@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_Client_Calls_Correct_Url(t *testing.T) {
+func Test_Client_Calls_Sender_With_Correct_Url(t *testing.T) {
 	// Arrange
 	sender := new(mocks.Sender)
 	sender.On("Send", mock.Anything, mock.Anything, nil).Return(nil, nil)
