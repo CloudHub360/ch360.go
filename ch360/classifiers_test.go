@@ -8,9 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+
 func Test_Client_Calls_Sender_With_Correct_Url(t *testing.T) {
 	// Arrange
-	sender := new(mocks.HttpSender)
+	sender := new(mocks.HttpDoer)
 	sender.On("Do", mock.Anything).Return(nil, nil)
 
 	sut := ClassifiersClient{

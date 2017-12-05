@@ -4,7 +4,7 @@ import "net/http"
 
 type ClassifiersClient struct {
 	baseUrl string
-	sender HttpSender
+	sender  HttpDoer
 }
 
 func (client *ClassifiersClient) CreateClassifier(name string) error {
