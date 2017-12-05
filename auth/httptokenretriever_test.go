@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"bytes"
 	"github.com/CloudHub360/ch360.go/response"
+	"errors"
 )
 
 var fakeClientId = "fake-client-id"
@@ -79,10 +80,28 @@ func Test_HttpTokenRetriever_Passes_Response_To_Checker(t *testing.T) {
 }
 
 func Test_HttpTokenRetriever_Returns_Error_On_ResponseChecker_Error(t *testing.T) {
-	//Fake (or mock?) httpServer
-	//Mock responseChecker
-	//Return error from responseChecker
-	//Assert that sut returns error
+	// Arrange
+	expectedResponseBody := []byte(`{"access_token": "tokenvalue"}`)
+
+	response := http.Response{
+		StatusCode: 200,
+		Body:       ioutil.NopCloser(bytes.NewBuffer(expectedResponseBody)),
+	}
+
+	mockHttpClient := new(mocks.FormPoster)
+	mockResponseChecker := new(mocks.Checker)
+
+	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(&response, nil)
+	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(nil, errors.New("An error"))
+
+	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
+
+	// Act
+	_, err :=sut.RetrieveToken()
+
+	// Assert
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "An error")
 }
 
 func Test_HttpTokenRetriever_Parses_Token_Response(t *testing.T) {
