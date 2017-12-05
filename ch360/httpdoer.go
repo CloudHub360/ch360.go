@@ -10,12 +10,12 @@ type HttpDoer interface {
 	Do(request *http.Request) (*http.Response, error)
 }
 
-type ResponseCheckingDoer struct {
+type responseCheckingDoer struct {
 	checker       response.Checker
 	wrappedSender HttpDoer
 }
 
-func (sender *ResponseCheckingDoer) Do(request *http.Request) (*http.Response, error) {
+func (sender *responseCheckingDoer) Do(request *http.Request) (*http.Response, error) {
 	response, err := sender.wrappedSender.Do(request)
 
 	if err != nil {
@@ -31,12 +31,12 @@ func (sender *ResponseCheckingDoer) Do(request *http.Request) (*http.Response, e
 	return response, nil
 }
 
-type AuthorisingDoer struct {
+type authorisingDoer struct {
 	retriever     auth.TokenRetriever
 	wrappedSender HttpDoer
 }
 
-func (sender *AuthorisingDoer) Do(request *http.Request) (*http.Response, error) {
+func (sender *authorisingDoer) Do(request *http.Request) (*http.Response, error) {
 	token, err := sender.retriever.RetrieveToken()
 
 	if err != nil {

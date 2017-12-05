@@ -12,7 +12,7 @@ import (
 
 type ResponseCheckingDoerSuite struct {
 	suite.Suite
-	sut        *ResponseCheckingDoer
+	sut        *responseCheckingDoer
 	underlying *mocks.HttpDoer
 	checker    *mocks.Checker
 }
@@ -20,7 +20,7 @@ type ResponseCheckingDoerSuite struct {
 func (suite *ResponseCheckingDoerSuite) SetupTest() {
 	suite.underlying = &mocks.HttpDoer{}
 	suite.checker = &mocks.Checker{}
-	suite.sut = &ResponseCheckingDoer{
+	suite.sut = &responseCheckingDoer{
 		checker:       suite.checker,
 		wrappedSender: suite.underlying,
 	}
