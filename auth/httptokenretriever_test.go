@@ -97,7 +97,7 @@ func Test_HttpTokenRetriever_Returns_Error_On_ResponseChecker_Error(t *testing.T
 	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
 
 	// Act
-	_, err :=sut.RetrieveToken()
+	_, err := sut.RetrieveToken()
 
 	// Assert
 	assert.NotNil(t, err)
@@ -125,44 +125,52 @@ func Test_HttpTokenRetriever_Parses_Token_Response(t *testing.T) {
 	assert.Equal(t, expectedToken, token)
 }
 
-//TODO: Test for returning error if we can't parse token response (or content empty)
+func Test_HttpTokenRetriever_Returns_Err_On_Invalid_Json(t *testing.T) {
+	// Arrange
+	expectedResponseBody := []byte(`<invalid-json>`)
 
-var unsuccessfulRequestData = []struct {
-	responseCode int
-	responseBody []byte
-	expectedErr  string
-}{
-	{201, nil, "An error occurred when requesting an authentication token: Received unexpected response code: 201"},
-	{200, []byte(`{"access_token": ""}`), "Received empty authentication token"},
-	{200, []byte(`<invalid json>`), "Failed to parse authentication token response"},
-	{400, []byte(`{"message": "error-message"}`), "An error occurred when requesting an authentication token: error-message"},
-	{499, []byte(`{"message": "error-message"}`), "An error occurred when requesting an authentication token: error-message"},
-	{403, []byte(`<Invalid json>`), "An error occurred when requesting an authentication token: Received error response with HTTP code 403"},
-	{500, nil, "An error occurred when requesting an authentication token: Received error response with HTTP code 500"},
-	{501, nil, "An error occurred when requesting an authentication token: Received error response with HTTP code 501"},
+	response := http.Response{
+		StatusCode: 200,
+		Body:       ioutil.NopCloser(bytes.NewBuffer(expectedResponseBody)),
+	}
+
+	mockHttpClient := new(mocks.FormPoster)
+	mockResponseChecker := new(mocks.Checker)
+
+	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(&response, nil)
+	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
+
+	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
+
+	// Act
+	_, err := sut.RetrieveToken()
+
+	// Assert
+	assert.NotNil(t, err)
+	assert.EqualError(t, err, "Failed to parse authentication token response")
 }
 
-func Test_HttpTokenRetriever_Returns_Err_On_Unsuccessful_Request(t *testing.T) {
-	for _, tp := range unsuccessfulRequestData {
-		// run an anonymous function to ensure defer is called on each iteration
-		func() {
-			// Arrange
-			fakeServer := func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(tp.responseCode)
-				w.Write(tp.responseBody)
-			}
+func Test_HttpTokenRetriever_Returns_Err_On_Empty_Token_Response(t *testing.T) {
+	// Arrange
+	expectedResponseBody := []byte(`{"access_token": ""}`)
 
-			ts := httptest.NewServer(http.HandlerFunc(fakeServer))
-			defer ts.Close()
-
-			tokenGetter := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, ts.Client(), ts.URL, &response.ErrorChecker{})
-
-			// Act
-			_, err := tokenGetter.RetrieveToken()
-
-			// Assert
-			assert.NotNil(t, err)
-			assert.Equal(t, tp.expectedErr, err.Error())
-		}()
+	response := http.Response{
+		StatusCode: 200,
+		Body:       ioutil.NopCloser(bytes.NewBuffer(expectedResponseBody)),
 	}
+
+	mockHttpClient := new(mocks.FormPoster)
+	mockResponseChecker := new(mocks.Checker)
+
+	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(&response, nil)
+	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
+
+	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
+
+	// Act
+	_, err := sut.RetrieveToken()
+
+	// Assert
+	assert.NotNil(t, err)
+	assert.EqualError(t, err, "Received empty authentication token")
 }
