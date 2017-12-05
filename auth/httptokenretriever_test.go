@@ -1,3 +1,5 @@
+//go:generate mockery -name FormPoster -recursive
+
 package auth
 
 import (
@@ -5,6 +7,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"github.com/stretchr/testify/assert"
+	"github.com/CloudHub360/ch360.go/mocks"
+	"github.com/stretchr/testify/mock"
+	"io/ioutil"
+	"bytes"
+	"github.com/CloudHub360/ch360.go/response"
 )
 
 var fakeClientId = "fake-client-id"
@@ -25,45 +33,80 @@ func Test_HttpTokenRetriever_Sends_Client_Id_And_Secret(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(requestHandler))
 	defer server.Close()
 
-	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, server.Client(), server.URL)
+	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, server.Client(), server.URL, &response.ErrorChecker{})
 
 	// Act
 	sut.RetrieveToken()
 
 	// Assert
-	if receivedClientId != fakeClientId {
-		t.Error("Did not receive client ID")
-	}
-
-	if receivedClientSecret != fakeClientSecret {
-		t.Error("Did not receive client secret")
-	}
+	assert.Equal(t, fakeClientId, receivedClientId)
+	assert.Equal(t, fakeClientSecret, receivedClientSecret)
 }
 
-func Test_HttpTokenRetriever_Parses_Json_Response(t *testing.T) {
+func Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error(t *testing.T) {
 	// Arrange
+	tokenGetter := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, &http.Client{}, "http://invalid-url:-1", &response.ErrorChecker{})
+
+	// Act
+	_, err := tokenGetter.RetrieveToken()
+
+	// Assert
+	assert.NotNil(t, err)
+}
+
+func Test_HttpTokenRetriever_Passes_Response_To_Checker(t *testing.T) {
+	// Arrange
+	expectedResponseBody := []byte(`{"access_token": "tokenvalue"}`)
+
+	response := http.Response{
+		StatusCode: 200,
+		Body:       ioutil.NopCloser(bytes.NewBuffer(expectedResponseBody)),
+	}
+
+	mockHttpClient := new(mocks.FormPoster)
+	mockResponseChecker := new(mocks.Checker)
+
+	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(&response, nil)
+	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
+
+	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
+
+	// Act
+	sut.RetrieveToken()
+
+	// Assert
+	mockResponseChecker.AssertCalled(t, "Check", &response, 200)
+}
+
+func Test_HttpTokenRetriever_Returns_Error_On_ResponseChecker_Error(t *testing.T) {
+	//Fake (or mock?) httpServer
+	//Mock responseChecker
+	//Return error from responseChecker
+	//Assert that sut returns error
+}
+
+func Test_HttpTokenRetriever_Parses_Token_Response(t *testing.T) {
+	// Arrange
+	expectedToken := "fake-token"
 	fakeServer := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{"access_token": "%s"}`, "fake-token")
+		fmt.Fprintf(w, `{"access_token": "%s"}`, expectedToken)
 	}
 
 	// create test server with handler
 	ts := httptest.NewServer(http.HandlerFunc(fakeServer))
 	defer ts.Close()
 
-	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, ts.Client(), ts.URL)
+	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, ts.Client(), ts.URL, &response.ErrorChecker{})
 
 	// Act
 	token, err := sut.RetrieveToken()
 
 	// Assert
-	if err != nil {
-		t.Error(err)
-	}
-
-	if token != "fake-token" {
-		t.Error("Incorrect auth token")
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, expectedToken, token)
 }
+
+//TODO: Test for returning error if we can't parse token response (or content empty)
 
 var unsuccessfulRequestData = []struct {
 	responseCode int
@@ -93,30 +136,14 @@ func Test_HttpTokenRetriever_Returns_Err_On_Unsuccessful_Request(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(fakeServer))
 			defer ts.Close()
 
-			tokenGetter := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, ts.Client(), ts.URL)
+			tokenGetter := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, ts.Client(), ts.URL, &response.ErrorChecker{})
 
 			// Act
 			_, err := tokenGetter.RetrieveToken()
 
 			// Assert
-			if err == nil {
-				t.Error("HttpTokenRetriever.RetrieveToken() didn't return an error, but should have.", tp.expectedErr)
-			} else if err.Error() != tp.expectedErr {
-				t.Error("Incorrect error message received", tp.expectedErr, err.Error())
-			}
+			assert.NotNil(t, err)
+			assert.Equal(t, tp.expectedErr, err.Error())
 		}()
-	}
-}
-
-func Test_HttpTokenRetriever_Returns_Err_On_Client_Error(t *testing.T) {
-	// Arrange
-	tokenGetter := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, &http.Client{}, "http://invalid-url:-1")
-
-	// Act
-	_, err := tokenGetter.RetrieveToken()
-
-	// Assert
-	if err == nil {
-		t.Error("HttpTokenRetriever.RetrieveToken() didn't return an error, but should have.")
 	}
 }

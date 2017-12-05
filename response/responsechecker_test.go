@@ -11,7 +11,7 @@ import (
 
 func Test_Returns_Response_Body_When_Check_Passes(t *testing.T) {
 	expectedResponseBody := []byte("body")
-	sut := &Checker{}
+	sut := &ErrorChecker{}
 
 	response := http.Response{
 		StatusCode: 200,
@@ -28,7 +28,7 @@ func Test_Returns_Error_With_Correct_Message_When_Check_Fails(t *testing.T) {
 	for _, tp := range errorResponsesData {
 		// run an anonymous function to ensure defer is called on each iteration
 		func() {
-			sut := &Checker{}
+			sut := &ErrorChecker{}
 
 			response := http.Response{
 				StatusCode: tp.responseCode,
