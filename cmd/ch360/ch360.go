@@ -8,7 +8,6 @@ import (
 	"time"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/auth"
-	buildvars "github.com/CloudHub360/ch360.go"
 )
 
 func main() {
@@ -25,7 +24,7 @@ Options:
   --id=<id>          API Client ID
   --secret=<secret>  API Client secret`
 
-	args, err := docopt.Parse(usage, nil, true, buildvars.Version, false)
+	args, err := docopt.Parse(usage, nil, true, ch360.Version, false)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
