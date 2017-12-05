@@ -14,10 +14,29 @@ import (
 	"bytes"
 	"github.com/CloudHub360/ch360.go/response"
 	"errors"
+	"github.com/stretchr/testify/suite"
 )
 
 var fakeClientId = "fake-client-id"
 var fakeClientSecret = "fake-client-secret"
+
+func AnHttpResponse(body []byte, status int) *http.Response {
+	return &http.Response{
+		StatusCode: status,
+		Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+	}
+}
+
+type HttpTokenRetrieverSuite struct {
+	suite.Suite
+	mockHttpClient      *mocks.FormPoster
+	mockResponseChecker *mocks.Checker
+}
+
+func (suite *HttpTokenRetrieverSuite) SetupTest() {
+	suite.mockHttpClient = new(mocks.FormPoster)
+	suite.mockResponseChecker = new(mocks.Checker)
+}
 
 func Test_HttpTokenRetriever_Sends_Client_Id_And_Secret(t *testing.T) {
 	// Arrange
@@ -55,52 +74,39 @@ func Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func AnHttpResponse(body []byte, status int) *http.Response {
-	return &http.Response{
-		StatusCode: status,
-		Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
-	}
-}
-
-func Test_HttpTokenRetriever_Passes_Response_To_Checker(t *testing.T) {
+func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Passes_Response_To_Checker() {
 	// Arrange
 	expectedResponseBody := []byte(`{"access_token": "tokenvalue"}`)
 
 	response := AnHttpResponse(expectedResponseBody, 200)
 
-	mockHttpClient := new(mocks.FormPoster)
-	mockResponseChecker := new(mocks.Checker)
+	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
+	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
 
-	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
-	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
-
-	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
+	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
 
 	// Act
 	sut.RetrieveToken()
 
 	// Assert
-	mockResponseChecker.AssertCalled(t, "Check", response, 200)
+	suite.mockResponseChecker.AssertCalled(suite.T(), "Check", response, 200)
 }
 
-func Test_HttpTokenRetriever_Returns_Error_On_ResponseChecker_Error(t *testing.T) {
+func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_ResponseChecker_Error() {
 	// Arrange
 	response := AnHttpResponse(nil, 200)
 
-	mockHttpClient := new(mocks.FormPoster)
-	mockResponseChecker := new(mocks.Checker)
+	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
+	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(nil, errors.New("An error"))
 
-	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
-	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(nil, errors.New("An error"))
-
-	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
+	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
 
 	// Act
 	_, err := sut.RetrieveToken()
 
 	// Assert
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "An error")
+	assert.NotNil(suite.T(), err)
+	assert.Contains(suite.T(), err.Error(), "An error")
 }
 
 func Test_HttpTokenRetriever_Parses_Token_Response(t *testing.T) {
