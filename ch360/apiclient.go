@@ -13,7 +13,7 @@ type ApiClient struct {
 	apiUrl          string
 	retriever       auth.TokenRetriever
 	httpClient      DoRequester
-	responseChecker response.Checker
+	responseChecker response.ErrorChecker
 	Classifiers     *ClassifiersClient
 }
 
@@ -23,7 +23,7 @@ func NewApiClient(requester DoRequester, apiUrl string, tokenRetriever auth.Toke
 		apiUrl:          apiUrl,
 		httpClient:      requester,
 		retriever:       tokenRetriever,
-		responseChecker: response.Checker{},
+		responseChecker: response.ErrorChecker{},
 		Classifiers:     &ClassifiersClient{},
 	}
 

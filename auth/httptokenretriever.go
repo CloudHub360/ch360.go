@@ -16,17 +16,21 @@ type HttpTokenRetriever struct {
 	apiUrl          string
 	clientId        string
 	clientSecret    string
-	httpClient      *http.Client
+	formPoster      FormPoster
 	responseChecker response.Checker
 }
 
-func NewHttpTokenRetriever(clientId string, clientSecret string, httpClient *http.Client, apiUrl string) *HttpTokenRetriever {
+type FormPoster interface {
+	PostForm(url string, values url.Values) (*http.Response, error)
+}
+
+func NewHttpTokenRetriever(clientId string, clientSecret string, formPoster FormPoster, apiUrl string, responseChecker response.Checker) *HttpTokenRetriever {
 	return &HttpTokenRetriever{
 		clientId:        clientId,
-		httpClient:      httpClient,
+		formPoster:      formPoster,
 		clientSecret:    clientSecret,
 		apiUrl:          apiUrl,
-		responseChecker: response.Checker{},
+		responseChecker: responseChecker,
 	}
 }
 
@@ -41,7 +45,7 @@ func (getter *HttpTokenRetriever) RetrieveToken() (string, error) {
 		"client_secret": []string{getter.clientSecret},
 	}
 
-	resp, err := getter.httpClient.PostForm(getter.apiUrl+"/oauth/token", form)
+	resp, err := getter.formPoster.PostForm(getter.apiUrl+"/oauth/token", form)
 	if err != nil {
 		// No response received
 		return "", err

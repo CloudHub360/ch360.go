@@ -8,9 +8,13 @@ import (
 	"bytes"
 )
 
-type Checker struct {}
+type ErrorChecker struct {}
 
-func (c *Checker) Check(response *http.Response, successCode int) ([]byte, error) {
+type Checker interface {
+	Check(response *http.Response, successCode int) ([]byte, error)
+}
+
+func (c *ErrorChecker) Check(response *http.Response, successCode int) ([]byte, error) {
 	type errorResponse struct {
 		Message string `json:"message"`
 	}
