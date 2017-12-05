@@ -3,67 +3,76 @@ package ch360
 import (
 	"github.com/CloudHub360/ch360.go/auth"
 	"github.com/CloudHub360/ch360.go/response"
-	"io"
 	"net/http"
 )
 
 const ApiAddress = "https://api.cloudhub360.com"
 
 type ApiClient struct {
-	apiUrl          string
-	retriever       auth.TokenRetriever
-	httpClient      DoRequester
-	responseChecker response.ErrorChecker
-	Classifiers     *ClassifiersClient
+	Classifiers *ClassifiersClient
 }
 
-//TODO: Should this take a pointer to a requester (which is an httpClient)?
-func NewApiClient(requester DoRequester, apiUrl string, tokenRetriever auth.TokenRetriever) *ApiClient {
+func NewApiClient(httpClient *http.Client, apiUrl string, clientId string, clientSecret string) *ApiClient {
+
+	responseChecker := response.ErrorChecker{}
+
+	tokenRetriever := auth.NewHttpTokenRetriever(clientId,
+		clientSecret, httpClient, apiUrl, &responseChecker)
+
+	authorisingSender := AuthorisingSender{
+		wrappedSender:httpClient,
+		retriever:tokenRetriever,
+	}
+
+	responseCheckingSender := ResponseCheckingSender{
+		wrappedSender:&authorisingSender,
+		checker:&responseChecker,
+	}
+
 	apiClient := &ApiClient{
-		apiUrl:          apiUrl,
-		httpClient:      requester,
-		retriever:       tokenRetriever,
-		responseChecker: response.ErrorChecker{},
-		Classifiers:     &ClassifiersClient{},
+		Classifiers: &ClassifiersClient{
+			baseUrl: apiUrl,
+			sender:  &responseCheckingSender,
+		},
 	}
 
 	return apiClient
 }
 
-type Sender interface {
-	Send(method string, path string, body io.Reader) ([]byte, error)
-}
-
-type DoRequester interface {
+type HttpSender interface {
 	Do(request *http.Request) (*http.Response, error)
 }
 
-func (client *ApiClient) Send(method string, path string, body io.Reader) ([]byte, error) {
-	token, err := client.retriever.RetrieveToken()
+type ResponseCheckingSender struct {
+	checker       response.Checker
+	wrappedSender HttpSender
+}
+
+func (sender *ResponseCheckingSender) Do(request *http.Request) (*http.Response, error) {
+	response, err := sender.wrappedSender.Do(request)
+
+	err = sender.checker.Check(response)
 
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest(method, client.apiUrl+path, body)
+	return response, nil
+}
+
+type AuthorisingSender struct {
+	retriever     auth.TokenRetriever
+	wrappedSender HttpSender
+}
+
+func (sender *AuthorisingSender) Do(request *http.Request) (*http.Response, error) {
+	token, err := sender.retriever.RetrieveToken()
 
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", "Bearer "+token)
+	request.Header.Add("Authorization", "Bearer "+token)
 
-	resp, err := client.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	bytes, err := client.responseChecker.Check(resp, 200)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes, nil
+	return sender.wrappedSender.Do(request)
 }
