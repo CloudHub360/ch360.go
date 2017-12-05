@@ -6,16 +6,16 @@ import (
 	"github.com/CloudHub360/ch360.go/auth"
 )
 
-type HttpSender interface {
+type HttpDoer interface {
 	Do(request *http.Request) (*http.Response, error)
 }
 
-type ResponseCheckingSender struct {
+type ResponseCheckingDoer struct {
 	checker       response.Checker
-	wrappedSender HttpSender
+	wrappedSender HttpDoer
 }
 
-func (sender *ResponseCheckingSender) Do(request *http.Request) (*http.Response, error) {
+func (sender *ResponseCheckingDoer) Do(request *http.Request) (*http.Response, error) {
 	response, err := sender.wrappedSender.Do(request)
 
 	err = sender.checker.Check(response)
@@ -27,12 +27,12 @@ func (sender *ResponseCheckingSender) Do(request *http.Request) (*http.Response,
 	return response, nil
 }
 
-type AuthorisingSender struct {
+type AuthorisingDoer struct {
 	retriever     auth.TokenRetriever
-	wrappedSender HttpSender
+	wrappedSender HttpDoer
 }
 
-func (sender *AuthorisingSender) Do(request *http.Request) (*http.Response, error) {
+func (sender *AuthorisingDoer) Do(request *http.Request) (*http.Response, error) {
 	token, err := sender.retriever.RetrieveToken()
 
 	if err != nil {
