@@ -55,19 +55,23 @@ func Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func AnHttpResponse(body []byte, status int) *http.Response {
+	return &http.Response{
+		StatusCode: status,
+		Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+	}
+}
+
 func Test_HttpTokenRetriever_Passes_Response_To_Checker(t *testing.T) {
 	// Arrange
 	expectedResponseBody := []byte(`{"access_token": "tokenvalue"}`)
 
-	response := http.Response{
-		StatusCode: 200,
-		Body:       ioutil.NopCloser(bytes.NewBuffer(expectedResponseBody)),
-	}
+	response := AnHttpResponse(expectedResponseBody, 200)
 
 	mockHttpClient := new(mocks.FormPoster)
 	mockResponseChecker := new(mocks.Checker)
 
-	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(&response, nil)
+	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
 	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
 
 	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
@@ -76,22 +80,17 @@ func Test_HttpTokenRetriever_Passes_Response_To_Checker(t *testing.T) {
 	sut.RetrieveToken()
 
 	// Assert
-	mockResponseChecker.AssertCalled(t, "Check", &response, 200)
+	mockResponseChecker.AssertCalled(t, "Check", response, 200)
 }
 
 func Test_HttpTokenRetriever_Returns_Error_On_ResponseChecker_Error(t *testing.T) {
 	// Arrange
-	expectedResponseBody := []byte(`{"access_token": "tokenvalue"}`)
-
-	response := http.Response{
-		StatusCode: 200,
-		Body:       ioutil.NopCloser(bytes.NewBuffer(expectedResponseBody)),
-	}
+	response := AnHttpResponse(nil, 200)
 
 	mockHttpClient := new(mocks.FormPoster)
 	mockResponseChecker := new(mocks.Checker)
 
-	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(&response, nil)
+	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
 	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(nil, errors.New("An error"))
 
 	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
@@ -129,15 +128,12 @@ func Test_HttpTokenRetriever_Returns_Err_On_Invalid_Json(t *testing.T) {
 	// Arrange
 	expectedResponseBody := []byte(`<invalid-json>`)
 
-	response := http.Response{
-		StatusCode: 200,
-		Body:       ioutil.NopCloser(bytes.NewBuffer(expectedResponseBody)),
-	}
+	response := AnHttpResponse(expectedResponseBody, 200)
 
 	mockHttpClient := new(mocks.FormPoster)
 	mockResponseChecker := new(mocks.Checker)
 
-	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(&response, nil)
+	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
 	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
 
 	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
@@ -154,15 +150,12 @@ func Test_HttpTokenRetriever_Returns_Err_On_Empty_Token_Response(t *testing.T) {
 	// Arrange
 	expectedResponseBody := []byte(`{"access_token": ""}`)
 
-	response := http.Response{
-		StatusCode: 200,
-		Body:       ioutil.NopCloser(bytes.NewBuffer(expectedResponseBody)),
-	}
+	response := AnHttpResponse(expectedResponseBody, 200)
 
 	mockHttpClient := new(mocks.FormPoster)
 	mockResponseChecker := new(mocks.Checker)
 
-	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(&response, nil)
+	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
 	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
 
 	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
