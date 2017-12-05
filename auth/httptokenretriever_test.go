@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -36,6 +35,10 @@ func (suite *HttpTokenRetrieverSuite) SetupTest() {
 	suite.mockHttpClient = new(mocks.FormPoster)
 	suite.mockResponseChecker = new(mocks.Checker)
 	suite.sut = NewHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
+}
+
+func TestExampleTestSuite(t *testing.T) {
+	suite.Run(t, new(HttpTokenRetrieverSuite))
 }
 
 func Test_HttpTokenRetriever_Sends_Client_Id_And_Secret(t *testing.T) {
@@ -76,10 +79,11 @@ func Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error(t *testing.T) {
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Passes_Response_To_Checker() {
 	// Arrange
-	response := AnHttpResponse([]byte(`{"access_token": "tokenvalue"}`), 200)
+	expectedResponseBody := `{"access_token": "tokenvalue"}`
+	response := AnHttpResponse([]byte(expectedResponseBody), 200)
 
 	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
-	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(response.Body, nil)
+	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return([]byte(expectedResponseBody), nil)
 
 	// Act
 	suite.sut.RetrieveToken()
@@ -103,33 +107,29 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_R
 	assert.Contains(suite.T(), err.Error(), "An error")
 }
 
-func Test_HttpTokenRetriever_Parses_Token_Response(t *testing.T) {
+func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Parses_Token_Response() {
 	// Arrange
-	expectedToken := "fake-token"
-	fakeServer := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{"access_token": "%s"}`, expectedToken)
-	}
+	expectedResponseBody := `{"access_token": "tokenvalue"}`
+	response := AnHttpResponse([]byte(expectedResponseBody), 200)
 
-	// create test server with handler
-	ts := httptest.NewServer(http.HandlerFunc(fakeServer))
-	defer ts.Close()
-
-	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, ts.Client(), ts.URL, &response.ErrorChecker{})
+	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
+	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return([]byte(expectedResponseBody), nil)
 
 	// Act
-	token, err := sut.RetrieveToken()
+	token, err := suite.sut.RetrieveToken()
 
 	// Assert
-	assert.Nil(t, err)
-	assert.Equal(t, expectedToken, token)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), "tokenvalue", token)
 }
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Invalid_Json() {
 	// Arrange
-	response := AnHttpResponse([]byte(`<invalid-json>`), 200)
+	expectedResponseBody := `<invalid-json>`
+	response := AnHttpResponse([]byte(expectedResponseBody), 200)
 
 	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
-	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(response.Body, nil)
+	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return([]byte(expectedResponseBody), nil)
 
 	// Act
 	_, err := suite.sut.RetrieveToken()
@@ -141,10 +141,11 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Inv
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Empty_Token_Response() {
 	// Arrange
-	response := AnHttpResponse([]byte(`{"access_token": ""}`), 200)
+	expectedResponseBody := `{"access_token": ""}`
+	response := AnHttpResponse([]byte(expectedResponseBody), 200)
 
 	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
-	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(response.Body, nil)
+	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return([]byte(expectedResponseBody), nil)
 
 	// Act
 	_, err := suite.sut.RetrieveToken()
