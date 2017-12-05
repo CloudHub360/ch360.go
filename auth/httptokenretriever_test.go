@@ -2,7 +2,6 @@ package auth
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/CloudHub360/ch360.go/mocks"
@@ -12,6 +11,7 @@ import (
 	"github.com/CloudHub360/ch360.go/response"
 	"errors"
 	"github.com/stretchr/testify/suite"
+	"net/url"
 )
 
 var fakeClientId = "fake-client-id"
@@ -41,29 +41,22 @@ func TestExampleTestSuite(t *testing.T) {
 	suite.Run(t, new(HttpTokenRetrieverSuite))
 }
 
-func Test_HttpTokenRetriever_Sends_Client_Id_And_Secret(t *testing.T) {
+func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Sends_Client_Id_And_Secret() {
 	// Arrange
-	var receivedClientId string
-	var receivedClientSecret string
+	expectedResponseBody := `{"access_token": "tokenvalue"}`
+	response := AnHttpResponse([]byte(expectedResponseBody), 200)
 
-	requestHandler := func(w http.ResponseWriter, r *http.Request) {
-		receivedClientId = r.FormValue("client_id")
-		receivedClientSecret = r.FormValue("client_secret")
-		w.WriteHeader(200)
-	}
-
-	// create test server with requestHandler
-	server := httptest.NewServer(http.HandlerFunc(requestHandler))
-	defer server.Close()
-
-	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, server.Client(), server.URL, &response.ErrorChecker{})
+	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
+	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return([]byte(expectedResponseBody), nil)
 
 	// Act
-	sut.RetrieveToken()
+	suite.sut.RetrieveToken()
 
 	// Assert
-	assert.Equal(t, fakeClientId, receivedClientId)
-	assert.Equal(t, fakeClientSecret, receivedClientSecret)
+	suite.mockHttpClient.AssertCalled(suite.T(), "PostForm", mock.Anything, mock.Anything)
+	receivedFormData := (suite.mockHttpClient.Calls[0].Arguments[1]).(url.Values)
+	assert.Equal(suite.T(), []string{fakeClientId}, receivedFormData["client_id"])
+	assert.Equal(suite.T(), []string{fakeClientSecret}, receivedFormData["client_secret"])
 }
 
 func Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error(t *testing.T) {
