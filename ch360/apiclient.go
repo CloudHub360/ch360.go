@@ -19,12 +19,12 @@ func NewApiClient(httpClient *http.Client, apiUrl string, clientId string, clien
 	tokenRetriever := auth.NewHttpTokenRetriever(clientId,
 		clientSecret, httpClient, apiUrl, &responseChecker)
 
-	authorisingSender := AuthorisingDoer{
+	authorisingSender := authorisingDoer{
 		wrappedSender:httpClient,
 		retriever:tokenRetriever,
 	}
 
-	responseCheckingSender := ResponseCheckingDoer{
+	responseCheckingSender := responseCheckingDoer{
 		wrappedSender:&authorisingSender,
 		checker:&responseChecker,
 	}
