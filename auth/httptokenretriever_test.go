@@ -43,7 +43,7 @@ func (suite *HttpTokenRetrieverSuite) SetupTest() {
 	suite.validTokenResponse = AnHttpResponse([]byte(suite.validTokenBody), 200)
 }
 
-func TestExampleTestSuite(t *testing.T) {
+func TestSuiteRunner(t *testing.T) {
 	suite.Run(t, new(HttpTokenRetrieverSuite))
 }
 
