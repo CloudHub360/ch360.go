@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
+	"bytes"
 )
 
 type TokenRetriever interface {
@@ -52,14 +53,17 @@ func (getter *HttpTokenRetriever) RetrieveToken() (string, error) {
 	}
 	defer resp.Body.Close()
 
-	bytes, err := getter.responseChecker.Check(resp, 200)
+	err = getter.responseChecker.Check(resp)
 
 	if err != nil {
 		return "", errors.Wrap(err, "An error occurred when requesting an authentication token")
 	}
 
+	buf := bytes.Buffer{}
+	buf.ReadFrom(resp.Body)
+
 	accessToken := tokenResponse{}
-	err = json.Unmarshal(bytes, &accessToken)
+	err = json.Unmarshal(buf.Bytes(), &accessToken)
 
 	if err != nil {
 		return "", errors.New("Failed to parse authentication token response")

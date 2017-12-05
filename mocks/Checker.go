@@ -9,25 +9,16 @@ type Checker struct {
 	mock.Mock
 }
 
-// Check provides a mock function with given fields: _a0, successCode
-func (_m *Checker) Check(_a0 *http.Response, successCode int) ([]byte, error) {
-	ret := _m.Called(_a0, successCode)
+// Check provides a mock function with given fields: _a0
+func (_m *Checker) Check(_a0 *http.Response) error {
+	ret := _m.Called(_a0)
 
-	var r0 []byte
-	if rf, ok := ret.Get(0).(func(*http.Response, int) []byte); ok {
-		r0 = rf(_a0, successCode)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*http.Response) error); ok {
+		r0 = rf(_a0)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
-		}
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(*http.Response, int) error); ok {
-		r1 = rf(_a0, successCode)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }

@@ -7,8 +7,6 @@ import (
 	"os"
 	"time"
 	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/auth"
-	"github.com/CloudHub360/ch360.go/response"
 )
 
 func main() {
@@ -39,10 +37,8 @@ Options:
 		Timeout: time.Minute * 5,
 	}
 
-	tokenGetter := auth.NewHttpTokenRetriever(id, secret, httpClient, ch360.ApiAddress, &response.ErrorChecker{})
-
-	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, tokenGetter)
-	err = apiClient.Classifiers.CreateClassifier("myclassifier")
+	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
+	err = apiClient.Classifiers.CreateClassifier("my-classifier")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)

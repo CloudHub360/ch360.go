@@ -1,11 +1,19 @@
 package ch360
 
+import "net/http"
 
 type ClassifiersClient struct {
-	sender Sender
+	baseUrl string
+	sender HttpSender
 }
 
 func (client *ClassifiersClient) CreateClassifier(name string) error {
-	_, err := client.sender.Send("POST", "/classifiers/"+name, nil)
+	request, err := http.NewRequest("POST", client.baseUrl+"/classifiers/"+name, nil)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = client.sender.Do(request)
 	return err
 }

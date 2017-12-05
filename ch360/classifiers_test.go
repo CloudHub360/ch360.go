@@ -4,15 +4,18 @@ import (
 	"github.com/CloudHub360/ch360.go/mocks"
 	"github.com/stretchr/testify/mock"
 	"testing"
+	"net/http"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Client_Calls_Sender_With_Correct_Url(t *testing.T) {
 	// Arrange
-	sender := new(mocks.Sender)
-	sender.On("Send", mock.Anything, mock.Anything, nil).Return(nil, nil)
+	sender := new(mocks.HttpSender)
+	sender.On("Do", mock.Anything).Return(nil, nil)
 
 	sut := ClassifiersClient{
 		sender: sender,
+		baseUrl:"baseurl",
 	}
 	classifierName := "classifier-name"
 
@@ -20,5 +23,7 @@ func Test_Client_Calls_Sender_With_Correct_Url(t *testing.T) {
 	sut.CreateClassifier(classifierName)
 
 	// Assert
-	sender.AssertCalled(t, "Send", "POST", "/classifiers/"+classifierName, nil)
+	sentRequest := (sender.Calls[0].Arguments[0]).(*http.Request)
+	assert.Equal(t, "POST", sentRequest.Method)
+	assert.Equal(t, "baseurl/classifiers/"+classifierName, sentRequest.URL.Path)
 }

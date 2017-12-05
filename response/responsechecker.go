@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"errors"
 	"bytes"
+	"io/ioutil"
+	"bufio"
 )
 
-type ErrorChecker struct {}
+type ErrorChecker struct{}
 
 type Checker interface {
-	Check(response *http.Response, successCode int) ([]byte, error)
+	Check(response *http.Response) (error)
 }
 
-func (c *ErrorChecker) Check(response *http.Response, successCode int) ([]byte, error) {
+func (c *ErrorChecker) Check(response *http.Response) (error) {
 	type errorResponse struct {
 		Message string `json:"message"`
 	}
@@ -22,22 +24,22 @@ func (c *ErrorChecker) Check(response *http.Response, successCode int) ([]byte, 
 	buf := bytes.Buffer{}
 	buf.ReadFrom(response.Body)
 
+	// We've read from the response body, and it can't be rewound, so 'recreate' it as a new io.Reader
+	// which will read from the start of the underlying byte array of 'buf'.
+	response.Body = ioutil.NopCloser(bufio.NewReader(&buf))
+
 	// Check status code
-	if response.StatusCode >= 400 {
-		errResponse := errorResponse{}
-		err := json.Unmarshal(buf.Bytes(), &errResponse)
-
-		if err != nil || errResponse.Message == "" {
-			return nil, errors.New(fmt.Sprintf("Received error response with HTTP code %d", response.StatusCode))
-		}
-
-		return nil, errors.New(errResponse.Message)
+	if response.StatusCode < 400 {
+		return nil
 	}
 
-	if response.StatusCode != successCode {
-		return nil, errors.New(fmt.Sprintf(
-			"Received unexpected response code: %d", response.StatusCode))
+	errResponse := errorResponse{}
+	err := json.Unmarshal(buf.Bytes(), &errResponse)
+
+	if err != nil || errResponse.Message == "" {
+		return errors.New(fmt.Sprintf("Received error response with HTTP code %d", response.StatusCode))
 	}
 
-	return buf.Bytes(), nil
+	return errors.New(errResponse.Message)
+
 }
