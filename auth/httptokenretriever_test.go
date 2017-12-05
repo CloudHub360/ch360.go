@@ -27,6 +27,7 @@ func AnHttpResponse(body []byte, status int) *http.Response {
 
 type HttpTokenRetrieverSuite struct {
 	suite.Suite
+	sut 				*HttpTokenRetriever
 	mockHttpClient      *mocks.FormPoster
 	mockResponseChecker *mocks.Checker
 }
@@ -34,6 +35,7 @@ type HttpTokenRetrieverSuite struct {
 func (suite *HttpTokenRetrieverSuite) SetupTest() {
 	suite.mockHttpClient = new(mocks.FormPoster)
 	suite.mockResponseChecker = new(mocks.Checker)
+	suite.sut = NewHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
 }
 
 func Test_HttpTokenRetriever_Sends_Client_Id_And_Secret(t *testing.T) {
@@ -74,17 +76,13 @@ func Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error(t *testing.T) {
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Passes_Response_To_Checker() {
 	// Arrange
-	expectedResponseBody := []byte(`{"access_token": "tokenvalue"}`)
-
-	response := AnHttpResponse(expectedResponseBody, 200)
+	response := AnHttpResponse([]byte(`{"access_token": "tokenvalue"}`), 200)
 
 	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
-	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
-
-	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
+	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(response.Body, nil)
 
 	// Act
-	sut.RetrieveToken()
+	suite.sut.RetrieveToken()
 
 	// Assert
 	suite.mockResponseChecker.AssertCalled(suite.T(), "Check", response, 200)
@@ -97,10 +95,8 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_R
 	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
 	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(nil, errors.New("An error"))
 
-	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
-
 	// Act
-	_, err := sut.RetrieveToken()
+	_, err := suite.sut.RetrieveToken()
 
 	// Assert
 	assert.NotNil(suite.T(), err)
@@ -128,46 +124,32 @@ func Test_HttpTokenRetriever_Parses_Token_Response(t *testing.T) {
 	assert.Equal(t, expectedToken, token)
 }
 
-func Test_HttpTokenRetriever_Returns_Err_On_Invalid_Json(t *testing.T) {
+func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Invalid_Json() {
 	// Arrange
-	expectedResponseBody := []byte(`<invalid-json>`)
+	response := AnHttpResponse([]byte(`<invalid-json>`), 200)
 
-	response := AnHttpResponse(expectedResponseBody, 200)
-
-	mockHttpClient := new(mocks.FormPoster)
-	mockResponseChecker := new(mocks.Checker)
-
-	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
-	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
-
-	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
+	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
+	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(response.Body, nil)
 
 	// Act
-	_, err := sut.RetrieveToken()
+	_, err := suite.sut.RetrieveToken()
 
 	// Assert
-	assert.NotNil(t, err)
-	assert.EqualError(t, err, "Failed to parse authentication token response")
+	assert.NotNil(suite.T(), err)
+	assert.EqualError(suite.T(), err, "Failed to parse authentication token response")
 }
 
-func Test_HttpTokenRetriever_Returns_Err_On_Empty_Token_Response(t *testing.T) {
+func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Empty_Token_Response() {
 	// Arrange
-	expectedResponseBody := []byte(`{"access_token": ""}`)
+	response := AnHttpResponse([]byte(`{"access_token": ""}`), 200)
 
-	response := AnHttpResponse(expectedResponseBody, 200)
-
-	mockHttpClient := new(mocks.FormPoster)
-	mockResponseChecker := new(mocks.Checker)
-
-	mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
-	mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(expectedResponseBody, nil)
-
-	sut := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, mockHttpClient, "notused", mockResponseChecker)
+	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
+	suite.mockResponseChecker.On("Check", mock.Anything, mock.Anything).Return(response.Body, nil)
 
 	// Act
-	_, err := sut.RetrieveToken()
+	_, err := suite.sut.RetrieveToken()
 
 	// Assert
-	assert.NotNil(t, err)
-	assert.EqualError(t, err, "Received empty authentication token")
+	assert.NotNil(suite.T(), err)
+	assert.EqualError(suite.T(), err, "Received empty authentication token")
 }
