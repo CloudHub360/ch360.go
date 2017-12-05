@@ -38,10 +38,11 @@ Options:
 	}
 
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
-	err = apiClient.Classifiers.CreateClassifier("my-classifier")
+	classifierName := "my-classifier"
+	err = apiClient.Classifiers.CreateClassifier(classifierName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-	fmt.Println("Created classifier 'myclassifier'.")
+	fmt.Printf("Created classifier '%s'.\n", classifierName)
 }
