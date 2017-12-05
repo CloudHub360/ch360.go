@@ -18,6 +18,10 @@ type ResponseCheckingDoer struct {
 func (sender *ResponseCheckingDoer) Do(request *http.Request) (*http.Response, error) {
 	response, err := sender.wrappedSender.Do(request)
 
+	if err != nil {
+		return nil, err
+	}
+
 	err = sender.checker.Check(response)
 
 	if err != nil {
