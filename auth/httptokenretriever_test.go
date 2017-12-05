@@ -1,5 +1,3 @@
-//go:generate mockery -name FormPoster -recursive
-
 package auth
 
 import (
