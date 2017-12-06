@@ -6,18 +6,18 @@ import (
 )
 
 type responseCheckingDoer struct {
-	checker       response.Checker
-	wrappedSender HttpDoer
+	responseChecker response.Checker
+	wrappedSender   HttpDoer
 }
 
-func (sender *responseCheckingDoer) Do(request *http.Request) (*http.Response, error) {
-	response, err := sender.wrappedSender.Do(request)
+func (requestSender *responseCheckingDoer) Do(request *http.Request) (*http.Response, error) {
+	response, err := requestSender.wrappedSender.Do(request)
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = sender.checker.Check(response)
+	err = requestSender.responseChecker.Check(response)
 
 	if err != nil {
 		return nil, err

@@ -21,8 +21,8 @@ func (suite *ResponseCheckingDoerSuite) SetupTest() {
 	suite.underlying = &mocks.HttpDoer{}
 	suite.checker = &mocks.Checker{}
 	suite.sut = &responseCheckingDoer{
-		checker:       suite.checker,
-		wrappedSender: suite.underlying,
+		responseChecker: suite.checker,
+		wrappedSender:   suite.underlying,
 	}
 }
 

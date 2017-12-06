@@ -25,8 +25,8 @@ func NewApiClient(httpClient *http.Client, apiUrl string, clientId string, clien
 	}
 
 	responseCheckingDoer := responseCheckingDoer{
-		wrappedSender: &authorisingDoer,
-		checker:       &responseChecker,
+		wrappedSender:   &authorisingDoer,
+		responseChecker: &responseChecker,
 	}
 
 	apiClient := &ApiClient{
