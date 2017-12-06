@@ -26,7 +26,7 @@ func (suite *ResponseCheckingDoerSuite) SetupTest() {
 	}
 }
 
-func TestSuiteRunner(t *testing.T) {
+func TestResponseCheckingDoerSuiteRunner(t *testing.T) {
 	suite.Run(t, new(ResponseCheckingDoerSuite))
 }
 
