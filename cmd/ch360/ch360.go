@@ -13,9 +13,9 @@ func main() {
 	usage := `CloudHub360 command-line tool.
 
 Usage:
+  ch360 create classifier <name> --id=<id> --secret=<secret>
   ch360 -h | --help
   ch360 --version
-  ch360 --id=<id> --secret=<secret>
 
 Options:
   -h --help          Show this help message.
@@ -32,13 +32,13 @@ Options:
 
 	id := args["--id"].(string)
 	secret := args["--secret"].(string)
+	classifierName := args["<name>"].(string)
 
 	var httpClient = &http.Client{
 		Timeout: time.Minute * 5,
 	}
 
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
-	classifierName := "my-classifier"
 	err = apiClient.Classifiers.CreateClassifier(classifierName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
