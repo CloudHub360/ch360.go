@@ -60,12 +60,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Sends_Client_Id_An
 	assert_FormData_Includes_Client_Id_And_Secret(suite.T(), (suite.mockHttpClient.Calls[0].Arguments[1]).(url.Values))
 }
 
-func assert_FormData_Includes_Client_Id_And_Secret(t *testing.T, receivedFormData url.Values) {
-	assert.Equal(t, []string{fakeClientId}, receivedFormData["client_id"])
-	assert.Equal(t, []string{fakeClientSecret}, receivedFormData["client_secret"])
-}
-
-func Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error(t *testing.T) {
+func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error() {
 	// Arrange
 	tokenGetter := NewHttpTokenRetriever(fakeClientId, fakeClientSecret, &http.Client{}, "http://invalid-url:-1", &response.ErrorChecker{})
 
@@ -146,4 +141,9 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Emp
 	// Assert
 	assert.NotNil(suite.T(), err)
 	assert.EqualError(suite.T(), err, "Received empty authentication token")
+}
+
+func assert_FormData_Includes_Client_Id_And_Secret(t *testing.T, receivedFormData url.Values) {
+	assert.Equal(t, []string{fakeClientId}, receivedFormData["client_id"])
+	assert.Equal(t, []string{fakeClientSecret}, receivedFormData["client_secret"])
 }
