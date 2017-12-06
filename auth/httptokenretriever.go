@@ -10,7 +10,7 @@ import (
 )
 
 type TokenRetriever interface {
-	RetrieveToken() (string, error) // todo custom type
+	RetrieveToken() (string, error)
 }
 
 type HttpTokenRetriever struct {
