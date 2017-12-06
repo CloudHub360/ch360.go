@@ -21,8 +21,8 @@ func (suite *AuthorisingHttpDoerSuite) SetupTest() {
 	suite.underlying = &mocks.HttpDoer{}
 	suite.retriever = &mocks.TokenRetriever{}
 	suite.sut = &authorisingDoer{
-		retriever:     suite.retriever,
-		wrappedSender: suite.underlying,
+		tokenRetriever: suite.retriever,
+		wrappedSender:  suite.underlying,
 	}
 }
 
