@@ -2,12 +2,11 @@ package ch360
 
 import (
 	"github.com/CloudHub360/ch360.go/mocks"
-	"github.com/stretchr/testify/mock"
-	"testing"
-	"net/http"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"net/http"
+	"testing"
 )
-
 
 func Test_Client_Calls_Sender_With_Correct_Url(t *testing.T) {
 	// Arrange
@@ -15,8 +14,8 @@ func Test_Client_Calls_Sender_With_Correct_Url(t *testing.T) {
 	sender.On("Do", mock.Anything).Return(nil, nil)
 
 	sut := ClassifiersClient{
-		sender: sender,
-		baseUrl:"baseurl",
+		sender:  sender,
+		baseUrl: "baseurl",
 	}
 	classifierName := "classifier-name"
 

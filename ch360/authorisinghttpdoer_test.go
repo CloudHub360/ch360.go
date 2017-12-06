@@ -1,13 +1,13 @@
 package ch360
 
 import (
-	"testing"
-	"github.com/CloudHub360/ch360.go/mocks"
-	"github.com/stretchr/testify/mock"
-	"net/http"
-	"github.com/stretchr/testify/suite"
-	"github.com/stretchr/testify/assert"
 	"errors"
+	"github.com/CloudHub360/ch360.go/mocks"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+	"net/http"
+	"testing"
 )
 
 type AuthorisingHttpDoerSuite struct {

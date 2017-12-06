@@ -1,12 +1,12 @@
 package auth
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/CloudHub360/ch360.go/response"
 	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
-	"bytes"
 )
 
 type TokenRetriever interface {

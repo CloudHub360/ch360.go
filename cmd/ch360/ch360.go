@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/docopt/docopt-go"
 	"net/http"
 	"os"
 	"time"
-	"github.com/CloudHub360/ch360.go/ch360"
 )
 
 func main() {

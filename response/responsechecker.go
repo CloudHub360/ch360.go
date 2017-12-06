@@ -1,22 +1,22 @@
 package response
 
 import (
-	"net/http"
-	"encoding/json"
-	"fmt"
-	"errors"
-	"bytes"
-	"io/ioutil"
 	"bufio"
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 )
 
 type ErrorChecker struct{}
 
 type Checker interface {
-	Check(response *http.Response) (error)
+	Check(response *http.Response) error
 }
 
-func (c *ErrorChecker) Check(response *http.Response) (error) {
+func (c *ErrorChecker) Check(response *http.Response) error {
 	type errorResponse struct {
 		Message string `json:"message"`
 	}
