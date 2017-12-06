@@ -6,12 +6,12 @@ import (
 )
 
 type authorisingDoer struct {
-	retriever     auth.TokenRetriever
-	wrappedSender HttpDoer
+	tokenRetriever auth.TokenRetriever
+	wrappedSender  HttpDoer
 }
 
 func (sender *authorisingDoer) Do(request *http.Request) (*http.Response, error) {
-	token, err := sender.retriever.RetrieveToken()
+	token, err := sender.tokenRetriever.RetrieveToken()
 
 	if err != nil {
 		return nil, err

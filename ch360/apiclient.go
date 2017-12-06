@@ -19,20 +19,20 @@ func NewApiClient(httpClient *http.Client, apiUrl string, clientId string, clien
 	tokenRetriever := auth.NewHttpTokenRetriever(clientId,
 		clientSecret, httpClient, apiUrl, &responseChecker)
 
-	authorisingSender := authorisingDoer{
-		wrappedSender: httpClient,
-		retriever:     tokenRetriever,
+	authorisingDoer := authorisingDoer{
+		wrappedSender:  httpClient,
+		tokenRetriever: tokenRetriever,
 	}
 
-	responseCheckingSender := responseCheckingDoer{
-		wrappedSender: &authorisingSender,
+	responseCheckingDoer := responseCheckingDoer{
+		wrappedSender: &authorisingDoer,
 		checker:       &responseChecker,
 	}
 
 	apiClient := &ApiClient{
 		Classifiers: &ClassifiersClient{
 			baseUrl: apiUrl,
-			sender:  &responseCheckingSender,
+			sender:  &responseCheckingDoer,
 		},
 	}
 
