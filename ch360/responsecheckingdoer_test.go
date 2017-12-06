@@ -1,13 +1,13 @@
 package ch360
 
 import (
-	"testing"
 	"github.com/CloudHub360/ch360.go/mocks"
-	"github.com/stretchr/testify/mock"
-	"net/http"
-	"github.com/stretchr/testify/suite"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+	"net/http"
+	"testing"
 )
 
 type ResponseCheckingDoerSuite struct {
@@ -70,7 +70,6 @@ func (suite *ResponseCheckingDoerSuite) Test_ResponseCheckingDoer_Calls_Checker(
 	suite.checker.AssertNumberOfCalls(suite.T(), "Check", 1)
 	suite.checker.AssertCalled(suite.T(), "Check", &response)
 }
-
 
 func (suite *ResponseCheckingDoerSuite) Test_ResponseCheckingDoer_Returns_Err_From_Checker() {
 	// Arrange

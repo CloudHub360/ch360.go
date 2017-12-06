@@ -1,12 +1,12 @@
 package response
 
 import (
-	"github.com/stretchr/testify/assert"
-	"testing"
-	"net/http"
-	"io/ioutil"
 	"bytes"
 	"errors"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"net/http"
+	"testing"
 )
 
 func Test_Returns_Error_With_Correct_Message_When_Check_Fails(t *testing.T) {

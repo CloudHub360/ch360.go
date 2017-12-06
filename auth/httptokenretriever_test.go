@@ -1,17 +1,17 @@
 package auth
 
 import (
-	"net/http"
-	"testing"
-	"github.com/stretchr/testify/assert"
-	"github.com/CloudHub360/ch360.go/mocks"
-	"github.com/stretchr/testify/mock"
-	"io/ioutil"
 	"bytes"
-	"github.com/CloudHub360/ch360.go/response"
 	"errors"
+	"github.com/CloudHub360/ch360.go/mocks"
+	"github.com/CloudHub360/ch360.go/response"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"io/ioutil"
+	"net/http"
 	"net/url"
+	"testing"
 )
 
 var fakeClientId = "fake-client-id"
@@ -29,9 +29,9 @@ type HttpTokenRetrieverSuite struct {
 	sut                 *HttpTokenRetriever
 	mockHttpClient      *mocks.FormPoster
 	mockResponseChecker *mocks.Checker
-	validTokenValue		string
+	validTokenValue     string
 	validTokenBody      string
-	validTokenResponse	*http.Response
+	validTokenResponse  *http.Response
 }
 
 func (suite *HttpTokenRetrieverSuite) SetupTest() {
