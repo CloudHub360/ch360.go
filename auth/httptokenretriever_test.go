@@ -57,9 +57,12 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Sends_Client_Id_An
 
 	// Assert
 	suite.mockHttpClient.AssertCalled(suite.T(), "PostForm", mock.Anything, mock.Anything)
-	receivedFormData := (suite.mockHttpClient.Calls[0].Arguments[1]).(url.Values)
-	assert.Equal(suite.T(), []string{fakeClientId}, receivedFormData["client_id"])
-	assert.Equal(suite.T(), []string{fakeClientSecret}, receivedFormData["client_secret"])
+	assert_FormData_Includes_Client_Id_And_Secret(suite.T(), (suite.mockHttpClient.Calls[0].Arguments[1]).(url.Values))
+}
+
+func assert_FormData_Includes_Client_Id_And_Secret(t *testing.T, receivedFormData url.Values) {
+	assert.Equal(t, []string{fakeClientId}, receivedFormData["client_id"])
+	assert.Equal(t, []string{fakeClientSecret}, receivedFormData["client_secret"])
 }
 
 func Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error(t *testing.T) {
