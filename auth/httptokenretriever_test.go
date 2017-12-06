@@ -68,7 +68,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_H
 	_, err := tokenGetter.RetrieveToken()
 
 	// Assert
-	assert.NotNil(t, err)
+	assert.NotNil(suite.T(), err)
 }
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Passes_Response_To_Checker() {
