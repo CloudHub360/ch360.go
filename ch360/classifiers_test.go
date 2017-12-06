@@ -14,8 +14,8 @@ func Test_Client_Calls_Sender_With_Correct_Url(t *testing.T) {
 	sender.On("Do", mock.Anything).Return(nil, nil)
 
 	sut := ClassifiersClient{
-		sender:  sender,
-		baseUrl: "baseurl",
+		requestSender: sender,
+		baseUrl:       "baseurl",
 	}
 	classifierName := "classifier-name"
 

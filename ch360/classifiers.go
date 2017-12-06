@@ -3,8 +3,8 @@ package ch360
 import "net/http"
 
 type ClassifiersClient struct {
-	baseUrl string
-	sender  HttpDoer
+	baseUrl       string
+	requestSender HttpDoer
 }
 
 func (client *ClassifiersClient) classifiersUrl() string {
@@ -18,6 +18,6 @@ func (client *ClassifiersClient) CreateClassifier(name string) error {
 		return err
 	}
 
-	_, err = client.sender.Do(request)
+	_, err = client.requestSender.Do(request)
 	return err
 }

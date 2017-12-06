@@ -31,8 +31,8 @@ func NewApiClient(httpClient *http.Client, apiUrl string, clientId string, clien
 
 	apiClient := &ApiClient{
 		Classifiers: &ClassifiersClient{
-			baseUrl: apiUrl,
-			sender:  &responseCheckingDoer,
+			baseUrl:       apiUrl,
+			requestSender: &responseCheckingDoer,
 		},
 	}
 
