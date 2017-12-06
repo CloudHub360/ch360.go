@@ -35,25 +35,25 @@ func NewHttpTokenRetriever(clientId string, clientSecret string, formPoster Form
 	}
 }
 
-func (getter *HttpTokenRetriever) RetrieveToken() (string, error) {
+func (retriever *HttpTokenRetriever) RetrieveToken() (string, error) {
 	type tokenResponse struct {
 		AccessToken string `json:"access_token"`
 	}
 
 	form := url.Values{
 		"grant_type":    []string{"client_credentials"},
-		"client_id":     []string{getter.clientId},
-		"client_secret": []string{getter.clientSecret},
+		"client_id":     []string{retriever.clientId},
+		"client_secret": []string{retriever.clientSecret},
 	}
 
-	resp, err := getter.formPoster.PostForm(getter.apiUrl+"/oauth/token", form)
+	resp, err := retriever.formPoster.PostForm(retriever.apiUrl+"/oauth/token", form)
 	if err != nil {
 		// No response received
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	err = getter.responseChecker.Check(resp)
+	err = retriever.responseChecker.Check(resp)
 
 	if err != nil {
 		return "", errors.Wrap(err, "An error occurred when requesting an authentication token")
