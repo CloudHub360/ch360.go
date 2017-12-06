@@ -17,9 +17,9 @@ import (
 var fakeClientId = "fake-client-id"
 var fakeClientSecret = "fake-client-secret"
 
-func AnHttpResponse(body []byte, status int) *http.Response {
+func AnHttpResponse(body []byte) *http.Response {
 	return &http.Response{
-		StatusCode: status,
+		StatusCode: 200,
 		Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
 	}
 }
@@ -40,7 +40,7 @@ func (suite *HttpTokenRetrieverSuite) SetupTest() {
 	suite.sut = NewHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
 	suite.validTokenValue = `tokenvalue`
 	suite.validTokenBody = `{"access_token": "` + suite.validTokenValue + `"}`
-	suite.validTokenResponse = AnHttpResponse([]byte(suite.validTokenBody), 200)
+	suite.validTokenResponse = AnHttpResponse([]byte(suite.validTokenBody))
 }
 
 func TestSuiteRunner(t *testing.T) {
@@ -87,7 +87,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Passes_Response_To
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_ResponseChecker_Error() {
 	// Arrange
-	response := AnHttpResponse(nil, 200)
+	response := AnHttpResponse(nil)
 
 	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
 	suite.mockResponseChecker.On("Check", mock.Anything).Return(errors.New("An error"))
@@ -116,7 +116,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Parses_Token_Respo
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Invalid_Json() {
 	// Arrange
 	expectedResponseBody := `<invalid-json>`
-	response := AnHttpResponse([]byte(expectedResponseBody), 200)
+	response := AnHttpResponse([]byte(expectedResponseBody))
 
 	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
 	suite.mockResponseChecker.On("Check", mock.Anything).Return(nil)
@@ -132,7 +132,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Inv
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Empty_Token_Response() {
 	// Arrange
 	expectedResponseBody := `{"access_token": ""}`
-	response := AnHttpResponse([]byte(expectedResponseBody), 200)
+	response := AnHttpResponse([]byte(expectedResponseBody))
 
 	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
 	suite.mockResponseChecker.On("Check", mock.Anything).Return(nil)
