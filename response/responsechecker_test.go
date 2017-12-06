@@ -10,19 +10,19 @@ import (
 )
 
 func Test_Returns_Error_With_Correct_Message_When_Check_Fails(t *testing.T) {
-	for _, tp := range errorResponsesData {
+	for _, errorResponseData := range errorResponsesData {
 		// run an anonymous function to ensure defer is called on each iteration
 		func() {
 			sut := &ErrorChecker{}
 
 			response := http.Response{
-				StatusCode: tp.responseCode,
-				Body:       ioutil.NopCloser(bytes.NewBuffer(tp.responseBody)),
+				StatusCode: errorResponseData.responseCode,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(errorResponseData.responseBody)),
 			}
 
 			err := sut.Check(&response)
 
-			assert.Equal(t, errors.New(tp.expectedErr), err)
+			assert.Equal(t, errors.New(errorResponseData.expectedErr), err)
 		}()
 	}
 }
