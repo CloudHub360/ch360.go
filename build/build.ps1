@@ -29,7 +29,7 @@ Task Build PackageRestore, {
   try {
     pushd $RootDir
 
-    $version="${BuildDate}-${GitRev}:${BuildNumber}"
+    $version="${BuildDate}-${GitRev}-${BuildNumber}"
 
     exec { go install -ldflags "-X github.com/CloudHub360/ch360.go/ch360.Version=$version" ./... }
   } finally {
