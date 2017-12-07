@@ -46,7 +46,8 @@ Options:
 		err = apiClient.Classifiers.CreateClassifier(classifierName)
 	} else {
 		fmt.Printf("Deleting classifier '%s'... ", classifierName)
-		err = apiClient.Classifiers.DeleteClassifier(classifierName)
+		cmd := commands.NewDeleteClassifier(apiClient.Classifiers)
+		err = cmd.Execute(classifierName)
 	}
 
 	if err != nil {
