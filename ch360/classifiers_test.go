@@ -6,24 +6,58 @@ import (
 	"github.com/stretchr/testify/mock"
 	"net/http"
 	"testing"
+	"github.com/stretchr/testify/suite"
 )
 
-func Test_Client_Calls_Sender_With_Correct_Url(t *testing.T) {
-	// Arrange
-	sender := new(mocks.HttpDoer)
-	sender.On("Do", mock.Anything).Return(nil, nil)
+type ClassifiersClientSuite struct {
+	suite.Suite
+	sut        *ClassifiersClient
+	httpClient *mocks.HttpDoer
+	classifierName string
+}
 
-	sut := ClassifiersClient{
-		requestSender: sender,
+func (suite *ClassifiersClientSuite) SetupTest() {
+	suite.httpClient = new(mocks.HttpDoer)
+	suite.httpClient.On("Do", mock.Anything).Return(nil, nil)
+
+	suite.sut = &ClassifiersClient{
+		requestSender: suite.httpClient,
 		baseUrl:       "baseurl",
 	}
-	classifierName := "classifier-name"
+	suite.classifierName = "classifier-name"
+}
 
+func TestClassifiersClientSuiteRunner(t *testing.T) {
+	suite.Run(t, new (ClassifiersClientSuite))
+}
+
+func (suite *ClassifiersClientSuite) Request() *http.Request {
+	assert.Len(suite.T(), suite.httpClient.Calls, 1)
+
+	call := suite.httpClient.Calls[0]
+	assert.Len(suite.T(), call.Arguments, 1)
+
+	return (call.Arguments[0]).(*http.Request)
+}
+
+func (suite *ClassifiersClientSuite) AssertRequestIssued(method string, urlPath string) {
+	assert.Equal(suite.T(), method, suite.Request().Method)
+	assert.Equal(suite.T(), urlPath, suite.Request().URL.Path)
+}
+
+func (suite *ClassifiersClientSuite) Test_CreateClassifier_Issues_Create_Classifier_Request() {
 	// Act
-	sut.CreateClassifier(classifierName)
+	suite.sut.CreateClassifier(suite.classifierName)
 
 	// Assert
-	sentRequest := (sender.Calls[0].Arguments[0]).(*http.Request)
-	assert.Equal(t, "POST", sentRequest.Method)
-	assert.Equal(t, "baseurl/classifiers/"+classifierName, sentRequest.URL.Path)
+	suite.AssertRequestIssued("POST", "baseurl/classifiers/"+suite.classifierName)
+
+}
+
+func (suite *ClassifiersClientSuite) Test_DeleteClassifier_Issues_Delete_Classifier_Request() {
+	// Act
+	suite.sut.DeleteClassifier(suite.classifierName)
+
+	// Assert
+	suite.AssertRequestIssued("DELETE", "baseurl/classifiers/"+suite.classifierName)
 }
