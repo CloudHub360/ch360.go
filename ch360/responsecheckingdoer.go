@@ -17,7 +17,7 @@ func (requestSender *responseCheckingDoer) Do(request *http.Request) (*http.Resp
 		return nil, err
 	}
 
-	err = requestSender.responseChecker.Check(response)
+	err = requestSender.responseChecker.CheckForErrors(response)
 
 	if err != nil {
 		return nil, err

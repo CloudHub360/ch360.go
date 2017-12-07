@@ -9,8 +9,8 @@ type Checker struct {
 	mock.Mock
 }
 
-// Check provides a mock function with given fields: _a0
-func (_m *Checker) Check(_a0 *http.Response) error {
+// CheckForErrors provides a mock function with given fields: _a0
+func (_m *Checker) CheckForErrors(_a0 *http.Response) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
