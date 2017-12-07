@@ -15,7 +15,7 @@ Task PackageRestore {
   }
 }
 
-Task Gen {
+Task GenerateMocks {
   try {
     pushd $RootDir
     exec { go get github.com/vektra/mockery/.../ }
