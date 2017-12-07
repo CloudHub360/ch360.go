@@ -14,6 +14,7 @@ func main() {
 
 Usage:
   ch360 create classifier <name> --id=<id> --secret=<secret>
+  ch360 delete classifier <name> --id=<id> --secret=<secret>
   ch360 -h | --help
   ch360 --version
 
@@ -39,10 +40,18 @@ Options:
 	}
 
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
-	err = apiClient.Classifiers.CreateClassifier(classifierName)
+	if args["create"].(bool) {
+		fmt.Printf("Creating classifier '%s'... ", classifierName)
+		err = apiClient.Classifiers.CreateClassifier(classifierName)
+	} else {
+		fmt.Printf("Deleting classifier '%s'... ", classifierName)
+		err = apiClient.Classifiers.DeleteClassifier(classifierName)
+	}
+
 	if err != nil {
+		fmt.Printf("[FAILED]\n")
 		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-	fmt.Printf("Created classifier '%s'.\n", classifierName)
+	fmt.Printf("[OK]\n")
 }
