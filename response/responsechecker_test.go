@@ -34,9 +34,11 @@ var errorResponsesData = []struct {
 }{
 	{400, []byte(`{"message": "error-message"}`), "error-message"},
 	{499, []byte(`{"message": "error-message"}`), "error-message"},
-	{403, []byte(`<Invalid json>`), "Received error response with HTTP code 403"},
-	{400, nil, "Received error response with HTTP code 400"},
-	{500, nil, "Received error response with HTTP code 500"},
-	{501, nil, "Received error response with HTTP code 501"},
-	{502, []byte(`Bad gateway`), "Received error response with HTTP code 502"},
+	{403, []byte(`<Invalid json>`), "Received unexpected response with HTTP code 403"},
+	{400, nil, "Received unexpected response with HTTP code 400"},
+	{500, nil, "Received unexpected response with HTTP code 500"},
+	{501, nil, "Received unexpected response with HTTP code 501"},
+	{502, []byte(`Bad gateway`), "Received unexpected response with HTTP code 502"},
+	{300, nil, "Received unexpected response with HTTP code 300"},
+	{301, []byte(`Moved permanently`), "Received unexpected response with HTTP code 301"},
 }
