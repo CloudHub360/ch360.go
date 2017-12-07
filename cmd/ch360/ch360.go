@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 )
 
 func main() {
@@ -41,6 +42,7 @@ Options:
 
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
 	if args["create"].(bool) {
+
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
 		err = apiClient.Classifiers.CreateClassifier(classifierName)
 	} else {

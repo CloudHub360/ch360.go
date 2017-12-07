@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"testing"
 	"github.com/stretchr/testify/suite"
+	"io/ioutil"
+	"bytes"
 )
 
 type ClassifiersClientSuite struct {
 	suite.Suite
-	sut        *ClassifiersClient
-	httpClient *mocks.HttpDoer
+	sut            *ClassifiersClient
+	httpClient     *mocks.HttpDoer
 	classifierName string
 }
 
@@ -28,7 +30,7 @@ func (suite *ClassifiersClientSuite) SetupTest() {
 }
 
 func TestClassifiersClientSuiteRunner(t *testing.T) {
-	suite.Run(t, new (ClassifiersClientSuite))
+	suite.Run(t, new(ClassifiersClientSuite))
 }
 
 func (suite *ClassifiersClientSuite) Request() *http.Request {
@@ -43,6 +45,10 @@ func (suite *ClassifiersClientSuite) Request() *http.Request {
 func (suite *ClassifiersClientSuite) AssertRequestIssued(method string, urlPath string) {
 	assert.Equal(suite.T(), method, suite.Request().Method)
 	assert.Equal(suite.T(), urlPath, suite.Request().URL.Path)
+}
+
+func (suite *ClassifiersClientSuite) ClearExpectedCalls() {
+	suite.httpClient.ExpectedCalls = nil
 }
 
 func (suite *ClassifiersClientSuite) Test_CreateClassifier_Issues_Create_Classifier_Request() {
@@ -60,4 +66,25 @@ func (suite *ClassifiersClientSuite) Test_DeleteClassifier_Issues_Delete_Classif
 
 	// Assert
 	suite.AssertRequestIssued("DELETE", "baseurl/classifiers/"+suite.classifierName)
+}
+
+func (suite *ClassifiersClientSuite) Test_GetAll_Issues_Get_All_Classifiers_Request() {
+	// Arrange
+	suite.ClearExpectedCalls()
+	suite.httpClient.On("Do", mock.Anything).Return(
+		AnHttpResponse([]byte("{}")),
+		nil)
+
+	// Act
+	suite.sut.GetAll()
+
+	// Assert
+	suite.AssertRequestIssued("GET", "baseurl/classifiers/")
+}
+
+func AnHttpResponse(body []byte) *http.Response {
+	return &http.Response{
+		StatusCode: 200,
+		Body:       ioutil.NopCloser(bytes.NewReader(body)),
+	}
 }
