@@ -12,7 +12,9 @@ func (client *ClassifiersClient) classifiersUrl() string {
 }
 
 func (client *ClassifiersClient) CreateClassifier(name string) error {
-	request, err := http.NewRequest("POST", client.baseUrl + client.classifiersUrl() + "/" + name, nil)
+	request, err := http.NewRequest("POST",
+		client.baseUrl + client.classifiersUrl() + "/" + name,
+			nil)
 
 	if err != nil {
 		return err

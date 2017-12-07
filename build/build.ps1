@@ -1,7 +1,9 @@
 param(
   [String]$BuildDate = (Get-Date -Format "yyyy.MM.dd"),
   [String]$GitRev = "$(git rev-parse --short HEAD)",
-  [String]$BuildNumber = "$([int]$env:BUILD_NUMBER)"
+  [String]$BuildNumber = "$([int]$env:BUILD_NUMBER)",
+  [String]$ClientId,
+  [String]$ClientSecret
 )
 
 $RootDir = Join-Path $PsScriptRoot ".."
@@ -43,7 +45,11 @@ Task Test Build, {
     exec { go test -v -race ./... }
 
     $env:PATH += "$([Io.Path]::PathSeparator)$env:GOPATH/bin"
-    assert ((Invoke-Pester -PassThru).FailedCount -eq 0)
+    $testResults = Invoke-Pester -PassThru -Script @{
+      Path="test";
+      Parameters = @{ClientId = $ClientId; ClientSecret = $ClientSecret}
+    }
+    assert ($testResults.FailedCount -eq 0)
   } finally {
     popd
   }
