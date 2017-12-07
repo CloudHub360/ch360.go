@@ -51,7 +51,7 @@ Options:
 
 	if err != nil {
 		fmt.Printf("[FAILED]\n")
-		fmt.Fprintf(os.Stderr, err.Error())
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 	fmt.Printf("[OK]\n")
