@@ -82,9 +82,68 @@ func (suite *ClassifiersClientSuite) Test_GetAll_Issues_Get_All_Classifiers_Requ
 	suite.AssertRequestIssued("GET", "baseurl/classifiers/")
 }
 
+func (suite *ClassifiersClientSuite) Test_GetAll_Returns_List_Of_Classifiers() {
+	// Arrange
+	suite.ClearExpectedCalls()
+	suite.httpClient.On("Do", mock.Anything).Return(
+		AnHttpResponse([]byte(exampleGetClassifiersResponse)),
+		nil)
+
+	// Act
+	classifiers, _ := suite.sut.GetAll()
+
+	// Assert
+	assert.Len(suite.T(), classifiers, 2)
+	assert.Equal(suite.T(), Classifier{ Name: "classifier1"}  ,classifiers[0])
+	assert.Equal(suite.T(), Classifier{ Name: "classifier2"}  ,classifiers[1])
+}
+
 func AnHttpResponse(body []byte) *http.Response {
 	return &http.Response{
 		StatusCode: 200,
 		Body:       ioutil.NopCloser(bytes.NewReader(body)),
 	}
 }
+
+var exampleGetClassifiersResponse =`
+{
+	"classifiers": [
+		{
+			"name": "classifier1",
+			"_links": {
+				"self": {
+					"href": "/classifiers/classifier1"
+				},
+				"classifier:add_sample": {
+					"href": "/classifiers/classifier1/sample/{document_type}",
+					"templated": true
+				},
+				"classifier:add_samples_from_zip": {
+					"href": "/classifiers/classifier1/samples"
+				},
+				"classifier:get": {
+					"href": "/classifiers/classifier1"
+				}
+			}
+		},
+		{
+			"name": "classifier2",
+			"_links": {
+				"self": {
+					"href": "/classifiers/classifier2"
+				},
+				"classifier:add_sample": {
+					"href": "/classifiers/classifier2/sample/{document_type}",
+					"templated": true
+				},
+				"classifier:add_samples_from_zip": {
+					"href": "/classifiers/classifier2/samples"
+				},
+				"classifier:get": {
+					"href": "/classifiers/classifier2"
+				}
+			}
+		}
+	]
+}
+`
