@@ -71,7 +71,13 @@ function global:build() {
       [String] $BuildDate = (Get-Date -Format "yyyy.MM.dd"),
 
       [Parameter(Position=3)]
-      [String] $GitRev = "$(git rev-parse --short HEAD)"
+      [String] $GitRev = "$(git rev-parse --short HEAD)",
+
+      [Parameter(Position=4)]
+      [String] $ClientId,
+
+      [Parameter(Position=5)]
+      [String] $ClientSecret
   )
 
   RestoreBuildLevelPackages
@@ -81,7 +87,9 @@ function global:build() {
       -Task $Tasks `
       -BuildDate $BuildDate `
       -GitRev $GitRev `
-      -BuildNumber $BuildNumber
+      -BuildNumber $BuildNumber `
+      -ClientId $ClientId `
+      -ClientSecret $ClientSecret
 }
 
 function global:release() {
