@@ -29,17 +29,16 @@ func (c *ErrorChecker) CheckForErrors(response *http.Response) error {
 	response.Body = ioutil.NopCloser(bufio.NewReader(&buf))
 
 	// Check status code
-	if response.StatusCode < 400 {
+	if response.StatusCode < 300 {
 		return nil
 	}
 
 	errResponse := errorResponse{}
 	err := json.Unmarshal(buf.Bytes(), &errResponse)
 
-	if err != nil || errResponse.Message == "" {
-		return errors.New(fmt.Sprintf("Received error response with HTTP code %d", response.StatusCode))
+	if err == nil && len(errResponse.Message) > 0 {
+		return errors.New(errResponse.Message)
 	}
 
-	return errors.New(errResponse.Message)
-
+	return errors.New(fmt.Sprintf("Received unexpected response with HTTP code %d", response.StatusCode))
 }
