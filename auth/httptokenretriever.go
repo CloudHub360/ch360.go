@@ -53,7 +53,7 @@ func (retriever *HttpTokenRetriever) RetrieveToken() (string, error) {
 	}
 	defer resp.Body.Close()
 
-	err = retriever.responseChecker.Check(resp)
+	err = retriever.responseChecker.CheckForErrors(resp)
 
 	if err != nil {
 		return "", errors.Wrap(err, "An error occurred when requesting an authentication token")

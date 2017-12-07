@@ -20,7 +20,7 @@ func Test_Returns_Error_With_Correct_Message_When_Check_Fails(t *testing.T) {
 				Body:       ioutil.NopCloser(bytes.NewBuffer(errorResponseData.responseBody)),
 			}
 
-			err := sut.Check(&response)
+			err := sut.CheckForErrors(&response)
 
 			assert.Equal(t, errors.New(errorResponseData.expectedErr), err)
 		}()

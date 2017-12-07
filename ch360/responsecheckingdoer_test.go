@@ -33,7 +33,7 @@ func TestResponseCheckingDoerSuiteRunner(t *testing.T) {
 func (suite *ResponseCheckingDoerSuite) Test_ResponseCheckingDoer_Calls_Underlying() {
 	// Arrange
 	suite.underlying.On("Do", mock.Anything).Return(nil, nil)
-	suite.checker.On("Check", mock.Anything).Return(nil)
+	suite.checker.On("CheckForErrors", mock.Anything).Return(nil)
 
 	// Act
 	request := http.Request{}
@@ -48,7 +48,7 @@ func (suite *ResponseCheckingDoerSuite) Test_ResponseCheckingDoer_Returns_Err_Fr
 	// Arrange
 	expectedErr := errors.New("an error")
 	suite.underlying.On("Do", mock.Anything).Return(nil, expectedErr)
-	suite.checker.On("Check", mock.Anything).Return(nil)
+	suite.checker.On("CheckForErrors", mock.Anything).Return(nil)
 
 	// Act
 	_, receivedErr := suite.sut.Do(&http.Request{})
@@ -61,21 +61,21 @@ func (suite *ResponseCheckingDoerSuite) Test_ResponseCheckingDoer_Calls_Checker(
 	// Arrange
 	response := http.Response{}
 	suite.underlying.On("Do", mock.Anything).Return(&response, nil)
-	suite.checker.On("Check", mock.Anything).Return(nil)
+	suite.checker.On("CheckForErrors", mock.Anything).Return(nil)
 
 	// Act
 	suite.sut.Do(&http.Request{})
 
 	// Assert
-	suite.checker.AssertNumberOfCalls(suite.T(), "Check", 1)
-	suite.checker.AssertCalled(suite.T(), "Check", &response)
+	suite.checker.AssertNumberOfCalls(suite.T(), "CheckForErrors", 1)
+	suite.checker.AssertCalled(suite.T(), "CheckForErrors", &response)
 }
 
 func (suite *ResponseCheckingDoerSuite) Test_ResponseCheckingDoer_Returns_Err_From_Checker() {
 	// Arrange
 	expectedErr := errors.New("an error")
 	suite.underlying.On("Do", mock.Anything).Return(nil, nil)
-	suite.checker.On("Check", mock.Anything).Return(expectedErr)
+	suite.checker.On("CheckForErrors", mock.Anything).Return(expectedErr)
 
 	// Act
 	_, receivedErr := suite.sut.Do(&http.Request{})

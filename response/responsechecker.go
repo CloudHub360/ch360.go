@@ -13,10 +13,10 @@ import (
 type ErrorChecker struct{}
 
 type Checker interface {
-	Check(response *http.Response) error
+	CheckForErrors(response *http.Response) error
 }
 
-func (c *ErrorChecker) Check(response *http.Response) error {
+func (c *ErrorChecker) CheckForErrors(response *http.Response) error {
 	type errorResponse struct {
 		Message string `json:"message"`
 	}
