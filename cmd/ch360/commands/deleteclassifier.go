@@ -5,25 +5,29 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 )
 
-type CreateClassifier struct {
-	client *ch360.ClassifiersClient
-}
 
 func NewCreateClassifier(client *ch360.ClassifiersClient) *CreateClassifier {
 	return &CreateClassifier{
 		client: client,
 	}
+type Deleter interface {
+	Delete (name string) error
 }
 
-func (cmd *CreateClassifier) Execute(classifierName string) error {
-	return cmd.client.CreateClassifier(classifierName)
+type Getter interface {
+	GetAll () ([]ch360.Classifier, error)
+}
+
+type DeleteGetter interface {
+	Deleter
+	Getter
 }
 
 type DeleteClassifier struct {
-	client *ch360.ClassifiersClient
+	client DeleteGetter
 }
 
-func NewDeleteClassifier(client *ch360.ClassifiersClient) *DeleteClassifier {
+func NewDeleteClassifier(client DeleteGetter) *DeleteClassifier {
 	return &DeleteClassifier{
 		client: client,
 	}
@@ -39,5 +43,5 @@ func (cmd *DeleteClassifier) Execute(classifierName string) error {
 	if !classifiers.Contains(classifierName) {
 		return errors.New("There is no classifier named '" + classifierName + "'")
 	}
-	return cmd.client.DeleteClassifier(classifierName)
+	return cmd.client.Delete(classifierName)
 }

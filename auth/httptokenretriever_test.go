@@ -3,7 +3,6 @@ package auth
 import (
 	"bytes"
 	"errors"
-	"github.com/CloudHub360/ch360.go/mocks"
 	"github.com/CloudHub360/ch360.go/response"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -12,6 +11,8 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	mockauth "github.com/CloudHub360/ch360.go/auth/mocks"
+	mockresponse "github.com/CloudHub360/ch360.go/response/mocks"
 )
 
 var fakeClientId = "fake-client-id"
@@ -27,16 +28,16 @@ func AnHttpResponse(body []byte) *http.Response {
 type HttpTokenRetrieverSuite struct {
 	suite.Suite
 	sut                 *HttpTokenRetriever
-	mockHttpClient      *mocks.FormPoster
-	mockResponseChecker *mocks.Checker
+	mockHttpClient      *mockauth.FormPoster
+	mockResponseChecker *mockresponse.Checker
 	validTokenValue     string
 	validTokenBody      string
 	validTokenResponse  *http.Response
 }
 
 func (suite *HttpTokenRetrieverSuite) SetupTest() {
-	suite.mockHttpClient = new(mocks.FormPoster)
-	suite.mockResponseChecker = new(mocks.Checker)
+	suite.mockHttpClient = new(mockauth.FormPoster)
+	suite.mockResponseChecker = new(mockresponse.Checker)
 	suite.sut = NewHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
 	suite.validTokenValue = `tokenvalue`
 	suite.validTokenBody = `{"access_token": "` + suite.validTokenValue + `"}`

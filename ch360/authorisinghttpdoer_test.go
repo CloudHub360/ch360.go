@@ -2,24 +2,25 @@ package ch360
 
 import (
 	"errors"
-	"github.com/CloudHub360/ch360.go/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"net/http"
 	"testing"
+	mockch360 "github.com/CloudHub360/ch360.go/ch360/mocks"
+	mockauth "github.com/CloudHub360/ch360.go/auth/mocks"
 )
 
 type AuthorisingHttpDoerSuite struct {
 	suite.Suite
 	sut        *authorisingDoer
-	underlying *mocks.HttpDoer
-	retriever  *mocks.TokenRetriever
+	underlying *mockch360.HttpDoer
+	retriever  *mockauth.TokenRetriever
 }
 
 func (suite *AuthorisingHttpDoerSuite) SetupTest() {
-	suite.underlying = &mocks.HttpDoer{}
-	suite.retriever = &mocks.TokenRetriever{}
+	suite.underlying = &mockch360.HttpDoer{}
+	suite.retriever = &mockauth.TokenRetriever{}
 	suite.sut = &authorisingDoer{
 		tokenRetriever: suite.retriever,
 		wrappedSender:  suite.underlying,

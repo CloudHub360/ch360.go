@@ -12,6 +12,8 @@ import (
 
 type ErrorChecker struct{}
 
+//go:generate mockery -name Checker
+
 type Checker interface {
 	CheckForErrors(response *http.Response) error
 }
