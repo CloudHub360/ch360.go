@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 )
 
 func main() {
