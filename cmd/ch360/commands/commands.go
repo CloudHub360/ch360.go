@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/CloudHub360/ch360.go/ch360"
 	"errors"
+	"github.com/CloudHub360/ch360.go/ch360"
 )
 
 type CreateClassifier struct {
@@ -11,7 +11,7 @@ type CreateClassifier struct {
 
 func NewCreateClassifier(client *ch360.ClassifiersClient) *CreateClassifier {
 	return &CreateClassifier{
-		client:client,
+		client: client,
 	}
 }
 
@@ -25,7 +25,7 @@ type DeleteClassifier struct {
 
 func NewDeleteClassifier(client *ch360.ClassifiersClient) *DeleteClassifier {
 	return &DeleteClassifier{
-		client:client,
+		client: client,
 	}
 }
 

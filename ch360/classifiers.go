@@ -1,9 +1,9 @@
 package ch360
 
 import (
-	"net/http"
 	"bytes"
 	"encoding/json"
+	"net/http"
 )
 
 type ClassifiersClient struct {
