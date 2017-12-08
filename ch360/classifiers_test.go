@@ -18,13 +18,15 @@ type ClassifiersClientSuite struct {
 	classifierName string
 }
 
+const apiUrl = "baseUrl"
+
 func (suite *ClassifiersClientSuite) SetupTest() {
 	suite.httpClient = new(mocks.HttpDoer)
 	suite.httpClient.On("Do", mock.Anything).Return(nil, nil)
 
 	suite.sut = &ClassifiersClient{
 		requestSender: suite.httpClient,
-		baseUrl:       "baseurl",
+		baseUrl:       apiUrl,
 	}
 	suite.classifierName = "classifier-name"
 }
@@ -56,7 +58,7 @@ func (suite *ClassifiersClientSuite) Test_CreateClassifier_Issues_Create_Classif
 	suite.sut.CreateClassifier(suite.classifierName)
 
 	// Assert
-	suite.AssertRequestIssued("POST", "baseurl/classifiers/"+suite.classifierName)
+	suite.AssertRequestIssued("POST", apiUrl+"/classifiers/"+suite.classifierName)
 
 }
 
@@ -65,7 +67,7 @@ func (suite *ClassifiersClientSuite) Test_DeleteClassifier_Issues_Delete_Classif
 	suite.sut.DeleteClassifier(suite.classifierName)
 
 	// Assert
-	suite.AssertRequestIssued("DELETE", "baseurl/classifiers/"+suite.classifierName)
+	suite.AssertRequestIssued("DELETE", apiUrl+"/classifiers/"+suite.classifierName)
 }
 
 func (suite *ClassifiersClientSuite) Test_GetAll_Issues_Get_All_Classifiers_Request() {
@@ -79,7 +81,7 @@ func (suite *ClassifiersClientSuite) Test_GetAll_Issues_Get_All_Classifiers_Requ
 	suite.sut.GetAll()
 
 	// Assert
-	suite.AssertRequestIssued("GET", "baseurl/classifiers/")
+	suite.AssertRequestIssued("GET", apiUrl+"/classifiers/")
 }
 
 func (suite *ClassifiersClientSuite) Test_GetAll_Returns_List_Of_Classifiers() {
