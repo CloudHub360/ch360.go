@@ -15,6 +15,8 @@ type Classifier struct {
 	Name string
 }
 
+type ClassifierList []Classifier
+
 func (client *ClassifiersClient) issueRequest(method string, classifierName string) (*http.Response, error) {
 	request, err := http.NewRequest(method,
 		client.baseUrl+"/classifiers/"+classifierName,
@@ -39,7 +41,7 @@ func (client *ClassifiersClient) DeleteClassifier(name string) error {
 	return err
 }
 
-func (client *ClassifiersClient) GetAll() ([]Classifier, error) {
+func (client *ClassifiersClient) GetAll() (ClassifierList, error) {
 
 	response, err := client.issueRequest("GET", "")
 
@@ -64,4 +66,13 @@ func (client *ClassifiersClient) GetAll() ([]Classifier, error) {
 	}
 
 	return classifiersResponse.Classifiers, nil
+}
+
+func (classifiers ClassifierList) Contains(item string) bool {
+	for _, b := range classifiers {
+		if b.Name == item {
+			return true
+		}
+	}
+	return false
 }

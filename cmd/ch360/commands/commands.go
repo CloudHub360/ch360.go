@@ -36,17 +36,8 @@ func (cmd *DeleteClassifier) Execute(classifierName string) error {
 		return err
 	}
 
-	if !classifierInList(classifierName, classifiers) {
+	if !classifiers.Contains(classifierName) {
 		return errors.New("There is no classifier named '" + classifierName + "'")
 	}
 	return cmd.client.DeleteClassifier(classifierName)
-}
-
-func classifierInList(classifierName string, list []ch360.Classifier) bool {
-	for _, b := range list {
-		if b.Name == classifierName {
-			return true
-		}
-	}
-	return false
 }
