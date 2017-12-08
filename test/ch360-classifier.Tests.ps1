@@ -12,6 +12,11 @@ Describe "ch360 delete classifier" {
         $LASTEXITCODE | Should -Be 0
     }
 
+    It "should output failure when the classifier does not exist" {
+        ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret" | Should -Be "Deleting classifier '$classifierName'... [FAILED]"
+        $LASTEXITCODE | Should -Be 1
+    }
+
     It "should output failure when client id or secret are invalid" {
         ch360 delete classifier $classifierName --id="invalid-id" --secret="$ClientSecret" | Should -Be "Deleting classifier '$classifierName'... [FAILED]"
         $LASTEXITCODE | Should -Be 1
