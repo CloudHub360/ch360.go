@@ -1,14 +1,14 @@
 package ch360
 
 import (
+	"bytes"
 	"github.com/CloudHub360/ch360.go/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"net/http"
-	"testing"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
-	"bytes"
+	"net/http"
+	"testing"
 )
 
 type ClassifiersClientSuite struct {
@@ -100,7 +100,7 @@ func AListOfClassifiers(names ...string) ClassifierList {
 	expected := make(ClassifierList, len(names))
 
 	for index, name := range names {
-		expected[index] = Classifier{name }
+		expected[index] = Classifier{name}
 	}
 
 	return expected
@@ -113,7 +113,7 @@ func AnHttpResponse(body []byte) *http.Response {
 	}
 }
 
-var exampleGetClassifiersResponse =`
+var exampleGetClassifiersResponse = `
 {
 	"classifiers": [
 		{
