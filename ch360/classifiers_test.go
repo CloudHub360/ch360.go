@@ -55,7 +55,7 @@ func (suite *ClassifiersClientSuite) ClearExpectedCalls() {
 
 func (suite *ClassifiersClientSuite) Test_CreateClassifier_Issues_Create_Classifier_Request() {
 	// Act
-	suite.sut.CreateClassifier(suite.classifierName)
+	suite.sut.Create(suite.classifierName)
 
 	// Assert
 	suite.AssertRequestIssued("POST", apiUrl+"/classifiers/"+suite.classifierName)
@@ -64,7 +64,7 @@ func (suite *ClassifiersClientSuite) Test_CreateClassifier_Issues_Create_Classif
 
 func (suite *ClassifiersClientSuite) Test_DeleteClassifier_Issues_Delete_Classifier_Request() {
 	// Act
-	suite.sut.DeleteClassifier(suite.classifierName)
+	suite.sut.Delete(suite.classifierName)
 
 	// Assert
 	suite.AssertRequestIssued("DELETE", apiUrl+"/classifiers/"+suite.classifierName)
