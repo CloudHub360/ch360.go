@@ -35,7 +35,7 @@ func TestClassifiersClientSuiteRunner(t *testing.T) {
 	suite.Run(t, new(ClassifiersClientSuite))
 }
 
-func (suite *ClassifiersClientSuite) Request() *http.Request {
+func (suite *ClassifiersClientSuite) request() *http.Request {
 	assert.Len(suite.T(), suite.httpClient.Calls, 1)
 
 	call := suite.httpClient.Calls[0]
@@ -45,8 +45,8 @@ func (suite *ClassifiersClientSuite) Request() *http.Request {
 }
 
 func (suite *ClassifiersClientSuite) AssertRequestIssued(method string, urlPath string) {
-	assert.Equal(suite.T(), method, suite.Request().Method)
-	assert.Equal(suite.T(), urlPath, suite.Request().URL.Path)
+	assert.Equal(suite.T(), method, suite.request().Method)
+	assert.Equal(suite.T(), urlPath, suite.request().URL.Path)
 }
 
 func (suite *ClassifiersClientSuite) ClearExpectedCalls() {
