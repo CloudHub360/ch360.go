@@ -93,9 +93,17 @@ func (suite *ClassifiersClientSuite) Test_GetAll_Returns_List_Of_Classifiers() {
 	classifiers, _ := suite.sut.GetAll()
 
 	// Assert
-	assert.Len(suite.T(), classifiers, 2)
-	assert.Equal(suite.T(), Classifier{ Name: "classifier1"}  ,classifiers[0])
-	assert.Equal(suite.T(), Classifier{ Name: "classifier2"}  ,classifiers[1])
+	assert.Equal(suite.T(), AListOfClassifiers("classifier1", "classifier2"), classifiers)
+}
+
+func AListOfClassifiers(names ...string) ClassifierList {
+	expected := make(ClassifierList, len(names))
+
+	for index, name := range names {
+		expected[index] = Classifier{name }
+	}
+
+	return expected
 }
 
 func AnHttpResponse(body []byte) *http.Response {
