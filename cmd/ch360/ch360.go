@@ -44,11 +44,10 @@ Options:
 	if args["create"].(bool) {
 
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
-		err = apiClient.Classifiers.CreateClassifier(classifierName)
+		err = commands.NewCreateClassifier(apiClient.Classifiers).Execute(classifierName)
 	} else {
 		fmt.Printf("Deleting classifier '%s'... ", classifierName)
-		cmd := commands.NewDeleteClassifier(apiClient.Classifiers)
-		err = cmd.Execute(classifierName)
+		err = commands.NewDeleteClassifier(apiClient.Classifiers).Execute(classifierName)
 	}
 
 	if err != nil {

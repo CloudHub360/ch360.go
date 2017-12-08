@@ -5,6 +5,7 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 )
 
+//go:generate mockery -name "Deleter|Getter|DeleteGetter"
 
 func NewCreateClassifier(client *ch360.ClassifiersClient) *CreateClassifier {
 	return &CreateClassifier{

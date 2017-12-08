@@ -29,13 +29,13 @@ func (client *ClassifiersClient) issueRequest(method string, classifierName stri
 	return client.requestSender.Do(request)
 }
 
-func (client *ClassifiersClient) CreateClassifier(name string) error {
+func (client *ClassifiersClient) Create(name string) error {
 	_, err := client.issueRequest("POST", name)
 
 	return err
 }
 
-func (client *ClassifiersClient) DeleteClassifier(name string) error {
+func (client *ClassifiersClient) Delete(name string) error {
 	_, err := client.issueRequest("DELETE", name)
 
 	return err
