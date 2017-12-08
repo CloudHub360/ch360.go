@@ -9,6 +9,8 @@ import (
 	"net/url"
 )
 
+//go:generate mockery -name "TokenRetriever|FormPoster"
+
 type TokenRetriever interface {
 	RetrieveToken() (string, error)
 }

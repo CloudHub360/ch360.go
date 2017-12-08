@@ -21,7 +21,7 @@ Task GenerateMocks {
   try {
     pushd $RootDir
     exec { go get github.com/vektra/mockery/.../ }
-    exec { mockery -all }
+    exec { go generate ./... }
   } finally {
     popd
   }
