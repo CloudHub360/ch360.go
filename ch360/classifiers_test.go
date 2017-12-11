@@ -2,7 +2,7 @@ package ch360
 
 import (
 	"bytes"
-	"github.com/CloudHub360/ch360.go/mocks"
+	"github.com/CloudHub360/ch360.go/ch360/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
