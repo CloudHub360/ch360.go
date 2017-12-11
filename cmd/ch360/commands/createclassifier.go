@@ -1,14 +1,18 @@
 package commands
 
-import "github.com/CloudHub360/ch360.go/ch360"
+//go:generate mockery -name "Creator"
 
-type CreateClassifier struct {
-	client *ch360.ClassifiersClient
+type Creator interface {
+	Create(name string) error
 }
 
-func NewCreateClassifier(client *ch360.ClassifiersClient) *CreateClassifier {
+type CreateClassifier struct {
+	client Creator
+}
+
+func NewCreateClassifier(client Creator) *CreateClassifier {
 	return &CreateClassifier{
-		client:client,
+		client: client,
 	}
 }
 
