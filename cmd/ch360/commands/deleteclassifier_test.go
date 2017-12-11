@@ -6,63 +6,66 @@ import (
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
-func TestDeleteClassifier_Execute_Deletes_The_Named_Classifier_When_It_Exists(t *testing.T) {
-	classifiersClient := new(mocks.DeleterGetter)
-	classifiersClient.On("GetAll", mock.Anything).Return(
-		AListOfClassifiers("charlie", "jo", "chris"), nil)
-
-	classifiersClient.On("Delete", mock.Anything).Return(nil)
-
-	sut := NewDeleteClassifier(classifiersClient)
-
-	sut.Execute("charlie")
-
-	classifiersClient.AssertCalled(t, "GetAll")
-	classifiersClient.AssertCalled(t, "Delete", "charlie")
+type DeleteClassifierSuite struct {
+	suite.Suite
+	sut    *DeleteClassifier
+	client *mocks.DeleterGetter
 }
 
-func TestDeleteClassifier_Execute_Does_Not_Delete_The_Named_Classifier_When_It_Does_Not_Exist(t *testing.T) {
-	classifiersClient := new(mocks.DeleterGetter)
-	classifiersClient.On("GetAll", mock.Anything).Return(
+func (suite *DeleteClassifierSuite) SetupTest() {
+	suite.client = new(mocks.DeleterGetter)
+	suite.client.On("GetAll", mock.Anything).Return(
 		AListOfClassifiers("charlie", "jo", "chris"), nil)
 
-	sut := NewDeleteClassifier(classifiersClient)
+	suite.client.On("Delete", mock.Anything).Return(nil)
 
-	sut.Execute("sydney")
-
-	classifiersClient.AssertCalled(t, "GetAll")
-	classifiersClient.AssertNotCalled(t, "Delete")
+	suite.sut = NewDeleteClassifier(suite.client)
 }
 
-func TestDeleteClassifier_Execute_Returns_An_Error_If_The_Classifiers_Cannot_Be_Retrieved(t *testing.T) {
-	classifiersClient := new(mocks.DeleterGetter)
+func TestDeleteClassifierSuiteRunner(t *testing.T) {
+	suite.Run(t, new(DeleteClassifierSuite))
+}
+
+func (suite *DeleteClassifierSuite) TestDeleteClassifier_Execute_Deletes_The_Named_Classifier_When_It_Exists() {
+	suite.sut.Execute("charlie")
+
+	suite.client.AssertCalled(suite.T(), "GetAll")
+	suite.client.AssertCalled(suite.T(), "Delete", "charlie")
+}
+
+func (suite *DeleteClassifierSuite) TestDeleteClassifier_Execute_Does_Not_Delete_The_Named_Classifier_When_It_Does_Not_Exist() {
+	suite.sut.Execute("sydney")
+
+	suite.client.AssertCalled(suite.T(), "GetAll")
+	suite.client.AssertNotCalled(suite.T(), "Delete")
+}
+
+func (suite *DeleteClassifierSuite) TestDeleteClassifier_Execute_Returns_An_Error_If_The_Classifiers_Cannot_Be_Retrieved() {
+	suite.client.ExpectedCalls = nil
 	expected := errors.New("Failed")
-	classifiersClient.On("GetAll", mock.Anything).Return(
-		nil, expected)
+	suite.client.On("GetAll", mock.Anything).Return(nil, expected)
 
-	sut := NewDeleteClassifier(classifiersClient)
+	actual := suite.sut.Execute("sydney")
 
-	actual := sut.Execute("sydney")
-
-	assert.Equal(t, expected, actual)
-	classifiersClient.AssertNotCalled(t, "Delete")
+	assert.Equal(suite.T(), expected, actual)
+	suite.client.AssertNotCalled(suite.T(), "Delete")
 }
 
-func TestDeleteClassifier_Execute_Returns_An_Error_If_The_Classifier_Cannot_Be_Deleted(t *testing.T) {
-	classifiersClient := new(mocks.DeleterGetter)
-	classifiersClient.On("GetAll", mock.Anything).Return(
+func (suite *DeleteClassifierSuite) TestDeleteClassifier_Execute_Returns_An_Error_If_The_Classifier_Cannot_Be_Deleted() {
+	suite.client.ExpectedCalls = nil
+	suite.client.On("GetAll", mock.Anything).Return(
 		AListOfClassifiers("charlie", "jo", "chris"), nil)
+
 	expected := errors.New("Failed")
-	classifiersClient.On("Delete", mock.Anything).Return(expected)
+	suite.client.On("Delete", mock.Anything).Return(expected)
 
-	sut := NewDeleteClassifier(classifiersClient)
+	actual := suite.sut.Execute("charlie")
 
-	actual := sut.Execute("charlie")
-
-	assert.Equal(t, expected, actual)
+	assert.Equal(suite.T(), expected, actual)
 }
 
 func AListOfClassifiers(names ...string) interface{} {
