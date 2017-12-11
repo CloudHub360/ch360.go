@@ -5,7 +5,7 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 )
 
-//go:generate mockery -name "Deleter|Getter|DeleteGetter"
+//go:generate mockery -name "Deleter|Getter|DeleterGetter"
 
 type Deleter interface {
 	Delete(name string) error
@@ -15,16 +15,16 @@ type Getter interface {
 	GetAll() (ch360.ClassifierList, error)
 }
 
-type DeleteGetter interface {
+type DeleterGetter interface {
 	Deleter
 	Getter
 }
 
 type DeleteClassifier struct {
-	client DeleteGetter
+	client DeleterGetter
 }
 
-func NewDeleteClassifier(client DeleteGetter) *DeleteClassifier {
+func NewDeleteClassifier(client DeleterGetter) *DeleteClassifier {
 	return &DeleteClassifier{
 		client: client,
 	}
