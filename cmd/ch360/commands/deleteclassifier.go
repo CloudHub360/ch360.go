@@ -7,16 +7,12 @@ import (
 
 //go:generate mockery -name "Deleter|Getter|DeleteGetter"
 
-func NewCreateClassifier(client *ch360.ClassifiersClient) *CreateClassifier {
-	return &CreateClassifier{
-		client: client,
-	}
 type Deleter interface {
-	Delete (name string) error
+	Delete(name string) error
 }
 
 type Getter interface {
-	GetAll () ([]ch360.Classifier, error)
+	GetAll() (ch360.ClassifierList, error)
 }
 
 type DeleteGetter interface {
