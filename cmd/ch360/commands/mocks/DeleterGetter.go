@@ -25,15 +25,15 @@ func (_m *DeleterGetter) Delete(name string) error {
 }
 
 // GetAll provides a mock function with given fields:
-func (_m *DeleterGetter) GetAll() ([]ch360.Classifier, error) {
+func (_m *DeleterGetter) GetAll() (ch360.ClassifierList, error) {
 	ret := _m.Called()
 
-	var r0 []ch360.Classifier
-	if rf, ok := ret.Get(0).(func() []ch360.Classifier); ok {
+	var r0 ch360.ClassifierList
+	if rf, ok := ret.Get(0).(func() ch360.ClassifierList); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]ch360.Classifier)
+			r0 = ret.Get(0).(ch360.ClassifierList)
 		}
 	}
 
