@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"os"
 )
 
 type ClassifiersClient struct {
@@ -13,6 +14,10 @@ type ClassifiersClient struct {
 
 type Classifier struct {
 	Name string
+}
+
+type Request interface {
+	Issue(client *ClassifiersClient) error
 }
 
 type ClassifierList []Classifier
@@ -41,8 +46,41 @@ func (client *ClassifiersClient) Delete(name string) error {
 	return err
 }
 
-func (client *ClassifiersClient) Train(name string, samplesPath string) error {
+type TrainClassifierRequest struct {
+	ClassifierName string
+	SamplesFile    string
+}
+
+func (_req *TrainClassifierRequest) Issue(client *ClassifiersClient) error {
+	zip, err := os.Open(_req.SamplesFile)
+	if err != nil {
+		return err
+	}
+
+	request, err := http.NewRequest("POST",
+		client.baseUrl+"/classifiers/"+_req.ClassifierName+"/samples",
+		zip)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = client.requestSender.Do(request)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func (client *ClassifiersClient) Train(name string, samplesPath string) error {
+	request := &TrainClassifierRequest{
+		ClassifierName: name,
+		SamplesFile:    samplesPath,
+	}
+
+	return request.Issue(client)
 }
 
 func (client *ClassifiersClient) GetAll() (ClassifierList, error) {

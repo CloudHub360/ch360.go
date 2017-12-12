@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"go/build"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -96,6 +97,17 @@ func (suite *ClassifiersClientSuite) Test_GetAll_Returns_List_Of_Classifiers() {
 
 	// Assert
 	assert.Equal(suite.T(), AListOfClassifiers("classifier1", "classifier2"), classifiers)
+}
+
+func (suite *ClassifiersClientSuite) Test_Train_Issues_Add_Samples_Request() {
+	// Act
+	err := suite.sut.Train(
+		suite.classifierName,
+		build.Default.GOPATH+"/src/github.com/CloudHub360/ch360.go/test/samples.zip")
+
+	// Assert
+	assert.Nil(suite.T(), err)
+	suite.AssertRequestIssued("POST", apiUrl+"/classifiers/"+suite.classifierName+"/samples")
 }
 
 func AListOfClassifiers(names ...string) ClassifierList {
