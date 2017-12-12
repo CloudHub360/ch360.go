@@ -41,6 +41,10 @@ func (client *ClassifiersClient) Delete(name string) error {
 	return err
 }
 
+func (client *ClassifiersClient) Train(name string, samplesPath string) error {
+	return nil
+}
+
 func (client *ClassifiersClient) GetAll() (ClassifierList, error) {
 
 	response, err := client.issueRequest("GET", "")
