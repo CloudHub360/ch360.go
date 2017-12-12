@@ -43,9 +43,9 @@ Options:
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
 	if args["create"].(bool) {
 		classifierName := args["<name>"].(string)
-
+		samplesPath := args["--samples-zip"].(string)
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
-		err = commands.NewCreateClassifier(apiClient.Classifiers).Execute(classifierName)
+		err = commands.NewCreateClassifier(apiClient.Classifiers).Execute(classifierName, samplesPath)
 		if err != nil {
 			fmt.Printf("[FAILED]\n")
 			fmt.Fprintln(os.Stderr, err.Error())
