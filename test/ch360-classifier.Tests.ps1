@@ -5,89 +5,47 @@ param(
 
 $classifierName = "test-classifier"
 
-Describe "ch360 delete classifier" {
-    It "should output success" {
-        # Run delete classifier first to ensure it's not already present
-        ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret"
-        
-        ch360 create classifier $classifierName --id="$ClientId" --secret="$ClientSecret" | Should -Be "Creating classifier '$classifierName'... [OK]"
-        ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret" | Should -Be "Deleting classifier '$classifierName'... [OK]"
-        $LASTEXITCODE | Should -Be 0
+Describe "classifiers" {
+    function New-Classifier([string]$classifierName, [Io.FileInfo]$samples) {
+        ch360 create classifier $classifierName `
+            --id="$ClientId" `
+            --secret="$ClientSecret" `
+            --samples-zip=$samples
     }
 
-    It "should output failure when the classifier does not exist" {
-        ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret" | Should -Be "Deleting classifier '$classifierName'... [FAILED]"
-        $LASTEXITCODE | Should -Be 1
-    }
-
-    It "should output failure when client id or secret are invalid" {
-        ch360 delete classifier $classifierName --id="invalid-id" --secret="$ClientSecret" | Should -Be "Deleting classifier '$classifierName'... [FAILED]"
-        $LASTEXITCODE | Should -Be 1
-    }
-}
-
-Describe "ch360 create classifier" {
-    It "should output success when creating a new classifier" {
-        # Run delete classifier first to ensure it's not already present
-        ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret"
-        ch360 create classifier $classifierName --id="$ClientId" --secret="$ClientSecret" | Should -Be "Creating classifier '$classifierName'... [OK]"
-        $LASTEXITCODE | Should -Be 0
-    }
-
-    It "should output failure when attempting to create a classifier that already exists" {
-        # Run delete classifier first to ensure it's not already present
-        ch360 create classifier $classifierName --id="$ClientId" --secret="$ClientSecret"
-        ch360 create classifier $classifierName --id="$ClientId" --secret="$ClientSecret" | Should -Be "Creating classifier '$classifierName'... [FAILED]"
-        $LASTEXITCODE | Should -Be 1
-    }
-
-    It "should output failure when client id or secret are invalid" {
-        ch360 create classifier $classifierName --id="invalid-id" --secret="$ClientSecret" | Should -Be "Creating classifier '$classifierName'... [FAILED]"
-        $LASTEXITCODE | Should -Be 1
-    }
-
-    It "should train the classifier with the provided ZIP file" {
-        # Run delete classifier first to ensure it's not already present
-        ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret"
+    It "should be created from a zip file of samples" {
         $samples = (Join-Path $pwd "samples.zip")
-
-        ch360 create classifier $classifierName --id="$ClientId" --secret="$ClientSecret" --samples-zip=$samples `
-            | Should -Be `
-@"
+        New-Classifier $classifierName $samples | Should -Be @"
 Creating classifier '$classifierName'... [OK]
 Adding samples from file '$samples'... [OK]
 "@
 
         $LASTEXITCODE | Should -Be 0
+
+        # Teardown
+        ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret"
     }
 
-    It "should output failure when the sample ZIP file does not exist at the specified path" {
-        $samples = (Join-Path $pwd "non-existent.zip")
-        ch360 create classifier $classifierName --id="$ClientId" --secret="$ClientSecret" --samples-zip=$samples `
-            | Should -Be `
-@"
-Creating classifier '$classifierName'... [FAILED]
+    It "should not be created from an invalid zip file of samples" {
+        $samples = (Join-Path $pwd "invalid.zip")
+        New-Classifier $classifierName $samples | Should -BeLike @"
+Creating classifier '$classifierName'... [OK]
+Adding samples from file '$samples'... [FAILED]
+*
+"@
+
+        $LASTEXITCODE | Should -Be 1
+    }
+
+    It "should not be created from a non-existent zip file of samples" {
+        $samples = (Join-Path $pwd "non-existent.zip" -Resolve)
+        New-Classifier $classifierName $samples | Should -Be @"
+Creating classifier '$classifierName'... [OK]
+Adding samples from file '$samples'... [FAILED]
 The file '$samples' could not be found.
 "@
 
         $LASTEXITCODE | Should -Be 1
-    }
-
-    It "should output failure when the sample ZIP file does not match the required format " {
-        $samples = (Join-Path $pwd "invalid.zip")
-        ch360 create classifier $classifierName --id="$ClientId" --secret="$ClientSecret" --samples-zip=$samples `
-            | Should -Be `
-@"
-Creating classifier '$classifierName'... [OK]
-Adding samples from file '$samples'... [FAILED]
-The samples file is invalid.
-"@
-
-        $LASTEXITCODE | Should -Be 1
-    }
-
-    AfterAll {
-        ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret"
     }
 }
 

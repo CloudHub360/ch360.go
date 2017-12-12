@@ -14,7 +14,7 @@ func main() {
 	usage := `CloudHub360 command-line tool.
 
 Usage:
-  ch360 create classifier <name> --id=<id> --secret=<secret>  [--samples-zip=<path>]
+  ch360 create classifier <name> --id=<id> --secret=<secret> --samples-zip=<path>
   ch360 delete classifier <name> --id=<id> --secret=<secret>
   ch360 list classifiers --id=<id> --secret=<secret>
   ch360 -h | --help
