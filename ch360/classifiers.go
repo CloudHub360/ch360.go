@@ -61,6 +61,8 @@ func (_req *TrainClassifierRequest) Issue(client *ClassifiersClient) error {
 		client.baseUrl+"/classifiers/"+_req.ClassifierName+"/samples",
 		zip)
 
+	request.Header.Set("Content-Type", "application/zip")
+
 	if err != nil {
 		return err
 	}
