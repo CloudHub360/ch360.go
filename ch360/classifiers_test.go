@@ -9,6 +9,7 @@ import (
 	"go/build"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 )
 
@@ -108,6 +109,16 @@ func (suite *ClassifiersClientSuite) Test_Train_Issues_Add_Samples_Request() {
 	// Assert
 	assert.Nil(suite.T(), err)
 	suite.AssertRequestIssued("POST", apiUrl+"/classifiers/"+suite.classifierName+"/samples")
+}
+
+func (suite *ClassifiersClientSuite) Test_Train_Returns_An_Error_If_The_Sample_Path_Is_Invalid() {
+	// Act
+	err := suite.sut.Train(
+		suite.classifierName,
+		build.Default.GOPATH+"/src/github.com/CloudHub360/ch360.go/test/non-existent.zip")
+
+	// Assert
+	assert.IsType(suite.T(), &os.PathError{}, err)
 }
 
 func AListOfClassifiers(names ...string) ClassifierList {
