@@ -16,6 +16,7 @@ func main() {
 Usage:
   ch360 create classifier <name> --id=<id> --secret=<secret>
   ch360 delete classifier <name> --id=<id> --secret=<secret>
+  ch360 list classifier --id=<id> --secret=<secret>
   ch360 -h | --help
   ch360 --version
 
@@ -34,7 +35,6 @@ Options:
 
 	id := args["--id"].(string)
 	secret := args["--secret"].(string)
-	classifierName := args["<name>"].(string)
 
 	var httpClient = &http.Client{
 		Timeout: time.Minute * 5,
@@ -42,18 +42,46 @@ Options:
 
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
 	if args["create"].(bool) {
+		classifierName := args["<name>"].(string)
 
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
 		err = commands.NewCreateClassifier(apiClient.Classifiers).Execute(classifierName)
-	} else {
+
+		if err != nil {
+			fmt.Printf("[FAILED]\n")
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+		fmt.Printf("[OK]\n")
+	} else if args["delete"].(bool) {
+		classifierName := args["<name>"].(string)
+
 		fmt.Printf("Deleting classifier '%s'... ", classifierName)
 		err = commands.NewDeleteClassifier(apiClient.Classifiers).Execute(classifierName)
-	}
 
-	if err != nil {
-		fmt.Printf("[FAILED]\n")
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		if err != nil {
+			fmt.Printf("[FAILED]\n")
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+		fmt.Printf("[OK]\n")
+
+	} else if args["list"].(bool) {
+		var classifiers ch360.ClassifierList
+		classifiers, err = commands.NewListClassifiers(apiClient.Classifiers).Execute()
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+
+		if classifiers != nil {
+			if len(classifiers) == 0 {
+				fmt.Printf("No classifiers found.")
+			}
+			for _, classifier := range classifiers {
+				fmt.Printf("%s\r\n", classifier.Name)
+			}
+		}
 	}
-	fmt.Printf("[OK]\n")
 }
