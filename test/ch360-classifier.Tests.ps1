@@ -47,3 +47,34 @@ Describe "ch360 create classifier" {
         ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret"
     }
 }
+
+Describe "ch360 list classifier" {
+    It "should list the names of all existing classifiers" {
+        # Run delete classifier first to ensure the test classifiers are not already present        
+        ch360 delete classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
+        ch360 delete classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
+        
+        ch360 create classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
+        ch360 create classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
+
+        ch360 list classifier --id="$ClientId" --secret="$ClientSecret" | Should -Be  @(
+            "test-classifier1",
+            "test-classifier2"
+            )            
+        $LASTEXITCODE | Should -Be 0
+    }
+
+    It "should output 'No classifiers found.' when there are no classifiers" {
+        # Run delete classifier first to ensure the test classifiers are not already present        
+        ch360 delete classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
+        ch360 delete classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
+        
+        ch360 list classifier --id="$ClientId" --secret="$ClientSecret" | Should -Be "No classifiers found."
+        $LASTEXITCODE | Should -Be 0
+    }
+    
+    AfterAll {
+        ch360 delete classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
+        ch360 delete classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
+    }
+}
