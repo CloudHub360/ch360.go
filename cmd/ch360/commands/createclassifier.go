@@ -1,5 +1,7 @@
 package commands
 
+import "fmt"
+
 //go:generate mockery -name "Creator|Trainer|CreatorTrainer"
 
 type Creator interface {
@@ -28,8 +30,10 @@ func NewCreateClassifier(client CreatorTrainer) *CreateClassifier {
 func (cmd *CreateClassifier) Execute(classifierName string, samplesPath string) error {
 	err := cmd.client.Create(classifierName)
 	if err != nil {
+		fmt.Println("[FAILED]")
 		return err
 	}
 
+	fmt.Println("[OK]")
 	return cmd.client.Train(classifierName, samplesPath)
 }
