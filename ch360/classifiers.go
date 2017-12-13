@@ -3,6 +3,7 @@ package ch360
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 )
@@ -52,8 +53,11 @@ type TrainClassifierRequest struct {
 }
 
 func (_req *TrainClassifierRequest) Issue(client *ClassifiersClient) error {
+	fmt.Printf("Adding samples from file '%s'... ", _req.SamplesFile)
+
 	zip, err := os.Open(_req.SamplesFile)
 	if err != nil {
+		fmt.Println("[FAILED]")
 		return err
 	}
 
@@ -64,12 +68,14 @@ func (_req *TrainClassifierRequest) Issue(client *ClassifiersClient) error {
 	request.Header.Set("Content-Type", "application/zip")
 
 	if err != nil {
+		fmt.Println("[FAILED]")
 		return err
 	}
 
 	_, err = client.requestSender.Do(request)
 
 	if err != nil {
+		fmt.Println("[FAILED]")
 		return err
 	}
 
