@@ -16,7 +16,7 @@ func main() {
 Usage:
   ch360 create classifier <name> --id=<id> --secret=<secret>
   ch360 delete classifier <name> --id=<id> --secret=<secret>
-  ch360 list classifier --id=<id> --secret=<secret>
+  ch360 list (classifier|classifiers) --id=<id> --secret=<secret>
   ch360 -h | --help
   ch360 --version
 
