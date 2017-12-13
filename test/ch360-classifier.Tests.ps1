@@ -20,7 +20,7 @@ Describe "classifiers" {
     }
 
     It "should be created from a zip file of samples" {
-        $samples = (Join-Path $pwd "samples.zip")
+        $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples | Should -Be @"
 Creating classifier '$classifierName'... [OK]
 Adding samples from file '$samples'... [OK]
@@ -33,7 +33,7 @@ Adding samples from file '$samples'... [OK]
     }
 
     It "should not be created from an invalid zip file of samples" {
-        $samples = (Join-Path $pwd "invalid.zip")
+        $samples = (Join-Path $PSScriptRoot "invalid.zip")
         New-Classifier $classifierName $samples | Should -BeLike @"
 Creating classifier '$classifierName'... [OK]
 Adding samples from file '$samples'... [FAILED]
@@ -44,7 +44,7 @@ Adding samples from file '$samples'... [FAILED]
     }
 
     It "should not be created from a non-existent zip file of samples" {
-        $samples = (Join-Path $pwd "non-existent.zip" -Resolve)
+        $samples = (Join-Path $PSScriptRoot "non-existent.zip")
         New-Classifier $classifierName $samples | Should -Be @"
 Creating classifier '$classifierName'... [OK]
 Adding samples from file '$samples'... [FAILED]
