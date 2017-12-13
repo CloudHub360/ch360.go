@@ -7,6 +7,9 @@ $classifierName = "test-classifier"
 
 Describe "ch360 delete classifier" {
     It "should output success" {
+        # Run delete classifier first to ensure it's not already present
+        ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret"
+        
         ch360 create classifier $classifierName --id="$ClientId" --secret="$ClientSecret" | Should -Be "Creating classifier '$classifierName'... [OK]"
         ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret" | Should -Be "Deleting classifier '$classifierName'... [OK]"
         $LASTEXITCODE | Should -Be 0
