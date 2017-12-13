@@ -5,12 +5,18 @@ param(
 
 $classifierName = "test-classifier"
 
+function New-Classifier([string]$classifierName, [Io.FileInfo]$samples) {
+    ch360 create classifier $classifierName `
+        --id="$ClientId" `
+        --secret="$ClientSecret" `
+        --samples-zip=$samples
+}
+
 Describe "classifiers" {
-    function New-Classifier([string]$classifierName, [Io.FileInfo]$samples) {
-        ch360 create classifier $classifierName `
+    BeforeEach {
+        ch360 delete classifier $classifierName `
             --id="$ClientId" `
-            --secret="$ClientSecret" `
-            --samples-zip=$samples
+            --secret="$ClientSecret"
     }
 
     It "should be created from a zip file of samples" {
