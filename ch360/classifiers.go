@@ -44,7 +44,13 @@ func (client *ClassifiersClient) Create(name string) error {
 func (client *ClassifiersClient) Delete(name string) error {
 	_, err := client.issueRequest("DELETE", name)
 
-	return err
+	if err != nil {
+		fmt.Println("[FAILED]")
+		return err
+	}
+
+	fmt.Println("[OK]")
+	return nil
 }
 
 type TrainClassifierRequest struct {
@@ -79,6 +85,7 @@ func (_req *TrainClassifierRequest) Issue(client *ClassifiersClient) error {
 		return err
 	}
 
+	fmt.Println("[OK]")
 	return nil
 }
 
@@ -96,6 +103,7 @@ func (client *ClassifiersClient) GetAll() (ClassifierList, error) {
 	response, err := client.issueRequest("GET", "")
 
 	if err != nil {
+		fmt.Println("[FAILED]")
 		return nil, err
 	}
 
@@ -103,6 +111,7 @@ func (client *ClassifiersClient) GetAll() (ClassifierList, error) {
 	_, err = buf.ReadFrom(response.Body)
 
 	if err != nil {
+		fmt.Println("[FAILED]")
 		return nil, err
 	}
 
@@ -112,6 +121,7 @@ func (client *ClassifiersClient) GetAll() (ClassifierList, error) {
 	err = json.Unmarshal(buf.Bytes(), &classifiersResponse)
 
 	if err != nil {
+		fmt.Println("[FAILED]")
 		return nil, err
 	}
 

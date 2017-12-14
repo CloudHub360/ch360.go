@@ -47,24 +47,18 @@ Options:
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
 		err = commands.NewCreateClassifier(apiClient.Classifiers).Execute(classifierName, samplesPath)
 		if err != nil {
-			fmt.Printf("[FAILED]\n")
 			fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
-
-		fmt.Printf("[OK]\n")
 	} else if args["delete"].(bool) {
 		classifierName := args["<name>"].(string)
 
 		fmt.Printf("Deleting classifier '%s'... ", classifierName)
 		err = commands.NewDeleteClassifier(apiClient.Classifiers).Execute(classifierName)
 		if err != nil {
-			fmt.Printf("[FAILED]\n")
 			fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
-		fmt.Printf("[OK]\n")
-
 	} else if args["list"].(bool) {
 		var classifiers ch360.ClassifierList
 		classifiers, err = commands.NewListClassifiers(apiClient.Classifiers).Execute()
