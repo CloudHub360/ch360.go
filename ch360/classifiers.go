@@ -64,6 +64,7 @@ func (_req *TrainClassifierRequest) Issue(client *ClassifiersClient) error {
 	zip, err := os.Open(_req.SamplesFile)
 	if err != nil {
 		fmt.Println("[FAILED]")
+		fmt.Fprintf(os.Stderr, "The file '%s' could not be found.\n", _req.SamplesFile)
 		return err
 	}
 
