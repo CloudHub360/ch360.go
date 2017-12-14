@@ -39,10 +39,25 @@ Task Build PackageRestore, {
   }
 }
 
+function Register-CustomAssertions([string]$path) {
+  Write-Host -ForegroundColor Green "Registering custom assertions from '$path'"
+  Get-ChildItem (Resolve-Path "$PsScriptRoot/../$path") -Exclude "*.Tests.ps1" |% {
+    $name = ($_.Name)
+    try {
+      . $_
+      Write-Host -ForegroundColor DarkGreen "  Registered $name"
+    } catch {
+      Write-Host -ForegroundColor Red "  Failed to register $name"
+    }
+  }
+}
+
 Task Test Build, {
   try {
     pushd $RootDir
     exec { go test -v -race ./... }
+
+    Register-CustomAssertions "test/assertions"
 
     $env:PATH += "$([Io.Path]::PathSeparator)$env:GOPATH/bin"
     $testResults = Invoke-Pester -PassThru -Script @{
