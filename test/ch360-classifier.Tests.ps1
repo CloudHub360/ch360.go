@@ -51,7 +51,7 @@ Describe "ch360 create classifier" {
     }
 }
 
-Describe "ch360 list classifier" {
+Describe "ch360 list classifiers" {
     It "should list the names of all existing classifiers" {
         # Run delete classifier first to ensure the test classifiers are not already present        
         ch360 delete classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
@@ -60,7 +60,7 @@ Describe "ch360 list classifier" {
         ch360 create classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
         ch360 create classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
 
-        ch360 list classifier --id="$ClientId" --secret="$ClientSecret" | Should -Be  @(
+        ch360 list classifiers --id="$ClientId" --secret="$ClientSecret" | Should -Be  @(
             "test-classifier1",
             "test-classifier2"
             )            
@@ -72,7 +72,7 @@ Describe "ch360 list classifier" {
         ch360 delete classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
         ch360 delete classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
         
-        ch360 list classifier --id="$ClientId" --secret="$ClientSecret" | Should -Be "No classifiers found."
+        ch360 list classifiers --id="$ClientId" --secret="$ClientSecret" | Should -Be "No classifiers found."
         $LASTEXITCODE | Should -Be 0
     }
  
@@ -82,7 +82,7 @@ Describe "ch360 list classifier" {
     }
 }
 
-Describe "ch360 list classifiers" {
+Describe "ch360 list classifier" {
     # Only do a minimum test to check that 'ch360 list classifiers' calls the same command as 'ch360 list classifier'
     It "should output 'No classifiers found.' when there are no classifiers" {
         # Run delete classifier first to ensure the test classifiers are not already present        
