@@ -2,6 +2,7 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 )
 
@@ -34,10 +35,12 @@ func (cmd *DeleteClassifier) Execute(classifierName string) error {
 	classifiers, err := cmd.client.GetAll()
 
 	if err != nil {
+		fmt.Println("[FAILED]")
 		return err
 	}
 
 	if !classifiers.Contains(classifierName) {
+		fmt.Println("[FAILED]")
 		return errors.New("There is no classifier named '" + classifierName + "'")
 	}
 	return cmd.client.Delete(classifierName)
