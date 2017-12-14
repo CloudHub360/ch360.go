@@ -23,6 +23,10 @@ function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){
     $input -join [Environment]::NewLine
 }
 
+function String-Starting([string]$input) {
+    ([Regex]::Escape($input) + ".*")
+}
+
 Describe "classifiers" {
     BeforeEach {
         ch360 delete classifier $classifierName `
@@ -45,11 +49,10 @@ Adding samples from file '$samples'... [OK]
 
     It "should not be created from an invalid zip file of samples" {
         $samples = (Join-Path $PSScriptRoot "invalid.zip")
-        New-Classifier $classifierName $samples | Format-MultilineOutput | Should -BeLike @"
+        New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Match (String-Starting @"
 Creating classifier '$classifierName'... [OK]
 Adding samples from file '$samples'... [FAILED]
-*
-"@
+"@)
 
         $LASTEXITCODE | Should -Be 1
     }
