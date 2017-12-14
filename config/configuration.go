@@ -1,4 +1,4 @@
-package commands
+package config
 
 import (
 	"encoding/json"
@@ -9,45 +9,45 @@ import (
 	"runtime"
 )
 
-type configuration struct {
-	configurationRoot *configurationRoot `json:"configuration"`
+type Configuration struct {
+	ConfigurationRoot *ConfigurationRoot `json:"configuration"`
 }
 
-type configurationRoot struct {
-	Credentials apiCredentialsList `json:"credentials"`
+type ConfigurationRoot struct {
+	Credentials ApiCredentialsList `json:"credentials"`
 }
 
-type apiCredentialsList []apiCredentials
+type ApiCredentialsList []ApiCredentials
 
-type apiCredentials struct {
+type ApiCredentials struct {
 	Key    string `json:"key"`
 	Url    string `json:"url"`
 	Id     string `json:"client_id"`
 	Secret string `json:"client_secret"`
 }
 
-func NewConfiguration(clientId string, clientSecret string) *configuration {
-	var credentials = make(apiCredentialsList, 1)
+func NewConfiguration(clientId string, clientSecret string) *Configuration {
+	var credentials = make(ApiCredentialsList, 1)
 
-	credentials[0] = apiCredentials{
+	credentials[0] = ApiCredentials{
 		Key:    "default", // These credentials are the ones used by default
 		Url:    "default", // These credentials are for the production API
 		Id:     clientId,
 		Secret: clientSecret,
 	}
 
-	config := &configurationRoot{
+	config := &ConfigurationRoot{
 		Credentials: credentials,
 	}
 
-	configuration := &configuration{
-		configurationRoot: config,
+	configuration := &Configuration{
+		ConfigurationRoot: config,
 	}
 
 	return configuration
 }
 
-func (config *configuration) Save() error {
+func (config *Configuration) Save() error {
 	json, _ := json.Marshal(config)
 	fmt.Println(string(json))
 
