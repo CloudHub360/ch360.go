@@ -5,18 +5,34 @@ param(
 
 $classifierName = "test-classifier"
 
-function New-Classifier([string]$classifierName, [Io.FileInfo]$samples) {
+function Invoke-App {
     $ErrorActionPreference = "Continue"
     try {
-        ch360 create classifier $classifierName `
-            --id="$ClientId" `
-            --secret="$ClientSecret" `
-            --samples-zip=$samples 2>&1
+        & ch360 $args
     } catch [System.Management.Automation.RemoteException] {
         # Catch exceptions for messages redirected from stderr and
         # write out the messages to stdout
         Write-Output $Error[0].Message
     }
+}
+
+function New-Classifier([string]$classifierName, [Io.FileInfo]$samples) {
+    Invoke-App create classifier $classifierName `
+        --id="$ClientId" `
+        --secret="$ClientSecret" `
+        --samples-zip=$samples 2>&1
+}
+
+function Get-Classifiers {
+    Invoke-App list classifiers `
+        --id="$ClientId" `
+        --secret="$ClientSecret" 2>&1
+}
+
+function Remove-Classifier([Parameter(ValueFromPipeline=$true)]$classifierName) {
+    Invoke-App delete classifier $classifierName `
+        --id="$ClientId" `
+        --secret="$ClientSecret" 2>&1
 }
 
 function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){
@@ -29,9 +45,7 @@ function String-Starting([string]$input) {
 
 Describe "classifiers" {
     BeforeEach {
-        ch360 delete classifier $classifierName `
-            --id="$ClientId" `
-            --secret="$ClientSecret"
+        Get-Classifiers | Should -Be "No classifiers found."
     }
 
     It "should be created from a zip file of samples" {
@@ -40,11 +54,13 @@ Describe "classifiers" {
 Creating classifier '$classifierName'... [OK]
 Adding samples from file '$samples'... [OK]
 "@
-
         $LASTEXITCODE | Should -Be 0
 
+        # Verify
+        Get-Classifiers | Format-MultilineOutput | Should -Contain $classifierName
+
         # Teardown
-        ch360 delete classifier $classifierName --id="$ClientId" --secret="$ClientSecret"
+        Remove-Classifier $classifierName
     }
 
     It "should not be created from an invalid zip file of samples" {
@@ -55,6 +71,9 @@ Adding samples from file '$samples'... [FAILED]
 "@)
 
         $LASTEXITCODE | Should -Be 1
+
+        #Teardown
+        Remove-Classifier $classifierName
     }
 
     It "should not be created from a non-existent zip file of samples" {
@@ -67,35 +86,9 @@ The file '$samples' could not be found.
 
         $LASTEXITCODE | Should -Be 1
     }
-}
 
-Describe "ch360 list classifiers" {
-    It "should list the names of all existing classifiers" {
-        # Run delete classifier first to ensure the test classifiers are not already present        
-        ch360 delete classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
-        ch360 delete classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
-        
-        ch360 create classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
-        ch360 create classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
-
-        ch360 list classifiers --id="$ClientId" --secret="$ClientSecret" | Should -Be  @(
-            "test-classifier1",
-            "test-classifier2"
-            )            
-        $LASTEXITCODE | Should -Be 0
-    }
-
-    It "should output 'No classifiers found.' when there are no classifiers" {
-        # Run delete classifier first to ensure the test classifiers are not already present        
-        ch360 delete classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
-        ch360 delete classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
-        
-        ch360 list classifiers --id="$ClientId" --secret="$ClientSecret" | Should -Be "No classifiers found."
-        $LASTEXITCODE | Should -Be 0
-    }
- 
     AfterAll {
-        ch360 delete classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
-        ch360 delete classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
+        # Tidy up any leftover classifiers in the account
+        Get-Classifiers | Remove-Classifier
     }
 }
