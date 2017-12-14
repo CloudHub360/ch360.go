@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 )
+
+var userReadWritePermissions os.FileMode = 0600
 
 type Configuration struct {
 	ConfigurationRoot *ConfigurationRoot `json:"configuration"`
@@ -54,6 +57,6 @@ func (config *Configuration) Save() error {
 
 	filename := filepath.Join(configDirectory.GetPath(), "config.json")
 
-	err := ioutil.WriteFile(filename, json, 0644) //TODO: Permissions?
+	err := ioutil.WriteFile(filename, json, userReadWritePermissions)
 	return err
 }
