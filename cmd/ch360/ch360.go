@@ -74,14 +74,12 @@ Options:
 			os.Exit(1)
 		}
 
-		if classifiers != nil {
-			if len(classifiers) == 0 {
-				fmt.Println("No classifiers found.")
-			}
+		if len(classifiers) == 0 {
+			fmt.Println("No classifiers found.")
+		}
 
-			for _, classifier := range classifiers {
-				fmt.Println(classifier.Name)
-			}
+		for _, classifier := range classifiers {
+			fmt.Println(classifier.Name)
 		}
 	}
 }
