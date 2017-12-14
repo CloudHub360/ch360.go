@@ -27,7 +27,6 @@ func TestListClassifierSuiteRunner(t *testing.T) {
 }
 
 func (suite *ListClassifierSuite) TestGetAllClassifiers_Execute_Returns_The_Classifiers_When_There_Are_Some() {
-
 	expectedClassifiers := AListOfClassifiers("charlie", "jo", "chris").(ch360.ClassifierList)
 	suite.client.On("GetAll", mock.Anything).Return(expectedClassifiers, nil)
 
