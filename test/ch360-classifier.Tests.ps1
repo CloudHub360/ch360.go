@@ -6,10 +6,21 @@ param(
 $classifierName = "test-classifier"
 
 function New-Classifier([string]$classifierName, [Io.FileInfo]$samples) {
-    ch360 create classifier $classifierName `
-        --id="$ClientId" `
-        --secret="$ClientSecret" `
-        --samples-zip=$samples
+    $ErrorActionPreference = "Continue"
+    try {
+        ch360 create classifier $classifierName `
+            --id="$ClientId" `
+            --secret="$ClientSecret" `
+            --samples-zip=$samples 2>&1
+    } catch [System.Management.Automation.RemoteException] {
+        # Catch exceptions for messages redirected from stderr and
+        # write out the messages to stdout
+        Write-Output $Error[0].Message
+    }
+}
+
+function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){
+    $input -join [Environment]::NewLine
 }
 
 Describe "classifiers" {
@@ -21,7 +32,7 @@ Describe "classifiers" {
 
     It "should be created from a zip file of samples" {
         $samples = (Join-Path $PSScriptRoot "samples.zip")
-        New-Classifier $classifierName $samples | Should -Be @"
+        New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Be @"
 Creating classifier '$classifierName'... [OK]
 Adding samples from file '$samples'... [OK]
 "@
@@ -34,7 +45,7 @@ Adding samples from file '$samples'... [OK]
 
     It "should not be created from an invalid zip file of samples" {
         $samples = (Join-Path $PSScriptRoot "invalid.zip")
-        New-Classifier $classifierName $samples | Should -BeLike @"
+        New-Classifier $classifierName $samples | Format-MultilineOutput | Should -BeLike @"
 Creating classifier '$classifierName'... [OK]
 Adding samples from file '$samples'... [FAILED]
 *
@@ -45,7 +56,7 @@ Adding samples from file '$samples'... [FAILED]
 
     It "should not be created from a non-existent zip file of samples" {
         $samples = (Join-Path $PSScriptRoot "non-existent.zip")
-        New-Classifier $classifierName $samples | Should -Be @"
+        New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Be @"
 Creating classifier '$classifierName'... [OK]
 Adding samples from file '$samples'... [FAILED]
 The file '$samples' could not be found.
