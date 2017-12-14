@@ -74,7 +74,7 @@ Options:
 			os.Exit(1)
 		}
 
-		if len(classifiers) == 0 {
+		if !classifiers.Any() {
 			fmt.Println("No classifiers found.")
 		}
 

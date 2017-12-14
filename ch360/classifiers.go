@@ -76,3 +76,7 @@ func (classifiers ClassifierList) Contains(item string) bool {
 	}
 	return false
 }
+
+func (classifiers ClassifierList) Any() bool {
+	return len(classifiers) > 0
+}
