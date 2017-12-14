@@ -16,7 +16,7 @@ func (configDirectory *configurationDirectory) CreateIfNotExists() error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// directory does not exist
-			os.Mkdir(dir, 0644) //TODO: Permissions?
+			os.Mkdir(dir, userReadWritePermissions)
 			return nil
 		} else {
 			// other error
