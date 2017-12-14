@@ -47,7 +47,6 @@ Options:
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
 		err = commands.NewCreateClassifier(apiClient.Classifiers).Execute(classifierName, samplesPath)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 	} else if args["delete"].(bool) {
