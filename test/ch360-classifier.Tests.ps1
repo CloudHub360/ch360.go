@@ -81,15 +81,3 @@ Describe "ch360 list classifiers" {
         ch360 delete classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
     }
 }
-
-Describe "ch360 list classifier" {
-    # Only do a minimum test to check that 'ch360 list classifiers' calls the same command as 'ch360 list classifier'
-    It "should output 'No classifiers found.' when there are no classifiers" {
-        # Run delete classifier first to ensure the test classifiers are not already present        
-        ch360 delete classifier "${classifierName}1" --id="$ClientId" --secret="$ClientSecret"
-        ch360 delete classifier "${classifierName}2" --id="$ClientId" --secret="$ClientSecret"
-        
-        ch360 list classifier --id="$ClientId" --secret="$ClientSecret" | Should -Be "No classifiers found."
-        $LASTEXITCODE | Should -Be 0
-    }
-}
