@@ -77,10 +77,10 @@ Options:
 
 		if classifiers != nil {
 			if len(classifiers) == 0 {
-				fmt.Printf("No classifiers found.")
+				fmt.Println("No classifiers found.")
 			}
 			for _, classifier := range classifiers {
-				fmt.Printf("%s\r\n", classifier.Name)
+				fmt.Println(classifier.Name)
 			}
 		}
 	}
