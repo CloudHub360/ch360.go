@@ -2,18 +2,20 @@ package main
 
 import (
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
-	"github.com/docopt/docopt-go"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/CloudHub360/ch360.go/ch360"
+	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
+	"github.com/docopt/docopt-go"
 )
 
 func main() {
 	usage := `CloudHub360 command-line tool.
 
 Usage:
+  ch360 login --id=<id> --secret=<secret>
   ch360 create classifier <name> --id=<id> --secret=<secret> --samples-zip=<path>
   ch360 delete classifier <name> --id=<id> --secret=<secret>
   ch360 list classifiers --id=<id> --secret=<secret>
