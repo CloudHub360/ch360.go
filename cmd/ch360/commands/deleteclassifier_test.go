@@ -12,7 +12,7 @@ import (
 
 type DeleteClassifierSuite struct {
 	suite.Suite
-	sut    *DeleteClassifier
+	sut    ClassifierCommand
 	client *mocks.DeleterGetter
 }
 
