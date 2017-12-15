@@ -37,5 +37,12 @@ func (cmd *CreateClassifier) Execute(classifierName string, samplesPath string) 
 	}
 
 	fmt.Println("[OK]")
-	return cmd.client.Train(classifierName, samplesPath)
+	err = cmd.client.Train(classifierName, samplesPath)
+
+	if err != nil {
+		cmd.deleteClassifier.Execute(classifierName)
+		return err
+	}
+
+	return nil
 }
