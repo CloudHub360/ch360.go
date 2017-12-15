@@ -61,6 +61,7 @@ Options:
 			fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
+		fmt.Println("[OK]")
 	} else if args["list"].(bool) {
 		var classifiers ch360.ClassifierList
 		classifiers, err = commands.NewListClassifiers(apiClient.Classifiers).Execute()
