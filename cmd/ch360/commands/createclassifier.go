@@ -18,12 +18,14 @@ type CreatorTrainer interface {
 }
 
 type CreateClassifier struct {
-	client CreatorTrainer
+	client           CreatorTrainer
+	deleteClassifier ClassifierCommand
 }
 
-func NewCreateClassifier(client CreatorTrainer) *CreateClassifier {
+func NewCreateClassifier(client CreatorTrainer, deleteClassifier ClassifierCommand) *CreateClassifier {
 	return &CreateClassifier{
-		client: client,
+		client:           client,
+		deleteClassifier: deleteClassifier,
 	}
 }
 

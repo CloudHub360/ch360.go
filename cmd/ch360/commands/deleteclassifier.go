@@ -6,7 +6,7 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 )
 
-//go:generate mockery -name "Deleter|Getter|DeleterGetter"
+//go:generate mockery -name "Deleter|Getter|DeleterGetter|ClassifierCommand"
 
 type Deleter interface {
 	Delete(name string) error
@@ -21,11 +21,15 @@ type DeleterGetter interface {
 	Getter
 }
 
+type ClassifierCommand interface {
+	Execute(classifierName string) error
+}
+
 type DeleteClassifier struct {
 	client DeleterGetter
 }
 
-func NewDeleteClassifier(client DeleterGetter) *DeleteClassifier {
+func NewDeleteClassifier(client DeleterGetter) ClassifierCommand {
 	return &DeleteClassifier{
 		client: client,
 	}

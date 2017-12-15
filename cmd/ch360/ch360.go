@@ -45,7 +45,10 @@ Options:
 		classifierName := args["<name>"].(string)
 		samplesPath := args["--samples-zip"].(string)
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
-		err = commands.NewCreateClassifier(apiClient.Classifiers).Execute(classifierName, samplesPath)
+		err = commands.NewCreateClassifier(
+			apiClient.Classifiers,
+			commands.NewDeleteClassifier(apiClient.Classifiers),
+		).Execute(classifierName, samplesPath)
 		if err != nil {
 			os.Exit(1)
 		}
