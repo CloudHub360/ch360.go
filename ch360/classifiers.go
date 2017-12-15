@@ -49,7 +49,6 @@ func (client *ClassifiersClient) Delete(name string) error {
 		return err
 	}
 
-	fmt.Println("[OK]")
 	return nil
 }
 
