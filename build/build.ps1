@@ -59,7 +59,6 @@ Task Test Build, {
 
     Register-CustomAssertions "test/assertions"
 
-    $env:PATH += "$([Io.Path]::PathSeparator)$env:GOPATH/bin"
     $testResults = Invoke-Pester -PassThru -Script @{
       Path="test";
       Parameters = @{ClientId = $ClientId; ClientSecret = $ClientSecret}
