@@ -4,9 +4,9 @@ import (
 	"fmt"
 	fakes "github.com/CloudHub360/ch360.go/config/fakes"
 	assertThat "github.com/CloudHub360/ch360.go/test/assertions"
+	generate "github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"math/rand"
 	"testing"
 	"time"
 )
@@ -40,7 +40,7 @@ func (suite *ConfigurationDirectorySuite) SetupTest() {
 	suite.expectedFilePath = suite.fileSystem.JoinPath(
 		suite.expectedDirectoryPath,
 		suite.filename)
-	suite.fileContents = generateBytes()
+	suite.fileContents = generate.Bytes()
 
 	assertThat.DirectoryDoesNotExist(suite.T(), suite.expectedDirectoryPath)
 	assertThat.FileDoesNotExist(suite.T(), suite.expectedFilePath)
@@ -84,11 +84,4 @@ func (suite *ConfigurationDirectorySuite) TestConfigurationDirectoryWriteFile_Cr
 	}
 
 	assertThat.FileHasContents(suite.T(), suite.expectedFilePath, suite.fileContents)
-}
-
-func generateBytes() []byte {
-	token := make([]byte, 100)
-	rand.Seed(time.Now().UTC().UnixNano())
-	rand.Read(token)
-	return token
 }
