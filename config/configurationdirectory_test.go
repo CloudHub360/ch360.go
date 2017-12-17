@@ -7,14 +7,15 @@ import (
 	generate "github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"path/filepath"
 	"testing"
 	"time"
 )
 
 type ConfigurationDirectorySuite struct {
 	suite.Suite
-	sut                   *ConfigurationDirectory
-	fileSystem            *FileSystem
+	sut *ConfigurationDirectory
+	//fileSystem            *FileSystem
 	homeDirectory         *fakes.FakeHomeDirectoryPathGetter
 	fileContents          []byte
 	expectedDirectoryPath string
@@ -30,14 +31,13 @@ func (suite *ConfigurationDirectorySuite) SetupTest() {
 	suite.homeDirectory.Create()
 
 	suite.sut = NewConfigurationDirectory(
-		suite.homeDirectory,
-		suite.fileSystem)
+		suite.homeDirectory)
 
 	suite.filename = "assertThat-config-file.json"
-	suite.expectedDirectoryPath = suite.fileSystem.JoinPath(
+	suite.expectedDirectoryPath = filepath.Join(
 		suite.homeDirectory.GetPath(),
 		".ch360")
-	suite.expectedFilePath = suite.fileSystem.JoinPath(
+	suite.expectedFilePath = filepath.Join(
 		suite.expectedDirectoryPath,
 		suite.filename)
 	suite.fileContents = generate.Bytes()
