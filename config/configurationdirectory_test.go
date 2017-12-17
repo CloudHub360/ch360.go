@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 )
@@ -15,7 +14,7 @@ type ConfigurationDirectorySuite struct {
 	suite.Suite
 	sut                   *ConfigurationDirectory
 	fileSystem            *FileSystem
-	homeDirectory         string
+	homeDirectory         *fakes.FakeHomeDirectoryPathGetter
 	fileContents          []byte
 	expectedDirectoryPath string
 	filename              string
@@ -24,21 +23,18 @@ type ConfigurationDirectorySuite struct {
 
 func (suite *ConfigurationDirectorySuite) SetupTest() {
 	// Create a unique "home directory" for this test
-	fakeHomeDirectoryGetter := &fakes.FakeHomeDirectoryPathGetter{
+	suite.homeDirectory = &fakes.FakeHomeDirectoryPathGetter{
 		Guid: fmt.Sprintf("%v", time.Now().UTC().UnixNano()),
 	}
-	suite.homeDirectory = fakeHomeDirectoryGetter.GetPath()
-
-	suite.fileSystem = &FileSystem{}
-	suite.fileSystem.CreateDirectoryIfNotExists(suite.homeDirectory)
+	suite.homeDirectory.Create()
 
 	suite.sut = NewConfigurationDirectory(
-		fakeHomeDirectoryGetter,
-		&FileSystem{})
+		suite.homeDirectory,
+		suite.fileSystem)
 
 	suite.filename = "a-config-file.json"
 	suite.expectedDirectoryPath = suite.fileSystem.JoinPath(
-		suite.homeDirectory,
+		suite.homeDirectory.GetPath(),
 		".ch360")
 	suite.expectedFilePath = suite.fileSystem.JoinPath(
 		suite.expectedDirectoryPath,
@@ -47,11 +43,10 @@ func (suite *ConfigurationDirectorySuite) SetupTest() {
 
 	suite.assertDirectoryDoesNotExist(suite.fileSystem, suite.expectedDirectoryPath)
 	suite.assertFileDoesNotExist(suite.fileSystem, suite.expectedFilePath)
-
 }
 
 func (suite *ConfigurationDirectorySuite) TearDownTest() {
-	os.RemoveAll(suite.homeDirectory)
+	suite.homeDirectory.Destroy()
 }
 
 func TestConfigurationDirectorySuiteRunner(t *testing.T) {
