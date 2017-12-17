@@ -1,43 +1,32 @@
 package config
 
 import (
-	"os"
 	"path/filepath"
-	"runtime"
 )
 
-type configurationDirectory struct {
+type ConfigurationDirectory struct {
+	homeDirectoryProvider DirectoryPathGetter
+	fileSystem            FileDirectoryReaderWriter
 }
 
-func (configDirectory *configurationDirectory) CreateIfNotExists() error {
-	dir := configDirectory.GetPath()
-
-	_, err := os.Stat(dir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// directory does not exist
-			os.Mkdir(dir, userReadWritePermissions)
-			return nil
-		} else {
-			// other error
-			return err
-		}
+func NewConfigurationDirectory(homeDirProvider DirectoryPathGetter, directoryReaderWriter FileDirectoryReaderWriter) *ConfigurationDirectory {
+	return &ConfigurationDirectory{
+		homeDirectoryProvider: homeDirProvider,
+		fileSystem:            directoryReaderWriter,
 	}
-
-	return nil
 }
 
-func (dir *configurationDirectory) GetPath() string {
-	return filepath.Join(userHomeDir(), ".ch360")
+func (configDirectory *ConfigurationDirectory) WriteFile(filename string, data []byte) error {
+	configDirectory.createIfNotExists()
+	filepath := configDirectory.fileSystem.JoinPath(configDirectory.getPath(), filename)
+	return configDirectory.fileSystem.WriteFile(filepath, data)
 }
 
-func userHomeDir() string {
-	if runtime.GOOS == "windows" {
-		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
-		if home == "" {
-			home = os.Getenv("USERPROFILE")
-		}
-		return home
-	}
-	return os.Getenv("HOME")
+func (configDirectory *ConfigurationDirectory) getPath() string {
+	return filepath.Join(configDirectory.homeDirectoryProvider.GetPath(), ".ch360")
+}
+
+func (configDirectory *ConfigurationDirectory) createIfNotExists() error {
+	dir := configDirectory.getPath()
+	return configDirectory.fileSystem.CreateDirectoryIfNotExists(dir)
 }
