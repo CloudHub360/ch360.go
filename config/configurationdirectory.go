@@ -1,25 +1,28 @@
 package config
 
 import (
+	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
 type ConfigurationDirectory struct {
 	homeDirectoryProvider DirectoryPathGetter
-	fileSystem            FileDirectoryReaderWriter
 }
 
-func NewConfigurationDirectory(homeDirProvider DirectoryPathGetter, directoryReaderWriter FileDirectoryReaderWriter) *ConfigurationDirectory {
+var userReadWritePermissions os.FileMode = 0600
+
+func NewConfigurationDirectory(homeDirProvider DirectoryPathGetter) *ConfigurationDirectory {
 	return &ConfigurationDirectory{
 		homeDirectoryProvider: homeDirProvider,
-		fileSystem:            directoryReaderWriter,
 	}
 }
 
 func (configDirectory *ConfigurationDirectory) WriteFile(filename string, data []byte) error {
 	configDirectory.createIfNotExists()
-	filepath := configDirectory.fileSystem.JoinPath(configDirectory.getPath(), filename)
-	return configDirectory.fileSystem.WriteFile(filepath, data)
+
+	fullFilePath := filepath.Join(configDirectory.getPath(), filename)
+	return ioutil.WriteFile(fullFilePath, data, userReadWritePermissions)
 }
 
 func (configDirectory *ConfigurationDirectory) getPath() string {
@@ -28,5 +31,33 @@ func (configDirectory *ConfigurationDirectory) getPath() string {
 
 func (configDirectory *ConfigurationDirectory) createIfNotExists() error {
 	dir := configDirectory.getPath()
-	return configDirectory.fileSystem.CreateDirectoryIfNotExists(dir)
+	return createDirectoryIfNotExists(dir)
+}
+
+func createDirectoryIfNotExists(dir string) error {
+	exists, err := directoryExists(dir)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		err := os.Mkdir(dir, userReadWritePermissions)
+		return err
+	}
+	return nil
+}
+
+func directoryExists(dir string) (bool, error) {
+	_, err := os.Stat(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// directory does not exist
+			return false, nil
+		} else {
+			// other error
+			return false, err
+		}
+	}
+
+	return true, nil
 }

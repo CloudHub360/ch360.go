@@ -21,6 +21,11 @@ type ApiCredentials struct {
 	Secret string `json:"client_secret"`
 }
 
+//go:generate mockery -name "FileWriter"
+type FileWriter interface {
+	WriteFile(filepath string, data []byte) error
+}
+
 func NewConfiguration(clientId string, clientSecret string) *Configuration {
 	var credentials = make(ApiCredentialsList, 1)
 
@@ -45,7 +50,5 @@ func NewConfiguration(clientId string, clientSecret string) *Configuration {
 func (config *Configuration) Save(configDir FileWriter) error {
 	json, _ := json.Marshal(config)
 
-	//err := ioutil.WriteFile(filename, json, userReadWritePermissions)
-	err := configDir.WriteFile("config.json", json)
-	return err
+	return configDir.WriteFile("config.json", json)
 }
