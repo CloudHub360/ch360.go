@@ -13,6 +13,10 @@ func NewLogin(client Getter) *Login {
 }
 
 func (cmd *Login) Execute(clientId string, clientSecret string) error {
-	config := config.NewConfiguration(clientId, clientSecret)
-	return config.Save()
+	configurationDirectory := config.NewConfigurationDirectory(
+		config.HomeDirectoryPathGetter{},
+		&config.FileSystem{})
+	configuration := config.NewConfiguration(clientId, clientSecret)
+
+	return configuration.Save(configurationDirectory)
 }
