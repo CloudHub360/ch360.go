@@ -2,13 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
-
-var userReadWritePermissions os.FileMode = 0600
 
 type Configuration struct {
 	ConfigurationRoot *ConfigurationRoot `json:"configuration"`
@@ -48,15 +42,10 @@ func NewConfiguration(clientId string, clientSecret string) *Configuration {
 	return configuration
 }
 
-func (config *Configuration) Save() error {
+func (config *Configuration) Save(configDir FileWriter) error {
 	json, _ := json.Marshal(config)
-	fmt.Println(string(json))
 
-	configDirectory := configurationDirectory{}
-	configDirectory.CreateIfNotExists()
-
-	filename := filepath.Join(configDirectory.GetPath(), "config.json")
-
-	err := ioutil.WriteFile(filename, json, userReadWritePermissions)
+	//err := ioutil.WriteFile(filename, json, userReadWritePermissions)
+	err := configDir.WriteFile("config.json", json)
 	return err
 }
