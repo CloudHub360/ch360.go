@@ -2,26 +2,19 @@ package tests
 
 import (
 	"github.com/CloudHub360/ch360.go/config"
-	mockconfig "github.com/CloudHub360/ch360.go/config/mocks"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/yaml.v2"
 	"testing"
 )
 
 type ConfigurationSuite struct {
 	suite.Suite
-	sut                 *config.Configuration
-	mockConfigDirectory *mockconfig.Writer
-	clientId            string
-	clientSecret        string
+	sut          *config.Configuration
+	clientId     string
+	clientSecret string
 }
 
 func (suite *ConfigurationSuite) SetupTest() {
-	suite.mockConfigDirectory = &mockconfig.Writer{}
-	suite.mockConfigDirectory.On("Write", mock.Anything).Return(0, nil)
-
 	suite.clientId = "clientid"
 	suite.clientSecret = "clientsecret"
 	suite.sut = config.NewConfiguration(suite.clientId, suite.clientSecret)
@@ -41,28 +34,21 @@ func (suite *ConfigurationSuite) TestConfigurationNewConfiguration_Creates_A_Con
 	assert.Equal(suite.T(), "default", actualCredentials.Url)
 }
 
-func (suite *ConfigurationSuite) TestConfigurationSaves_Writes_File_With_Serialised_Configuration() {
-	// Act
-	suite.sut.Save(suite.mockConfigDirectory)
-
-	// Assert
-	suite.mockConfigDirectory.AssertNumberOfCalls(suite.T(), "Write", 1)
-
-	call := suite.mockConfigDirectory.Calls[0]
-	assert.Len(suite.T(), call.Arguments, 1)
-	configuration := suite.AssertIsValidSerialisedConfiguration(call.Arguments[0].([]byte))
-	suite.AssertConfigurationIsPopulatedWithData(configuration)
-}
-
-func (suite *ConfigurationSuite) AssertIsValidSerialisedConfiguration(contents []byte) config.Configuration {
-	var configuration config.Configuration
-	err := yaml.Unmarshal(contents, &configuration)
+func (suite *ConfigurationSuite) TestConfigurationSerialise_Can_Be_Deserialised_To_Configuration_With_Same_Values() {
+	bytes, err := suite.sut.Serialise()
 	if err != nil {
-		assert.Fail(suite.T(), "Bytes are not valid serialised Configuration")
+		assert.Error(suite.T(), err)
 	}
-	return configuration
-}
 
-func (suite *ConfigurationSuite) AssertConfigurationIsPopulatedWithData(configuration config.Configuration) {
-	assert.Equal(suite.T(), suite.clientId, configuration.ConfigurationRoot.Credentials[0].Id)
+	configuration, err := config.DeserialiseConfiguration(bytes)
+	if err != nil {
+		assert.Error(suite.T(), err)
+	}
+
+	assert.Equal(suite.T(), len(suite.sut.ConfigurationRoot.Credentials), len(configuration.ConfigurationRoot.Credentials))
+	credentials := suite.sut.ConfigurationRoot.Credentials[0]
+	assert.Equal(suite.T(), credentials.Id, suite.clientId)
+	assert.Equal(suite.T(), credentials.Secret, suite.clientSecret)
+	assert.Equal(suite.T(), credentials.Key, "default")
+	assert.Equal(suite.T(), credentials.Url, "default")
 }
