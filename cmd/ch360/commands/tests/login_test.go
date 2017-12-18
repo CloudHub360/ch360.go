@@ -5,6 +5,7 @@ import (
 	cmdmocks "github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/config/mocks"
+	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -13,23 +14,23 @@ import (
 
 type LoginSuite struct {
 	suite.Suite
-	sut             *commands.Login
-	configDirectory *mocks.ConfigurationWriter
-	secretReader    *cmdmocks.SecretReader
-	clientId        string
-	clientSecret    string
+	sut          *commands.Login
+	configWriter *mocks.ConfigurationWriter
+	secretReader *cmdmocks.SecretReader
+	clientId     string
+	clientSecret string
 }
 
 func (suite *LoginSuite) SetupTest() {
-	suite.configDirectory = new(mocks.ConfigurationWriter)
-	suite.configDirectory.On("WriteConfiguration", mock.Anything).Return(nil)
+	suite.clientId = generators.String("clientid")
+	suite.clientSecret = generators.String("clientsecret")
+
+	suite.configWriter = new(mocks.ConfigurationWriter)
+	suite.configWriter.On("WriteConfiguration", mock.Anything).Return(nil)
 
 	suite.secretReader = new(cmdmocks.SecretReader)
 	suite.secretReader.On("Read").Return(suite.clientSecret, nil)
-	suite.sut = commands.NewLogin(suite.configDirectory, suite.secretReader)
-
-	suite.clientId = suite.clientId
-	suite.clientSecret = suite.clientSecret
+	suite.sut = commands.NewLogin(suite.configWriter, suite.secretReader)
 }
 
 func TestLoginSuiteRunner(t *testing.T) {
@@ -64,9 +65,9 @@ func (suite *LoginSuite) TestLogin_Execute_Writes_Configuration_When_Secret_Not_
 }
 
 func (suite *LoginSuite) assertConfigurationWrittenWithCredentials(clientId string, clientSecret string) {
-	suite.configDirectory.AssertCalled(suite.T(), "WriteConfiguration", mock.Anything)
+	suite.configWriter.AssertCalled(suite.T(), "WriteConfiguration", mock.Anything)
 
-	call := suite.configDirectory.Calls[0]
+	call := suite.configWriter.Calls[0]
 	assert.Len(suite.T(), call.Arguments, 1)
 	configuration := call.Arguments[0].(*config.Configuration)
 	assert.Equal(suite.T(), clientId, configuration.ConfigurationRoot.Credentials[0].Id)
