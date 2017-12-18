@@ -1,7 +1,8 @@
-package config
+package tests
 
 import (
 	"fmt"
+	"github.com/CloudHub360/ch360.go/config"
 	fakes "github.com/CloudHub360/ch360.go/config/fakes"
 	assertThat "github.com/CloudHub360/ch360.go/test/assertions"
 	generate "github.com/CloudHub360/ch360.go/test/generators"
@@ -14,7 +15,7 @@ import (
 
 type ConfigurationDirectorySuite struct {
 	suite.Suite
-	sut                   *ConfigurationDirectory
+	sut                   *config.ConfigurationDirectory
 	homeDirectory         *fakes.FakeHomeDirectoryPathGetter
 	fileContents          []byte
 	expectedDirectoryPath string
@@ -29,7 +30,7 @@ func (suite *ConfigurationDirectorySuite) SetupTest() {
 	}
 	suite.homeDirectory.Create()
 
-	suite.sut = NewConfigurationDirectory(
+	suite.sut = config.NewConfigurationDirectory(
 		suite.homeDirectory)
 
 	suite.expectedFilename = "config.yaml"
