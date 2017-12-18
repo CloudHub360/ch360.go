@@ -45,7 +45,7 @@ Options:
 			secret = ""
 		}
 
-		configDirectory := config.NewConfigurationDirectory(config.HomeDirectoryPathGetter{})
+		configDirectory := config.NewAppDirectory(config.HomeDirectoryPathGetter{})
 		err = commands.NewLogin(configDirectory, &commands.ConsoleSecretReader{}).Execute(id, secret)
 		if err != nil {
 			os.Exit(1)
