@@ -47,5 +47,12 @@ func (cmd *DeleteClassifier) Execute(classifierName string) error {
 		fmt.Println("[FAILED]")
 		return errors.New("There is no classifier named '" + classifierName + "'")
 	}
-	return cmd.client.Delete(classifierName)
+
+	err = cmd.client.Delete(classifierName)
+	if err != nil {
+		fmt.Println("[FAILED]")
+		return err
+	}
+
+	return nil
 }

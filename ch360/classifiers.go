@@ -3,6 +3,7 @@ package ch360
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -45,7 +46,6 @@ func (client *ClassifiersClient) Delete(name string) error {
 	_, err := client.issueRequest("DELETE", name)
 
 	if err != nil {
-		fmt.Println("[FAILED]")
 		return err
 	}
 
@@ -58,13 +58,9 @@ type TrainClassifierRequest struct {
 }
 
 func (_req *TrainClassifierRequest) Issue(client *ClassifiersClient) error {
-	fmt.Printf("Adding samples from file '%s'... ", _req.SamplesFile)
-
 	zip, err := os.Open(_req.SamplesFile)
 	if err != nil {
-		fmt.Println("[FAILED]")
-		fmt.Fprintf(os.Stderr, "The file '%s' could not be found.\n", _req.SamplesFile)
-		return err
+		return errors.New(fmt.Sprintf("The file '%s' could not be found.", _req.SamplesFile))
 	}
 
 	request, err := http.NewRequest("POST",
@@ -74,18 +70,15 @@ func (_req *TrainClassifierRequest) Issue(client *ClassifiersClient) error {
 	request.Header.Set("Content-Type", "application/zip")
 
 	if err != nil {
-		fmt.Println("[FAILED]")
 		return err
 	}
 
 	_, err = client.requestSender.Do(request)
 
 	if err != nil {
-		fmt.Println("[FAILED]")
 		return err
 	}
 
-	fmt.Println("[OK]")
 	return nil
 }
 
@@ -103,7 +96,6 @@ func (client *ClassifiersClient) GetAll() (ClassifierList, error) {
 	response, err := client.issueRequest("GET", "")
 
 	if err != nil {
-		fmt.Println("[FAILED]")
 		return nil, err
 	}
 
@@ -111,7 +103,6 @@ func (client *ClassifiersClient) GetAll() (ClassifierList, error) {
 	_, err = buf.ReadFrom(response.Body)
 
 	if err != nil {
-		fmt.Println("[FAILED]")
 		return nil, err
 	}
 
@@ -121,7 +112,6 @@ func (client *ClassifiersClient) GetAll() (ClassifierList, error) {
 	err = json.Unmarshal(buf.Bytes(), &classifiersResponse)
 
 	if err != nil {
-		fmt.Println("[FAILED]")
 		return nil, err
 	}
 

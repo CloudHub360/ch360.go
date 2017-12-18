@@ -1,6 +1,9 @@
 package commands
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 //go:generate mockery -name "Creator|Trainer|CreatorTrainer"
 
@@ -37,12 +40,17 @@ func (cmd *CreateClassifier) Execute(classifierName string, samplesPath string) 
 	}
 
 	fmt.Println("[OK]")
+
+	fmt.Printf("Adding samples from file '%s'... ", samplesPath)
 	err = cmd.client.Train(classifierName, samplesPath)
 
 	if err != nil {
+		fmt.Println("[FAILED]")
+		fmt.Fprint(os.Stderr, err.Error())
 		cmd.deleteClassifier.Execute(classifierName)
 		return err
 	}
 
+	fmt.Println("[OK]")
 	return nil
 }

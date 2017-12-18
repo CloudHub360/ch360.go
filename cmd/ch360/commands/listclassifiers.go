@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 )
 
@@ -15,5 +16,11 @@ func NewListClassifiers(client Getter) *ListClassifiers {
 }
 
 func (cmd *ListClassifiers) Execute() (ch360.ClassifierList, error) {
-	return cmd.client.GetAll()
+	classifiers, err := cmd.client.GetAll()
+	if err != nil {
+		fmt.Println("[FAILED]")
+		return nil, err
+	}
+
+	return classifiers, nil
 }
