@@ -2,7 +2,6 @@ package config
 
 import (
 	"gopkg.in/yaml.v2"
-	"io"
 )
 
 type Configuration struct {
@@ -20,11 +19,6 @@ type ApiCredentials struct {
 	Url    string `yaml:"url"`
 	Id     string `yaml:"client_id"`
 	Secret string `yaml:"client_secret"`
-}
-
-//go:generate mockery -name "Writer"
-type Writer interface {
-	io.Writer
 }
 
 func NewConfiguration(clientId string, clientSecret string) *Configuration {
