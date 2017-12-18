@@ -56,7 +56,7 @@ Describe "ch360 --login" {
     ch360 login --id="$ClientId" --secret="$ClientSecret" | Should -Be "Logging in... [OK]"
     $LASTEXITCODE | Should -Be 0
   }
-  
+
   It "should write credentials to config file" {
     $expectedConfigFilePath = Join-Path -Path $configFolderPath -ChildPath "config.yaml"
 
