@@ -5,18 +5,20 @@ import (
 	"net/http"
 	"os"
 	"time"
-
+	//"bufio"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/bgentry/speakeasy"
 	"github.com/docopt/docopt-go"
+	//"strings"
 )
 
 func main() {
 	usage := `CloudHub360 command-line tool.
 
 Usage:
-  ch360 login --id=<id> --secret=<secret>
+  ch360 login --id=<id> [--secret=<secret>]
   ch360 create classifier <name> --id=<id> --secret=<secret> --samples-zip=<path>
   ch360 delete classifier <name> --id=<id> --secret=<secret>
   ch360 list classifiers --id=<id> --secret=<secret>
@@ -36,25 +38,33 @@ Options:
 		os.Exit(1)
 	}
 
-	id := args["--id"].(string)
-	secret := args["--secret"].(string)
+	if args["login"].(bool) {
+		id := args["--id"].(string)
+
+		var secret string
+		if args["--secret"] != nil {
+			secret = args["--secret"].(string)
+		} else {
+			secret = ""
+		}
+
+		configDirectory := config.NewConfigurationDirectory(config.HomeDirectoryPathGetter{})
+		err = commands.NewLogin(configDirectory, &commands.ConsoleSecretReader{}).Execute(id, secret)
+		if err != nil {
+			os.Exit(1)
+		}
+		return
+	}
 
 	var httpClient = &http.Client{
 		Timeout: time.Minute * 5,
 	}
 
+	id := args["--id"].(string)
+	secret := args["--secret"].(string)
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
 
-	if args["login"].(bool) {
-		fmt.Print("Logging in... ")
-
-		configDirectory := config.NewConfigurationDirectory(config.HomeDirectoryPathGetter{})
-		err = commands.NewLogin(configDirectory).Execute(id, secret)
-		if err != nil {
-			os.Exit(1)
-		}
-		fmt.Println("[OK]")
-	} else if args["create"].(bool) {
+	if args["create"].(bool) {
 		classifierName := args["<name>"].(string)
 		samplesPath := args["--samples-zip"].(string)
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
