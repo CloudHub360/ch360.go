@@ -2,6 +2,7 @@ package ch360
 
 import (
 	"bytes"
+	"errors"
 	"github.com/CloudHub360/ch360.go/ch360/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -9,7 +10,6 @@ import (
 	"go/build"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"testing"
 )
 
@@ -113,12 +113,13 @@ func (suite *ClassifiersClientSuite) Test_Train_Issues_Add_Samples_Request() {
 
 func (suite *ClassifiersClientSuite) Test_Train_Returns_An_Error_If_The_Sample_Path_Is_Invalid() {
 	// Act
+	samplesPath := build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/non-existent.zip"
 	err := suite.sut.Train(
 		suite.classifierName,
-		build.Default.GOPATH+"/src/github.com/CloudHub360/ch360.go/test/non-existent.zip")
+		samplesPath)
 
 	// Assert
-	assert.IsType(suite.T(), &os.PathError{}, err)
+	assert.Equal(suite.T(), errors.New("The file '"+samplesPath+"' could not be found."), err)
 }
 
 func AListOfClassifiers(names ...string) ClassifierList {
