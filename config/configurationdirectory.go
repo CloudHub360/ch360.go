@@ -10,12 +10,26 @@ type ConfigurationDirectory struct {
 	homeDirectoryProvider DirectoryPathGetter
 }
 
+//go:generate mockery -name "ConfigurationWriter"
+type ConfigurationWriter interface {
+	WriteConfiguration(configuration *Configuration) error
+}
+
 var userReadWritePermissions os.FileMode = 0600
 
 func NewConfigurationDirectory(homeDirProvider DirectoryPathGetter) *ConfigurationDirectory {
 	return &ConfigurationDirectory{
 		homeDirectoryProvider: homeDirProvider,
 	}
+}
+
+func (configDirectory *ConfigurationDirectory) WriteConfiguration(configuration *Configuration) error {
+	contents, err := configuration.Serialise()
+	if err != nil {
+		return err
+	}
+	_, err = configDirectory.Write(contents)
+	return err
 }
 
 func (configDirectory *ConfigurationDirectory) Write(data []byte) (int, error) {

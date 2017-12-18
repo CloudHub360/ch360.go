@@ -1,6 +1,7 @@
-package config
+package tests
 
 import (
+	"github.com/CloudHub360/ch360.go/config"
 	mockconfig "github.com/CloudHub360/ch360.go/config/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -11,7 +12,7 @@ import (
 
 type ConfigurationSuite struct {
 	suite.Suite
-	sut                 *Configuration
+	sut                 *config.Configuration
 	mockConfigDirectory *mockconfig.Writer
 	clientId            string
 	clientSecret        string
@@ -23,7 +24,7 @@ func (suite *ConfigurationSuite) SetupTest() {
 
 	suite.clientId = "clientid"
 	suite.clientSecret = "clientsecret"
-	suite.sut = NewConfiguration(suite.clientId, suite.clientSecret)
+	suite.sut = config.NewConfiguration(suite.clientId, suite.clientSecret)
 }
 
 func TestConfigurationSuiteRunner(t *testing.T) {
@@ -53,8 +54,8 @@ func (suite *ConfigurationSuite) TestConfigurationSaves_Writes_File_With_Seriali
 	suite.AssertConfigurationIsPopulatedWithData(configuration)
 }
 
-func (suite *ConfigurationSuite) AssertIsValidSerialisedConfiguration(contents []byte) Configuration {
-	var configuration Configuration
+func (suite *ConfigurationSuite) AssertIsValidSerialisedConfiguration(contents []byte) config.Configuration {
+	var configuration config.Configuration
 	err := yaml.Unmarshal(contents, &configuration)
 	if err != nil {
 		assert.Fail(suite.T(), "Bytes are not valid serialised Configuration")
@@ -62,6 +63,6 @@ func (suite *ConfigurationSuite) AssertIsValidSerialisedConfiguration(contents [
 	return configuration
 }
 
-func (suite *ConfigurationSuite) AssertConfigurationIsPopulatedWithData(configuration Configuration) {
+func (suite *ConfigurationSuite) AssertConfigurationIsPopulatedWithData(configuration config.Configuration) {
 	assert.Equal(suite.T(), suite.clientId, configuration.ConfigurationRoot.Credentials[0].Id)
 }
