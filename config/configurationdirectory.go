@@ -18,11 +18,12 @@ func NewConfigurationDirectory(homeDirProvider DirectoryPathGetter) *Configurati
 	}
 }
 
-func (configDirectory *ConfigurationDirectory) WriteFile(filename string, data []byte) error {
+func (configDirectory *ConfigurationDirectory) Write(data []byte) (int, error) {
 	configDirectory.createIfNotExists()
 
-	fullFilePath := filepath.Join(configDirectory.getPath(), filename)
-	return ioutil.WriteFile(fullFilePath, data, userReadWritePermissions)
+	fullFilePath := filepath.Join(configDirectory.getPath(), "config.yaml")
+	err := ioutil.WriteFile(fullFilePath, data, userReadWritePermissions)
+	return 0, err
 }
 
 func (configDirectory *ConfigurationDirectory) getPath() string {

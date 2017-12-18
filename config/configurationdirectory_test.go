@@ -14,12 +14,11 @@ import (
 
 type ConfigurationDirectorySuite struct {
 	suite.Suite
-	sut *ConfigurationDirectory
-	//fileSystem            *FileSystem
+	sut                   *ConfigurationDirectory
 	homeDirectory         *fakes.FakeHomeDirectoryPathGetter
 	fileContents          []byte
 	expectedDirectoryPath string
-	filename              string
+	expectedFilename      string
 	expectedFilePath      string
 }
 
@@ -33,13 +32,13 @@ func (suite *ConfigurationDirectorySuite) SetupTest() {
 	suite.sut = NewConfigurationDirectory(
 		suite.homeDirectory)
 
-	suite.filename = "assertThat-config-file.json"
+	suite.expectedFilename = "config.yaml"
 	suite.expectedDirectoryPath = filepath.Join(
 		suite.homeDirectory.GetPath(),
 		".ch360")
 	suite.expectedFilePath = filepath.Join(
 		suite.expectedDirectoryPath,
-		suite.filename)
+		suite.expectedFilename)
 	suite.fileContents = generate.Bytes()
 
 	assertThat.DirectoryDoesNotExist(suite.T(), suite.expectedDirectoryPath)
@@ -56,15 +55,19 @@ func TestConfigurationDirectorySuiteRunner(t *testing.T) {
 
 func (suite *ConfigurationDirectorySuite) TestConfigurationDirectoryWriteFile_Creates_Config_Directory_If_None_Exists() {
 	// Act
-	suite.sut.WriteFile(suite.filename, suite.fileContents)
+	_, err := suite.sut.Write(suite.fileContents)
 
 	// Assert
+	if err != nil {
+		assert.Error(suite.T(), err)
+	}
+
 	assertThat.DirectoryExists(suite.T(), suite.expectedDirectoryPath)
 }
 
 func (suite *ConfigurationDirectorySuite) TestConfigurationDirectoryWriteFile_Creates_File_With_Correct_Name() {
 	// Act
-	err := suite.sut.WriteFile(suite.filename, suite.fileContents)
+	_, err := suite.sut.Write(suite.fileContents)
 
 	// Assert
 	if err != nil {
@@ -76,7 +79,7 @@ func (suite *ConfigurationDirectorySuite) TestConfigurationDirectoryWriteFile_Cr
 
 func (suite *ConfigurationDirectorySuite) TestConfigurationDirectoryWriteFile_Creates_File_With_Correct_Content() {
 	// Act
-	err := suite.sut.WriteFile(suite.filename, suite.fileContents)
+	_, err := suite.sut.Write(suite.fileContents)
 
 	// Assert
 	if err != nil {
