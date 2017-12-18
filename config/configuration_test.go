@@ -1,11 +1,11 @@
 package config
 
 import (
-	"encoding/json"
 	mockconfig "github.com/CloudHub360/ch360.go/config/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/yaml.v2"
 	"testing"
 )
 
@@ -49,7 +49,7 @@ func (suite *ConfigurationSuite) TestConfigurationSaves_Writes_File_With_Correct
 
 	call := suite.mockConfigDirectory.Calls[0]
 	assert.Len(suite.T(), call.Arguments, 2)
-	assert.Equal(suite.T(), "config.json", call.Arguments[0])
+	assert.Equal(suite.T(), "config.yaml", call.Arguments[0])
 }
 
 func (suite *ConfigurationSuite) TestConfigurationSaves_Writes_File_With_Serialised_Configuration() {
@@ -67,7 +67,7 @@ func (suite *ConfigurationSuite) TestConfigurationSaves_Writes_File_With_Seriali
 
 func (suite *ConfigurationSuite) AssertIsValidSerialisedConfiguration(contents []byte) Configuration {
 	var configuration Configuration
-	err := json.Unmarshal(contents, &configuration)
+	err := yaml.Unmarshal(contents, &configuration)
 	if err != nil {
 		assert.Fail(suite.T(), "Bytes are not valid serialised Configuration")
 	}

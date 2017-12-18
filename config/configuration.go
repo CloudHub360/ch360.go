@@ -1,24 +1,24 @@
 package config
 
 import (
-	"encoding/json"
+	"gopkg.in/yaml.v2"
 )
 
 type Configuration struct {
-	ConfigurationRoot *ConfigurationRoot `json:"configuration"`
+	ConfigurationRoot *ConfigurationRoot `yaml:"configuration"`
 }
 
 type ConfigurationRoot struct {
-	Credentials ApiCredentialsList `json:"credentials"`
+	Credentials ApiCredentialsList `yaml:"credentials"`
 }
 
 type ApiCredentialsList []ApiCredentials
 
 type ApiCredentials struct {
-	Key    string `json:"key"`
-	Url    string `json:"url"`
-	Id     string `json:"client_id"`
-	Secret string `json:"client_secret"`
+	Key    string `yaml:"key"`
+	Url    string `yaml:"url"`
+	Id     string `yaml:"client_id"`
+	Secret string `yaml:"client_secret"`
 }
 
 //go:generate mockery -name "FileWriter"
@@ -48,7 +48,7 @@ func NewConfiguration(clientId string, clientSecret string) *Configuration {
 }
 
 func (config *Configuration) Save(configDir FileWriter) error {
-	json, _ := json.Marshal(config)
+	yaml, _ := yaml.Marshal(config)
 
-	return configDir.WriteFile("config.json", json)
+	return configDir.WriteFile("config.yaml", yaml)
 }
