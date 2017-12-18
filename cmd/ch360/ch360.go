@@ -8,6 +8,7 @@ import (
 
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
+	"github.com/CloudHub360/ch360.go/config"
 	"github.com/docopt/docopt-go"
 )
 
@@ -43,7 +44,17 @@ Options:
 	}
 
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
-	if args["create"].(bool) {
+
+	if args["login"].(bool) {
+		fmt.Print("Logging in... ")
+
+		configDirectory := config.NewConfigurationDirectory(config.HomeDirectoryPathGetter{})
+		err = commands.NewLogin(configDirectory).Execute(id, secret)
+		if err != nil {
+			os.Exit(1)
+		}
+		fmt.Println("[OK]")
+	} else if args["create"].(bool) {
 		classifierName := args["<name>"].(string)
 		samplesPath := args["--samples-zip"].(string)
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
