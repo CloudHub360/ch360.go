@@ -11,3 +11,13 @@ func Bytes() []byte {
 	rand.Read(token)
 	return token
 }
+
+const lettersAndNumbers = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func String(root string) string {
+	b := make([]byte, 8)
+	for i := range b {
+		b[i] = lettersAndNumbers[rand.Intn(len(lettersAndNumbers))]
+	}
+	return root + "-" + string(b)
+}
