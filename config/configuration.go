@@ -48,7 +48,10 @@ func NewConfiguration(clientId string, clientSecret string) *Configuration {
 }
 
 func (config *Configuration) Save(configDir FileWriter) error {
-	yaml, _ := yaml.Marshal(config)
+	yaml, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
 
 	return configDir.WriteFile("config.yaml", yaml)
 }
