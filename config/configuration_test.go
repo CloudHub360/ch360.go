@@ -12,14 +12,14 @@ import (
 type ConfigurationSuite struct {
 	suite.Suite
 	sut                 *Configuration
-	mockConfigDirectory *mockconfig.FileWriter
+	mockConfigDirectory *mockconfig.Writer
 	clientId            string
 	clientSecret        string
 }
 
 func (suite *ConfigurationSuite) SetupTest() {
-	suite.mockConfigDirectory = &mockconfig.FileWriter{}
-	suite.mockConfigDirectory.On("WriteFile", mock.Anything, mock.Anything).Return(nil)
+	suite.mockConfigDirectory = &mockconfig.Writer{}
+	suite.mockConfigDirectory.On("Write", mock.Anything).Return(0, nil)
 
 	suite.clientId = "clientid"
 	suite.clientSecret = "clientsecret"
@@ -40,28 +40,16 @@ func (suite *ConfigurationSuite) TestConfigurationNewConfiguration_Creates_A_Con
 	assert.Equal(suite.T(), "default", actualCredentials.Url)
 }
 
-func (suite *ConfigurationSuite) TestConfigurationSaves_Writes_File_With_Correct_Name() {
-	// Act
-	suite.sut.Save(suite.mockConfigDirectory)
-
-	// Assert
-	suite.mockConfigDirectory.AssertNumberOfCalls(suite.T(), "WriteFile", 1)
-
-	call := suite.mockConfigDirectory.Calls[0]
-	assert.Len(suite.T(), call.Arguments, 2)
-	assert.Equal(suite.T(), "config.yaml", call.Arguments[0])
-}
-
 func (suite *ConfigurationSuite) TestConfigurationSaves_Writes_File_With_Serialised_Configuration() {
 	// Act
 	suite.sut.Save(suite.mockConfigDirectory)
 
 	// Assert
-	suite.mockConfigDirectory.AssertNumberOfCalls(suite.T(), "WriteFile", 1)
+	suite.mockConfigDirectory.AssertNumberOfCalls(suite.T(), "Write", 1)
 
 	call := suite.mockConfigDirectory.Calls[0]
-	assert.Len(suite.T(), call.Arguments, 2)
-	configuration := suite.AssertIsValidSerialisedConfiguration(call.Arguments[1].([]byte))
+	assert.Len(suite.T(), call.Arguments, 1)
+	configuration := suite.AssertIsValidSerialisedConfiguration(call.Arguments[0].([]byte))
 	suite.AssertConfigurationIsPopulatedWithData(configuration)
 }
 

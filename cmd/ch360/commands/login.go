@@ -1,22 +1,22 @@
 package commands
 
-import "github.com/CloudHub360/ch360.go/config"
+import (
+	"github.com/CloudHub360/ch360.go/config"
+	"io"
+)
 
 type Login struct {
-	client Getter
+	configurationDirectory io.Writer
 }
 
-func NewLogin(client Getter) *Login {
+func NewLogin(configDirectory io.Writer) *Login {
 	return &Login{
-		client: client,
+		configurationDirectory: configDirectory,
 	}
 }
 
 func (cmd *Login) Execute(clientId string, clientSecret string) error {
-	configurationDirectory := config.NewConfigurationDirectory(
-		config.HomeDirectoryPathGetter{},
-		&config.FileSystem{})
 	configuration := config.NewConfiguration(clientId, clientSecret)
 
-	return configuration.Save(configurationDirectory)
+	return configuration.Save(cmd.configurationDirectory)
 }

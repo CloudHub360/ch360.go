@@ -2,6 +2,7 @@ package config
 
 import (
 	"gopkg.in/yaml.v2"
+	"io"
 )
 
 type Configuration struct {
@@ -21,9 +22,9 @@ type ApiCredentials struct {
 	Secret string `yaml:"client_secret"`
 }
 
-//go:generate mockery -name "FileWriter"
-type FileWriter interface {
-	WriteFile(filepath string, data []byte) error
+//go:generate mockery -name "Writer"
+type Writer interface {
+	io.Writer
 }
 
 func NewConfiguration(clientId string, clientSecret string) *Configuration {
@@ -47,11 +48,12 @@ func NewConfiguration(clientId string, clientSecret string) *Configuration {
 	return configuration
 }
 
-func (config *Configuration) Save(configDir FileWriter) error {
+func (config *Configuration) Save(configDir io.Writer) error {
 	yaml, err := yaml.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	return configDir.WriteFile("config.yaml", yaml)
+	_, err = configDir.Write(yaml)
+	return err
 }
