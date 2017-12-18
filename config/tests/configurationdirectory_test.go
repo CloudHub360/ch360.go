@@ -56,7 +56,8 @@ func TestConfigurationDirectorySuiteRunner(t *testing.T) {
 
 func (suite *ConfigurationDirectorySuite) TestConfigurationDirectoryWriteFile_Creates_Config_Directory_If_None_Exists() {
 	// Act
-	_, err := suite.sut.Write(suite.fileContents)
+	config := config.NewConfiguration("clientid", "clientsecret")
+	err := suite.sut.WriteConfiguration(config)
 
 	// Assert
 	if err != nil {
@@ -68,7 +69,8 @@ func (suite *ConfigurationDirectorySuite) TestConfigurationDirectoryWriteFile_Cr
 
 func (suite *ConfigurationDirectorySuite) TestConfigurationDirectoryWriteFile_Creates_File_With_Correct_Name() {
 	// Act
-	_, err := suite.sut.Write(suite.fileContents)
+	config := config.NewConfiguration("clientid", "clientsecret")
+	err := suite.sut.WriteConfiguration(config)
 
 	// Assert
 	if err != nil {
@@ -80,12 +82,19 @@ func (suite *ConfigurationDirectorySuite) TestConfigurationDirectoryWriteFile_Cr
 
 func (suite *ConfigurationDirectorySuite) TestConfigurationDirectoryWriteFile_Creates_File_With_Correct_Content() {
 	// Act
-	_, err := suite.sut.Write(suite.fileContents)
+	config := config.NewConfiguration("clientid", "clientsecret")
+	err := suite.sut.WriteConfiguration(config)
 
 	// Assert
 	if err != nil {
 		assert.Error(suite.T(), err)
 	}
 
-	assertThat.FileHasContents(suite.T(), suite.expectedFilePath, suite.fileContents)
+	reloadedConfig, err := suite.sut.ReadConfiguration()
+	assertConfigurationHasCredentials(suite.T(), reloadedConfig, "clientid", "clientsecret")
+}
+
+func assertConfigurationHasCredentials(t *testing.T, configuration *config.Configuration, clientId string, clientSecret string) {
+	assert.Equal(t, clientId, configuration.ConfigurationRoot.Credentials[0].Id)
+	assert.Equal(t, clientSecret, configuration.ConfigurationRoot.Credentials[0].Secret)
 }

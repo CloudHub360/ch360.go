@@ -2,7 +2,6 @@ package config
 
 import (
 	"gopkg.in/yaml.v2"
-	//"io"
 	"io"
 )
 
@@ -54,12 +53,8 @@ func (config *Configuration) Serialise() ([]byte, error) {
 	return yaml, err
 }
 
-func (config *Configuration) Save(configDir io.Writer) error {
-	yaml, err := yaml.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	_, err = configDir.Write(yaml)
-	return err
+func DeserialiseConfiguration(data []byte) (*Configuration, error) {
+	var configuration Configuration
+	err := yaml.Unmarshal(data, &configuration)
+	return &configuration, err
 }

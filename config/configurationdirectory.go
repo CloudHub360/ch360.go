@@ -28,16 +28,31 @@ func (configDirectory *ConfigurationDirectory) WriteConfiguration(configuration 
 	if err != nil {
 		return err
 	}
-	_, err = configDirectory.Write(contents)
+	_, err = configDirectory.write(contents)
 	return err
 }
 
-func (configDirectory *ConfigurationDirectory) Write(data []byte) (int, error) {
+func (configDirectory *ConfigurationDirectory) ReadConfiguration() (*Configuration, error) {
+	contents, err := configDirectory.read()
+	if err != nil {
+		return nil, err
+	}
+
+	configuration, err := DeserialiseConfiguration(contents)
+	return configuration, err
+}
+
+func (configDirectory *ConfigurationDirectory) write(data []byte) (int, error) {
 	configDirectory.createIfNotExists()
 
 	fullFilePath := filepath.Join(configDirectory.getPath(), "config.yaml")
 	err := ioutil.WriteFile(fullFilePath, data, userReadWritePermissions)
 	return 0, err
+}
+
+func (configDirectory *ConfigurationDirectory) read() ([]byte, error) {
+	fullFilePath := filepath.Join(configDirectory.getPath(), "config.yaml")
+	return ioutil.ReadFile(fullFilePath)
 }
 
 func (configDirectory *ConfigurationDirectory) getPath() string {
