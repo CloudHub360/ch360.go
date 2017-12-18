@@ -1,8 +1,9 @@
-package commands
+package tests
 
 import (
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360"
+	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -12,14 +13,14 @@ import (
 
 type ListClassifierSuite struct {
 	suite.Suite
-	sut    *ListClassifiers
+	sut    *commands.ListClassifiers
 	client *mocks.Getter
 }
 
 func (suite *ListClassifierSuite) SetupTest() {
 	suite.client = new(mocks.Getter)
 
-	suite.sut = NewListClassifiers(suite.client)
+	suite.sut = commands.NewListClassifiers(suite.client)
 }
 
 func TestListClassifierSuiteRunner(t *testing.T) {
