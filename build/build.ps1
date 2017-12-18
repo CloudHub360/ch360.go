@@ -57,7 +57,7 @@ Task Test Build, {
     pushd $RootDir
     exec { go test -v -race ./... }
 
-    Register-CustomAssertions "test/assertions"
+    Register-CustomAssertions "test/assertions/pester"
 
     $testResults = Invoke-Pester -PassThru -Script @{
       Path="test";
