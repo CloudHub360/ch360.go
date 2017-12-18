@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -51,4 +52,11 @@ func (suite *ConfigurationSuite) TestConfigurationSerialise_Can_Be_Deserialised_
 	assert.Equal(suite.T(), credentials.Secret, suite.clientSecret)
 	assert.Equal(suite.T(), credentials.Key, "default")
 	assert.Equal(suite.T(), credentials.Url, "default")
+}
+
+func (suite *ConfigurationSuite) TestConfigurationDeserialise_Returns_Error_If_Attempting_To_Deserialised_Invalid_Contents() {
+	_, err := config.DeserialiseConfiguration(generators.Bytes())
+	if err == nil {
+		assert.Fail(suite.T(), "No error was returned when deserialising contents that aren't a valid configuration")
+	}
 }
