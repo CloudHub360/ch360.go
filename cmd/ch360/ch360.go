@@ -2,16 +2,13 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"os"
-	"time"
-	//"bufio"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/bgentry/speakeasy"
 	"github.com/docopt/docopt-go"
-	//"strings"
+	"net/http"
+	"os"
+	"time"
 )
 
 func main() {
