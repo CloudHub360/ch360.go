@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/howeyc/gopass"
 	"os"
 )
 
@@ -46,15 +45,4 @@ func (cmd *Login) Execute(clientId string, clientSecret string) error {
 		fmt.Println("[OK]")
 	}
 	return err
-}
-
-type ConsoleSecretReader struct{}
-
-func (reader *ConsoleSecretReader) Read() (string, error) {
-	secret, err := gopass.GetPasswd()
-	if err != nil {
-		return "", err
-	}
-
-	return string(secret), nil
 }
