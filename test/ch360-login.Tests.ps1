@@ -19,7 +19,7 @@ function Backup-ConfigFolder() {
 }
 
 function Restore-ConfigFolder() {
-  if (!Test-Path $configFolderPathBackup) {
+  if (!(Test-Path $configFolderPathBackup)) {
     return
   }
 
@@ -41,7 +41,7 @@ function Remove-BackupFolder() {
 }
 
 function Copy-Folder($source, $destination) {
-  if (!Test-Path $destination) {
+  if (!(Test-Path $destination)) {
     New-Item -ItemType Directory $destination    
   }
   Get-ChildItem -Path $source | Copy-Item -Destination $destination -Recurse -Container
@@ -60,7 +60,7 @@ Describe "ch360 --login" {
   It "should write credentials to config file" {
     $expectedConfigFilePath = Join-Path -Path $configFolderPath -ChildPath "config.yaml"
 
-    ch360 login --id="$ClientId" --secret="$ClientSecret"    
+    ch360 login --id="$ClientId" --secret="$ClientSecret"
     Get-Content -Path $expectedConfigFilePath | Format-MultilineOutput | Should -BeLike "*client_id: $ClientId*"
     Get-Content -Path $expectedConfigFilePath | Format-MultilineOutput | Should -BeLike "*client_secret: $ClientSecret*"
   }
