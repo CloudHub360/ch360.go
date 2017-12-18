@@ -1,8 +1,9 @@
-package commands
+package tests
 
 import (
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360"
+	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -12,7 +13,7 @@ import (
 
 type DeleteClassifierSuite struct {
 	suite.Suite
-	sut    ClassifierCommand
+	sut    commands.ClassifierCommand
 	client *mocks.DeleterGetter
 }
 
@@ -23,7 +24,7 @@ func (suite *DeleteClassifierSuite) SetupTest() {
 
 	suite.client.On("Delete", mock.Anything).Return(nil)
 
-	suite.sut = NewDeleteClassifier(suite.client)
+	suite.sut = commands.NewDeleteClassifier(suite.client)
 }
 
 func TestDeleteClassifierSuiteRunner(t *testing.T) {
