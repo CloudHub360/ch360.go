@@ -24,20 +24,19 @@ func NewLogin(configDirectory config.ConfigurationWriter, reader SecretReader) *
 }
 
 func (cmd *Login) Execute(clientId string, clientSecret string) error {
+	var err error
 	if clientSecret == "" {
-		fmt.Print("API Client Secret: ")
-		secret, err := cmd.secretReader.Read()
+		clientSecret, err = cmd.readSecret()
 		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
-		clientSecret = secret
 	}
 
 	fmt.Print("Logging in... ")
 	configuration := config.NewConfiguration(clientId, clientSecret)
 
-	err := cmd.configurationDirectory.WriteConfiguration(configuration)
+	err = cmd.configurationDirectory.WriteConfiguration(configuration)
 	if err != nil {
 		fmt.Println("[FAILED]")
 		fmt.Fprintln(os.Stderr, err.Error())
@@ -45,4 +44,14 @@ func (cmd *Login) Execute(clientId string, clientSecret string) error {
 		fmt.Println("[OK]")
 	}
 	return err
+}
+
+func (cmd *Login) readSecret() (string, error) {
+	fmt.Print("API Client Secret: ")
+	secret, err := cmd.secretReader.Read()
+	if err != nil {
+		fmt.Println(err.Error())
+		return "", err
+	}
+	return secret, nil
 }
