@@ -4,6 +4,7 @@ import (
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -27,7 +28,7 @@ func TestConfigurationSuiteRunner(t *testing.T) {
 
 func (suite *ConfigurationSuite) TestConfigurationNewConfiguration_Creates_A_Configuration_With_Specified_Credentials() {
 	// Assert
-	assert.Len(suite.T(), suite.sut.Credentials, 1)
+	require.Len(suite.T(), suite.sut.Credentials, 1)
 	actualCredentials := suite.sut.Credentials[0]
 	assert.Equal(suite.T(), suite.clientId, actualCredentials.Id)
 	assert.Equal(suite.T(), suite.clientSecret, actualCredentials.Secret)
