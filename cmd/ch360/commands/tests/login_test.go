@@ -8,6 +8,7 @@ import (
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -69,7 +70,7 @@ func (suite *LoginSuite) assertConfigurationWrittenWithCredentials(clientId stri
 	suite.configWriter.AssertCalled(suite.T(), "WriteConfiguration", mock.Anything)
 
 	call := suite.configWriter.Calls[0]
-	assert.Len(suite.T(), call.Arguments, 1)
+	require.Len(suite.T(), call.Arguments, 1)
 	configuration := call.Arguments[0].(*config.Configuration)
 	assert.Equal(suite.T(), clientId, configuration.ConfigurationRoot.Credentials[0].Id)
 	assert.Equal(suite.T(), clientSecret, configuration.ConfigurationRoot.Credentials[0].Secret)
