@@ -16,8 +16,8 @@ type ConfigurationSuite struct {
 }
 
 func (suite *ConfigurationSuite) SetupTest() {
-	suite.clientId = "clientid"
-	suite.clientSecret = "clientsecret"
+	suite.clientId = generators.String("clientid")
+	suite.clientSecret = generators.String("clientsecret")
 	suite.sut = config.NewConfiguration(suite.clientId, suite.clientSecret)
 }
 
