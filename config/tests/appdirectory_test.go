@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -56,7 +57,11 @@ func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_App_D
 
 	assert.Nil(suite.T(), err)
 	assertThat.DirectoryExists(suite.T(), suite.expectedConfigDir)
-	assertThat.DirectoryHasPermissions(suite.T(), suite.expectedConfigDir, config.DirRWPermissions)
+
+	//Permissions are not set correctly on Windows, only linux (on Windows they are always 777)
+	if runtime.GOOS != "windows" {
+		assertThat.DirectoryHasPermissions(suite.T(), suite.expectedConfigDir, config.DirRWPermissions)
+	}
 }
 
 func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_File_With_Correct_Name() {
@@ -71,6 +76,7 @@ func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_File_
 
 	assert.Nil(suite.T(), err)
 	reloadedConfig, err := suite.sut.ReadConfiguration()
+
 	assertConfigurationHasCredentials(suite.T(), reloadedConfig, suite.clientId, suite.clientSecret)
 }
 
