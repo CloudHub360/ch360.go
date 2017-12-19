@@ -6,17 +6,17 @@ import (
 	"os"
 )
 
-//go:generate mockery -name SecretReader
-type SecretReader interface {
+//go:generate mockery -name Reader
+type Reader interface {
 	Read() (string, error)
 }
 
 type Login struct {
 	configurationDirectory config.ConfigurationWriter
-	secretReader           SecretReader
+	secretReader           Reader
 }
 
-func NewLogin(configDirectory config.ConfigurationWriter, reader SecretReader) *Login {
+func NewLogin(configDirectory config.ConfigurationWriter, reader Reader) *Login {
 	return &Login{
 		configurationDirectory: configDirectory,
 		secretReader:           reader,
