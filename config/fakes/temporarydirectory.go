@@ -9,18 +9,18 @@ import (
 	"time"
 )
 
-type FakeHomeDirectoryPathGetter struct {
+type TemporaryDirectory struct {
 	guid string
 	path string
 }
 
-func NewFakeHomeDirectoryPathGetter() *FakeHomeDirectoryPathGetter {
-	return &FakeHomeDirectoryPathGetter{
+func NewTemporaryDirectory() *TemporaryDirectory {
+	return &TemporaryDirectory{
 		guid: fmt.Sprintf("%v", time.Now().UTC().UnixNano()),
 	}
 }
 
-func (dir *FakeHomeDirectoryPathGetter) Path() string {
+func (dir *TemporaryDirectory) Path() string {
 	if dir.path == "" {
 		tmpDir, _ := ioutil.TempDir("", "fakehome")
 		dir.path = filepath.Join(tmpDir, dir.guid)
@@ -28,10 +28,10 @@ func (dir *FakeHomeDirectoryPathGetter) Path() string {
 	return dir.path
 }
 
-func (dir *FakeHomeDirectoryPathGetter) Create() {
+func (dir *TemporaryDirectory) Create() {
 	os.MkdirAll(dir.Path(), config.DirRWPermissions)
 }
 
-func (dir *FakeHomeDirectoryPathGetter) Destroy() {
+func (dir *TemporaryDirectory) Destroy() {
 	os.RemoveAll(dir.Path())
 }

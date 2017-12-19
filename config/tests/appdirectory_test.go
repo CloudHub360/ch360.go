@@ -15,7 +15,7 @@ type AppDirectorySuite struct {
 	suite.Suite
 	sut                    *config.AppDirectory
 	config                 *config.Configuration
-	homeDirectory          *fakes.FakeHomeDirectoryPathGetter
+	homeDirectory          *fakes.TemporaryDirectory
 	expectedConfigDir      string
 	expectedConfigFilePath string
 	clientId               string
@@ -24,7 +24,7 @@ type AppDirectorySuite struct {
 
 func (suite *AppDirectorySuite) SetupTest() {
 	// Create unique "home directory" for this test
-	suite.homeDirectory = fakes.NewFakeHomeDirectoryPathGetter()
+	suite.homeDirectory = fakes.NewTemporaryDirectory()
 	suite.homeDirectory.Create()
 
 	suite.sut = config.NewAppDirectory(suite.homeDirectory.Path())
