@@ -37,14 +37,10 @@ func (suite *ConfigurationSuite) TestConfigurationNewConfiguration_Creates_A_Con
 
 func (suite *ConfigurationSuite) TestConfigurationSerialise_Can_Be_Deserialised_To_Configuration_With_Same_Values() {
 	bytes, err := suite.sut.Serialise()
-	if err != nil {
-		assert.Error(suite.T(), err)
-	}
+	assert.Nil(suite.T(), err)
 
 	configuration, err := config.DeserialiseConfiguration(bytes)
-	if err != nil {
-		assert.Error(suite.T(), err)
-	}
+	assert.Nil(suite.T(), err)
 
 	assert.Equal(suite.T(), len(suite.sut.Credentials), len(configuration.Credentials))
 	credentials := suite.sut.Credentials[0]
@@ -56,7 +52,5 @@ func (suite *ConfigurationSuite) TestConfigurationSerialise_Can_Be_Deserialised_
 
 func (suite *ConfigurationSuite) TestConfigurationDeserialise_Returns_Error_If_Attempting_To_Deserialised_Invalid_Contents() {
 	_, err := config.DeserialiseConfiguration(generators.Bytes())
-	if err == nil {
-		assert.Fail(suite.T(), "No error was returned when deserialising contents that aren't a valid configuration")
-	}
+	assert.NotNil(suite.T(), err)
 }
