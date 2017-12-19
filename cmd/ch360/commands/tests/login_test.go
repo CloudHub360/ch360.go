@@ -17,7 +17,7 @@ type LoginSuite struct {
 	suite.Suite
 	sut          *commands.Login
 	configWriter *mocks.ConfigurationWriter
-	secretReader *cmdmocks.SecretReader
+	secretReader *cmdmocks.Reader
 	clientId     string
 	clientSecret string
 }
@@ -29,7 +29,7 @@ func (suite *LoginSuite) SetupTest() {
 	suite.configWriter = new(mocks.ConfigurationWriter)
 	suite.configWriter.On("WriteConfiguration", mock.Anything).Return(nil)
 
-	suite.secretReader = new(cmdmocks.SecretReader)
+	suite.secretReader = new(cmdmocks.Reader)
 	suite.secretReader.On("Read").Return(suite.clientSecret, nil)
 	suite.sut = commands.NewLogin(suite.configWriter, suite.secretReader)
 }
@@ -57,7 +57,7 @@ func (suite *LoginSuite) TestLogin_Execute_Prompts_For_Secret_When_Secret_Not_Sp
 }
 
 func (suite *LoginSuite) TestLogin_Execute_Writes_Configuration_When_Secret_Is_Entered_At_Prompt() {
-	// Simulate user entering secret at prompt by the mock SecretReader returning the secret
+	// Simulate user entering secret at prompt by the mock Reader returning the secret
 	err := suite.sut.Execute(suite.clientId, "")
 	if err != nil {
 		assert.Error(suite.T(), err)
