@@ -72,6 +72,6 @@ func (suite *LoginSuite) assertConfigurationWrittenWithCredentials(clientId stri
 	call := suite.configWriter.Calls[0]
 	require.Len(suite.T(), call.Arguments, 1)
 	configuration := call.Arguments[0].(*config.Configuration)
-	assert.Equal(suite.T(), clientId, configuration.ConfigurationRoot.Credentials[0].Id)
-	assert.Equal(suite.T(), clientSecret, configuration.ConfigurationRoot.Credentials[0].Secret)
+	assert.Equal(suite.T(), clientId, configuration.Credentials[0].Id)
+	assert.Equal(suite.T(), clientSecret, configuration.Credentials[0].Secret)
 }

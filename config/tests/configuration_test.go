@@ -27,8 +27,8 @@ func TestConfigurationSuiteRunner(t *testing.T) {
 
 func (suite *ConfigurationSuite) TestConfigurationNewConfiguration_Creates_A_Configuration_With_Specified_Credentials() {
 	// Assert
-	assert.Len(suite.T(), suite.sut.ConfigurationRoot.Credentials, 1)
-	actualCredentials := suite.sut.ConfigurationRoot.Credentials[0]
+	assert.Len(suite.T(), suite.sut.Credentials, 1)
+	actualCredentials := suite.sut.Credentials[0]
 	assert.Equal(suite.T(), suite.clientId, actualCredentials.Id)
 	assert.Equal(suite.T(), suite.clientSecret, actualCredentials.Secret)
 	assert.Equal(suite.T(), "default", actualCredentials.Key)
@@ -46,8 +46,8 @@ func (suite *ConfigurationSuite) TestConfigurationSerialise_Can_Be_Deserialised_
 		assert.Error(suite.T(), err)
 	}
 
-	assert.Equal(suite.T(), len(suite.sut.ConfigurationRoot.Credentials), len(configuration.ConfigurationRoot.Credentials))
-	credentials := suite.sut.ConfigurationRoot.Credentials[0]
+	assert.Equal(suite.T(), len(suite.sut.Credentials), len(configuration.Credentials))
+	credentials := suite.sut.Credentials[0]
 	assert.Equal(suite.T(), credentials.Id, suite.clientId)
 	assert.Equal(suite.T(), credentials.Secret, suite.clientSecret)
 	assert.Equal(suite.T(), credentials.Key, "default")
