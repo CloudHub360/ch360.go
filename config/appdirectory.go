@@ -44,10 +44,13 @@ func (appDirectory *AppDirectory) ReadConfiguration() (*Configuration, error) {
 }
 
 func (appDirectory *AppDirectory) write(data []byte) (int, error) {
-	appDirectory.createIfNotExists()
+	err := createDirectoryIfNotExists(appDirectory.getPath())
+	if err != nil {
+		return 0, err
+	}
 
 	fullFilePath := filepath.Join(appDirectory.getPath(), "config.yaml")
-	err := ioutil.WriteFile(fullFilePath, data, FileRWPermissions)
+	err = ioutil.WriteFile(fullFilePath, data, FileRWPermissions)
 	return 0, err
 }
 
@@ -58,11 +61,6 @@ func (appDirectory *AppDirectory) read() ([]byte, error) {
 
 func (appDirectory *AppDirectory) getPath() string {
 	return filepath.Join(appDirectory.homeDirectoryProvider.GetPath(), ".ch360")
-}
-
-func (appDirectory *AppDirectory) createIfNotExists() error {
-	dir := appDirectory.getPath()
-	return createDirectoryIfNotExists(dir)
 }
 
 func createDirectoryIfNotExists(dir string) error {
