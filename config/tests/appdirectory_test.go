@@ -2,7 +2,6 @@ package tests
 
 import (
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/CloudHub360/ch360.go/config/fakes"
 	assertThat "github.com/CloudHub360/ch360.go/test/assertions"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +14,7 @@ type AppDirectorySuite struct {
 	suite.Suite
 	sut                    *config.AppDirectory
 	config                 *config.Configuration
-	homeDirectory          *fakes.TemporaryDirectory
+	homeDirectory          *TemporaryDirectory
 	expectedConfigDir      string
 	expectedConfigFilePath string
 	clientId               string
@@ -24,7 +23,7 @@ type AppDirectorySuite struct {
 
 func (suite *AppDirectorySuite) SetupTest() {
 	// Create unique "home directory" for this test
-	suite.homeDirectory = fakes.NewTemporaryDirectory()
+	suite.homeDirectory = NewTemporaryDirectory()
 	suite.homeDirectory.Create()
 
 	suite.sut = config.NewAppDirectory(suite.homeDirectory.Path())

@@ -1,4 +1,4 @@
-package fakes
+package tests
 
 import (
 	"fmt"
