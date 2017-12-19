@@ -16,18 +16,18 @@ func main() {
 	usage := `CloudHub360 command-line tool.
 
 Usage:
-  ch360 login --id=<id> [--secret=<secret>]
-  ch360 create classifier <name> --id=<id> --secret=<secret> --samples-zip=<path>
-  ch360 delete classifier <name> --id=<id> --secret=<secret>
-  ch360 list classifiers --id=<id> --secret=<secret>
+  ch360 login --client-id=<id> [--client-secret=<secret>]
+  ch360 create classifier <name> --client-id=<id> --client-secret=<secret> --samples-zip=<path>
+  ch360 delete classifier <name> --client-id=<id> --client-secret=<secret>
+  ch360 list classifiers --client-id=<id> --client-secret=<secret>
   ch360 -h | --help
   ch360 --version
 
 Options:
   -h --help          Show this help message.
   --version          Show version.
-  --id=<id>          API Client ID
-  --secret=<secret>  API Client secret`
+  --client-id=<id>          API Client ID
+  --client-secret=<secret>  API Client secret`
 
 	args, err := docopt.Parse(usage, nil, true, ch360.Version, false)
 
@@ -37,11 +37,11 @@ Options:
 	}
 
 	if args["login"].(bool) {
-		id := args["--id"].(string)
+		id := args["--client-id"].(string)
 
 		var secret = ""
-		if args["--secret"] != nil {
-			secret = args["--secret"].(string)
+		if args["--client-secret"] != nil {
+			secret = args["--client-secret"].(string)
 		}
 
 		user, err := user.Current()
@@ -62,8 +62,8 @@ Options:
 		Timeout: time.Minute * 5,
 	}
 
-	id := args["--id"].(string)
-	secret := args["--secret"].(string)
+	id := args["--client-id"].(string)
+	secret := args["--client-secret"].(string)
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
 
 	if args["create"].(bool) {
