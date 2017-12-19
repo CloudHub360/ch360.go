@@ -13,8 +13,8 @@ type ApiCredentialsList []ApiCredentials
 type ApiCredentials struct {
 	Key    string `yaml:"key"`
 	Url    string `yaml:"url"`
-	Id     string `yaml:"client_id"`
-	Secret string `yaml:"client_secret"`
+	Id     string `yaml:"clientId"`
+	Secret string `yaml:"clientSecret"`
 }
 
 func NewConfiguration(clientId string, clientSecret string) *Configuration {
