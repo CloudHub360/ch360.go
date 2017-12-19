@@ -30,19 +30,19 @@ function Restore-ConfigFolder() {
 
 function Remove-ConfigFolder() {
   if (Test-Path $configFolderPath) {
-    Remove-Item $configFolderPath -Recurse
-  }  
+    Remove-Item $configFolderPath -Recurse -Force
+  }
 }
 
 function Remove-BackupFolder() {
   if (Test-Path $configFolderPathBackup) {
-    Remove-Item $configFolderPathBackup -Recurse
+    Remove-Item $configFolderPathBackup -Recurse -Force
   }
 }
 
 function Copy-Folder($source, $destination) {
   if (!(Test-Path $destination)) {
-    New-Item -ItemType Directory $destination    
+    New-Item -ItemType Directory $destination
   }
   Get-ChildItem -Path $source | Copy-Item -Destination $destination -Recurse -Container
 }
@@ -51,7 +51,7 @@ Describe "ch360 --login" {
   BeforeEach {
     Backup-ConfigFolder
   }
-  
+
   It "should output ok on success" {
     ch360 login --id="$ClientId" --secret="$ClientSecret" | Should -Be "Logging in... [OK]"
     $LASTEXITCODE | Should -Be 0
@@ -61,10 +61,10 @@ Describe "ch360 --login" {
     $expectedConfigFilePath = Join-Path -Path $configFolderPath -ChildPath "config.yaml"
 
     ch360 login --id="$ClientId" --secret="$ClientSecret"
-    Get-Content -Path $expectedConfigFilePath | Format-MultilineOutput | Should -BeLike "*client_id: $ClientId*"
-    Get-Content -Path $expectedConfigFilePath | Format-MultilineOutput | Should -BeLike "*client_secret: $ClientSecret*"
+    Get-Content -Path $expectedConfigFilePath | Format-MultilineOutput | Should -BeLike "*clientId: $ClientId*"
+    Get-Content -Path $expectedConfigFilePath | Format-MultilineOutput | Should -BeLike "*clientSecret: $ClientSecret*"
   }
-  
+
   AfterEach {
     Restore-ConfigFolder
   }
