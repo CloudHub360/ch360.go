@@ -85,6 +85,6 @@ func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_File_
 }
 
 func assertConfigurationHasCredentials(t *testing.T, configuration *config.Configuration, clientId string, clientSecret string) {
-	assert.Equal(t, clientId, configuration.ConfigurationRoot.Credentials[0].Id)
-	assert.Equal(t, clientSecret, configuration.ConfigurationRoot.Credentials[0].Secret)
+	assert.Equal(t, clientId, configuration.Credentials[0].Id)
+	assert.Equal(t, clientSecret, configuration.Credentials[0].Secret)
 }

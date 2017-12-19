@@ -5,10 +5,6 @@ import (
 )
 
 type Configuration struct {
-	ConfigurationRoot *ConfigurationRoot `yaml:"configuration"`
-}
-
-type ConfigurationRoot struct {
 	Credentials ApiCredentialsList `yaml:"credentials"`
 }
 
@@ -31,15 +27,9 @@ func NewConfiguration(clientId string, clientSecret string) *Configuration {
 		Secret: clientSecret,
 	}
 
-	config := &ConfigurationRoot{
+	return &Configuration{
 		Credentials: credentials,
 	}
-
-	configuration := &Configuration{
-		ConfigurationRoot: config,
-	}
-
-	return configuration
 }
 
 func (config *Configuration) Serialise() ([]byte, error) {
