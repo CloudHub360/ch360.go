@@ -3,7 +3,6 @@ package assertions
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"os"
 	"testing"
 )
