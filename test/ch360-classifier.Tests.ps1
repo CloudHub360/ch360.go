@@ -4,6 +4,9 @@ param(
 )
 
 $classifierName = "test-classifier"
+$applicationFolderPath = Join-Path -Path "~" -ChildPath ".ch360"
+$applicationFolderPathBackup = "$applicationFolderPath" + "_backup"
+$configFilePath = Join-Path -Path $applicationFolderPath -ChildPath "config.yaml"
 
 function Invoke-App {
     $ErrorActionPreference = "Continue"
@@ -43,7 +46,47 @@ function String-Starting([string]$input) {
     ([Regex]::Escape($input) + ".*")
 }
 
+function Backup-ApplicationFolder() {
+    if (!(Test-Path $applicationFolderPath)) {
+        return 
+    }
+
+    Remove-Item $applicationFolderPathBackup -Recurse -Force -ErrorAction SilentlyContinue
+    Copy-Folder $applicationFolderPath $applicationFolderPathBackup
+    Remove-Item $applicationFolderPath -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host "Backed up application folder"    
+  }
+  
+  function Restore-ApplicationFolder() {
+    if (!(Test-Path $applicationFolderPathBackup)) {
+      return
+    }
+  
+    Remove-Item $applicationFolderPath -Recurse -Force -ErrorAction SilentlyContinue
+    Copy-Folder $applicationFolderPathBackup $applicationFolderPath
+    Remove-Item $applicationFolderPathBackup -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host "Restored application folder"
+}
+    
+  function Copy-Folder($source, $destination) {
+    if (!(Test-Path $destination)) {
+      New-Item -ItemType Directory $destination
+    }
+    Get-ChildItem -Path $source | Copy-Item -Destination $destination -Recurse -Container
+  }
+  
 Describe "classifiers" {
+    BeforeAll {
+        Backup-ApplicationFolder
+        
+        ch360 login --client-id="$ClientId" --client-secret="$ClientSecret" | Should -Be "Logging in... [OK]"
+        $LASTEXITCODE | Should -Be 0
+        
+        Get-Content -Path $configFilePath | Format-MultilineOutput | Should -BeLike "*clientId: $ClientId*"
+        Get-Content -Path $configFilePath | Format-MultilineOutput | Should -BeLike "*clientSecret: $ClientSecret*"    
+        Write-Host "Ran ch360 login"        
+    }
+    
     BeforeEach {
         Get-Classifiers | Should -Be "No classifiers found."
     }
@@ -90,5 +133,8 @@ The file '$samples' could not be found.
     AfterAll {
         # Tidy up any leftover classifiers in the account
         Get-Classifiers | Remove-Classifier
+        
+        # Restore user's original application folder
+        Restore-ApplicationFolder
     }
 }
