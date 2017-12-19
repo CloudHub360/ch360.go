@@ -58,28 +58,22 @@ func TestAppDirectorySuiteRunner(t *testing.T) {
 
 func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_Config_Directory_If_None_Exists() {
 	err := suite.sut.WriteConfiguration(suite.config)
-	if err != nil {
-		assert.Error(suite.T(), err)
-	}
 
+	assert.Nil(suite.T(), err)
 	assertThat.DirectoryExists(suite.T(), suite.expectedConfigDir)
 }
 
 func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_File_With_Correct_Name() {
-	err := suite.sut.WriteConfiguration(suite.config)
-	if err != nil {
-		assert.Error(suite.T(), err)
-	}
 
+	err := suite.sut.WriteConfiguration(suite.config)
+	assert.Nil(suite.T(), err)
 	assertThat.FileExists(suite.T(), suite.expectedConfigFilePath)
 }
 
 func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_File_With_Correct_Content() {
 	err := suite.sut.WriteConfiguration(suite.config)
-	if err != nil {
-		assert.Error(suite.T(), err)
-	}
 
+	assert.Nil(suite.T(), err)
 	reloadedConfig, err := suite.sut.ReadConfiguration()
 	assertConfigurationHasCredentials(suite.T(), reloadedConfig, suite.clientId, suite.clientSecret)
 }
