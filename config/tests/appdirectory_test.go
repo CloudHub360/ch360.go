@@ -60,7 +60,7 @@ func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_App_D
 
 	//Permissions are not set correctly on Windows, only linux (on Windows they are always 777)
 	if runtime.GOOS != "windows" {
-		assertThat.DirectoryHasPermissions(suite.T(), suite.expectedConfigDir, config.DirRWPermissions)
+		assertThat.DirectoryOrFileHasPermissions(suite.T(), suite.expectedConfigDir, config.DirRWPermissions)
 	}
 }
 
@@ -69,6 +69,11 @@ func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_File_
 	err := suite.sut.WriteConfiguration(suite.config)
 	assert.Nil(suite.T(), err)
 	assertThat.FileExists(suite.T(), suite.expectedConfigFilePath)
+
+	//Permissions are not set correctly on Windows, only linux (on Windows they are always 777)
+	if runtime.GOOS != "windows" {
+		assertThat.DirectoryOrFileHasPermissions(suite.T(), suite.expectedConfigFilePath, config.FileRWPermissions)
+	}
 }
 
 func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_File_With_Correct_Content() {
