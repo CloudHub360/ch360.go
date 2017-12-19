@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/config/fakes"
 	assertThat "github.com/CloudHub360/ch360.go/test/assertions"
@@ -10,7 +9,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"path/filepath"
 	"testing"
-	"time"
 )
 
 type AppDirectorySuite struct {
@@ -26,9 +24,7 @@ type AppDirectorySuite struct {
 
 func (suite *AppDirectorySuite) SetupTest() {
 	// Create unique "home directory" for this test
-	suite.homeDirectory = &fakes.FakeHomeDirectoryPathGetter{
-		Guid: fmt.Sprintf("%v", time.Now().UTC().UnixNano()),
-	}
+	suite.homeDirectory = fakes.NewFakeHomeDirectoryPathGetter()
 	suite.homeDirectory.Create()
 
 	suite.sut = config.NewAppDirectory(suite.homeDirectory)
