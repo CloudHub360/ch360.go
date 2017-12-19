@@ -8,6 +8,7 @@ import (
 	"github.com/docopt/docopt-go"
 	"net/http"
 	"os"
+	"os/user"
 	"time"
 )
 
@@ -43,8 +44,14 @@ Options:
 			secret = args["--secret"].(string)
 		}
 
-		configDirectory := config.NewAppDirectory(config.HomeDirectoryPathGetter{})
-		err = commands.NewLogin(configDirectory, &commands.ConsoleSecretReader{}).Execute(id, secret)
+		user, err := user.Current()
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+
+		appDirectory := config.NewAppDirectory(user.HomeDir)
+		err = commands.NewLogin(appDirectory, &commands.ConsoleSecretReader{}).Execute(id, secret)
 		if err != nil {
 			os.Exit(1)
 		}
