@@ -29,8 +29,7 @@ func (appDirectory *AppDirectory) WriteConfiguration(configuration *Configuratio
 	if err != nil {
 		return err
 	}
-	_, err = appDirectory.write(contents)
-	return err
+	return appDirectory.write(contents)
 }
 
 func (appDirectory *AppDirectory) ReadConfiguration() (*Configuration, error) {
@@ -43,15 +42,15 @@ func (appDirectory *AppDirectory) ReadConfiguration() (*Configuration, error) {
 	return configuration, err
 }
 
-func (appDirectory *AppDirectory) write(data []byte) (int, error) {
+func (appDirectory *AppDirectory) write(data []byte) error {
 	err := createDirectoryIfNotExists(appDirectory.getPath())
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	fullFilePath := filepath.Join(appDirectory.getPath(), "config.yaml")
 	err = ioutil.WriteFile(fullFilePath, data, FileRWPermissions)
-	return 0, err
+	return err
 }
 
 func (appDirectory *AppDirectory) read() ([]byte, error) {
