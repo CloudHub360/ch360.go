@@ -18,21 +18,21 @@ function Invoke-App {
 
 function New-Classifier([string]$classifierName, [Io.FileInfo]$samples) {
     Invoke-App create classifier $classifierName `
-        --id="$ClientId" `
-        --secret="$ClientSecret" `
+        --client-id="$ClientId" `
+        --client-secret="$ClientSecret" `
         --samples-zip=$samples 2>&1
 }
 
 function Get-Classifiers {
     Invoke-App list classifiers `
-        --id="$ClientId" `
-        --secret="$ClientSecret" 2>&1
+        --client-id="$ClientId" `
+        --client-secret="$ClientSecret" 2>&1
 }
 
 function Remove-Classifier([Parameter(ValueFromPipeline=$true)]$classifierName) {
     Invoke-App delete classifier $classifierName `
-        --id="$ClientId" `
-        --secret="$ClientSecret" 2>&1
+        --client-id="$ClientId" `
+        --client-secret="$ClientSecret" 2>&1
 }
 
 function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){

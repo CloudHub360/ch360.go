@@ -53,14 +53,14 @@ Describe "ch360 --login" {
   }
 
   It "should output ok on success" {
-    ch360 login --id="$ClientId" --secret="$ClientSecret" | Should -Be "Logging in... [OK]"
+    ch360 login --client-id="$ClientId" --client-secret="$ClientSecret" | Should -Be "Logging in... [OK]"
     $LASTEXITCODE | Should -Be 0
   }
 
   It "should write credentials to config file" {
     $expectedConfigFilePath = Join-Path -Path $configFolderPath -ChildPath "config.yaml"
 
-    ch360 login --id="$ClientId" --secret="$ClientSecret"
+    ch360 login --client-id="$ClientId" --client-secret="$ClientSecret"
     Get-Content -Path $expectedConfigFilePath | Format-MultilineOutput | Should -BeLike "*clientId: $ClientId*"
     Get-Content -Path $expectedConfigFilePath | Format-MultilineOutput | Should -BeLike "*clientSecret: $ClientSecret*"
   }
