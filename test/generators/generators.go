@@ -16,6 +16,8 @@ const lettersAndNumbers = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0
 
 func String(root string) string {
 	b := make([]byte, 8)
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	for i := range b {
 		b[i] = lettersAndNumbers[rand.Intn(len(lettersAndNumbers))]
 	}
