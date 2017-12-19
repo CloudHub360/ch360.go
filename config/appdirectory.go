@@ -7,7 +7,7 @@ import (
 )
 
 type AppDirectory struct {
-	homeDirectoryProvider DirectoryPathGetter
+	homeDirectoryProvider PathGetter
 }
 
 //go:generate mockery -name "ConfigurationWriter"
@@ -18,7 +18,7 @@ type ConfigurationWriter interface {
 const FileRWPermissions os.FileMode = 0600
 const DirRWPermissions os.FileMode = 0700
 
-func NewAppDirectory(homeDirProvider DirectoryPathGetter) *AppDirectory {
+func NewAppDirectory(homeDirProvider PathGetter) *AppDirectory {
 	return &AppDirectory{
 		homeDirectoryProvider: homeDirProvider,
 	}
@@ -59,7 +59,7 @@ func (appDirectory *AppDirectory) read() ([]byte, error) {
 }
 
 func (appDirectory *AppDirectory) getPath() string {
-	return filepath.Join(appDirectory.homeDirectoryProvider.GetPath(), ".ch360")
+	return filepath.Join(appDirectory.homeDirectoryProvider.Path(), ".ch360")
 }
 
 func createDirectoryIfNotExists(dir string) error {

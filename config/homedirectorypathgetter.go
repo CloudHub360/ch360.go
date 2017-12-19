@@ -5,13 +5,13 @@ import (
 	"runtime"
 )
 
-type DirectoryPathGetter interface {
-	GetPath() string
+type PathGetter interface {
+	Path() string
 }
 
 type HomeDirectoryPathGetter struct{}
 
-func (provider HomeDirectoryPathGetter) GetPath() string {
+func (provider HomeDirectoryPathGetter) Path() string {
 	if runtime.GOOS == "windows" {
 		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
 		if home == "" {
