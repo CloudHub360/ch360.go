@@ -40,7 +40,7 @@ func DirectoryHasPermissions(t *testing.T, name string, perm os.FileMode) {
 	if err != nil {
 		assert.Error(t, err)
 	}
-	assert.Equal(t, perm, info.Mode())
+	assert.Equal(t, perm, info.Mode().Perm())
 }
 
 func directoryOrFileExists(dir string) (bool, error) {
