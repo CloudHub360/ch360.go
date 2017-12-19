@@ -37,10 +37,10 @@ func (suite *AppDirectorySuite) SetupTest() {
 	suite.config = config.NewConfiguration(suite.clientId, suite.clientSecret)
 
 	suite.expectedConfigDir = filepath.Join(
-		suite.homeDirectory.GetPath(),
+		suite.homeDirectory.Path(),
 		".ch360")
 	suite.expectedConfigFilePath = filepath.Join(
-		suite.homeDirectory.GetPath(),
+		suite.homeDirectory.Path(),
 		".ch360",
 		"config.yaml")
 

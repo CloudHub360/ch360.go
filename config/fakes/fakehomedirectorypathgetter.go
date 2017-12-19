@@ -12,7 +12,7 @@ type FakeHomeDirectoryPathGetter struct {
 	path string
 }
 
-func (dir *FakeHomeDirectoryPathGetter) GetPath() string {
+func (dir *FakeHomeDirectoryPathGetter) Path() string {
 	if dir.path == "" {
 		tmpDir, _ := ioutil.TempDir("", "fakehome")
 		dir.path = filepath.Join(tmpDir, dir.Guid)
@@ -21,9 +21,9 @@ func (dir *FakeHomeDirectoryPathGetter) GetPath() string {
 }
 
 func (dir *FakeHomeDirectoryPathGetter) Create() {
-	os.MkdirAll(dir.GetPath(), config.DirRWPermissions)
+	os.MkdirAll(dir.Path(), config.DirRWPermissions)
 }
 
 func (dir *FakeHomeDirectoryPathGetter) Destroy() {
-	os.RemoveAll(dir.GetPath())
+	os.RemoveAll(dir.Path())
 }
