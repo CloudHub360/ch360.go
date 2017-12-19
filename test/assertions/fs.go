@@ -36,15 +36,6 @@ func DirectoryDoesNotExist(t *testing.T, name string) {
 	}
 }
 
-func FileHasContents(t *testing.T, name string, expectedContents []byte) {
-	FileExists(t, name)
-	contents, err := ioutil.ReadFile(name)
-	if err != nil {
-		assert.Error(t, err)
-	}
-	assert.Equal(t, expectedContents, contents)
-}
-
 func directoryOrFileExists(dir string) (bool, error) {
 	_, err := os.Stat(dir)
 	if err != nil {
