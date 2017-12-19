@@ -38,11 +38,9 @@ Options:
 	if args["login"].(bool) {
 		id := args["--id"].(string)
 
-		var secret string
+		var secret = ""
 		if args["--secret"] != nil {
 			secret = args["--secret"].(string)
-		} else {
-			secret = ""
 		}
 
 		configDirectory := config.NewAppDirectory(config.HomeDirectoryPathGetter{})
