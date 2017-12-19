@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/CloudHub360/ch360.go/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -43,7 +44,7 @@ func (appDirectory *AppDirectory) ReadConfiguration() (*Configuration, error) {
 }
 
 func (appDirectory *AppDirectory) write(data []byte) error {
-	err := createDirectoryIfNotExists(appDirectory.getPath())
+	err := fs.CreateDirectoryIfNotExists(appDirectory.getPath(), DirRWPermissions)
 	if err != nil {
 		return err
 	}
@@ -60,32 +61,4 @@ func (appDirectory *AppDirectory) read() ([]byte, error) {
 
 func (appDirectory *AppDirectory) getPath() string {
 	return filepath.Join(appDirectory.homeDirectory, ".ch360")
-}
-
-func createDirectoryIfNotExists(dir string) error {
-	exists, err := directoryExists(dir)
-	if err != nil {
-		return err
-	}
-
-	if !exists {
-		err := os.Mkdir(dir, DirRWPermissions)
-		return err
-	}
-	return nil
-}
-
-func directoryExists(dir string) (bool, error) {
-	_, err := os.Stat(dir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// directory does not exist
-			return false, nil
-		} else {
-			// other error
-			return false, err
-		}
-	}
-
-	return true, nil
 }

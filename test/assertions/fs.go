@@ -2,34 +2,35 @@ package assertions
 
 import (
 	"fmt"
+	"github.com/CloudHub360/ch360.go/fs"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
 
 func FileExists(t *testing.T, name string) {
-	exists, _ := directoryOrFileExists(name)
+	exists, _ := fs.DirectoryOrFileExists(name)
 	if !exists {
 		assert.Fail(t, fmt.Sprintf("File %s does not exist", name))
 	}
 }
 
 func FileDoesNotExist(t *testing.T, name string) {
-	exists, _ := directoryOrFileExists(name)
+	exists, _ := fs.DirectoryOrFileExists(name)
 	if exists {
 		assert.Fail(t, fmt.Sprintf("File %s exists when it should not", name))
 	}
 }
 
 func DirectoryExists(t *testing.T, name string) {
-	exists, _ := directoryOrFileExists(name)
+	exists, _ := fs.DirectoryOrFileExists(name)
 	if !exists {
 		assert.Fail(t, fmt.Sprintf("Directory %s does not exist", name))
 	}
 }
 
 func DirectoryDoesNotExist(t *testing.T, name string) {
-	exists, _ := directoryOrFileExists(name)
+	exists, _ := fs.DirectoryOrFileExists(name)
 	if exists {
 		assert.Fail(t, fmt.Sprintf("Directory %s exists when it should not", name))
 	}
@@ -41,19 +42,4 @@ func DirectoryOrFileHasPermissions(t *testing.T, name string, perm os.FileMode) 
 		assert.Error(t, err)
 	}
 	assert.Equal(t, perm, info.Mode().Perm())
-}
-
-func directoryOrFileExists(dir string) (bool, error) {
-	_, err := os.Stat(dir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// directory does not exist
-			return false, nil
-		} else {
-			// other error
-			return false, err
-		}
-	}
-
-	return true, nil
 }
