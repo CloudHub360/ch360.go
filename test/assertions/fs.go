@@ -35,6 +35,14 @@ func DirectoryDoesNotExist(t *testing.T, name string) {
 	}
 }
 
+func DirectoryHasPermissions(t *testing.T, name string, perm os.FileMode) {
+	info, err := os.Stat(name)
+	if err != nil {
+		assert.Error(t, err)
+	}
+	assert.Equal(t, perm, info.Mode())
+}
+
 func directoryOrFileExists(dir string) (bool, error) {
 	_, err := os.Stat(dir)
 	if err != nil {

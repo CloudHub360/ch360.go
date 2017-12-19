@@ -51,11 +51,12 @@ func TestAppDirectorySuiteRunner(t *testing.T) {
 	suite.Run(t, new(AppDirectorySuite))
 }
 
-func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_Config_Directory_If_None_Exists() {
+func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_App_Directory_If_None_Exists() {
 	err := suite.sut.WriteConfiguration(suite.config)
 
 	assert.Nil(suite.T(), err)
 	assertThat.DirectoryExists(suite.T(), suite.expectedConfigDir)
+	assertThat.DirectoryHasPermissions(suite.T(), suite.expectedConfigDir, config.DirRWPermissions)
 }
 
 func (suite *AppDirectorySuite) TestAppDirectoryWriteConfiguration_Creates_File_With_Correct_Name() {
