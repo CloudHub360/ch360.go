@@ -30,19 +30,19 @@ function Restore-ConfigFolder() {
 
 function Remove-ConfigFolder() {
   if (Test-Path $configFolderPath) {
-    Remove-Item $configFolderPath -Recurse
-  }  
+    Remove-Item $configFolderPath -Recurse -Force
+  }
 }
 
 function Remove-BackupFolder() {
   if (Test-Path $configFolderPathBackup) {
-    Remove-Item $configFolderPathBackup -Recurse
+    Remove-Item $configFolderPathBackup -Recurse -Force
   }
 }
 
 function Copy-Folder($source, $destination) {
   if (!(Test-Path $destination)) {
-    New-Item -ItemType Directory $destination    
+    New-Item -ItemType Directory $destination
   }
   Get-ChildItem -Path $source | Copy-Item -Destination $destination -Recurse -Container
 }
