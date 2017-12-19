@@ -12,14 +12,14 @@ type Reader interface {
 }
 
 type Login struct {
-	configurationDirectory config.ConfigurationWriter
-	secretReader           Reader
+	appDirectory config.ConfigurationWriter
+	secretReader Reader
 }
 
-func NewLogin(configDirectory config.ConfigurationWriter, reader Reader) *Login {
+func NewLogin(appDirectory config.ConfigurationWriter, reader Reader) *Login {
 	return &Login{
-		configurationDirectory: configDirectory,
-		secretReader:           reader,
+		appDirectory: appDirectory,
+		secretReader: reader,
 	}
 }
 
@@ -36,7 +36,7 @@ func (cmd *Login) Execute(clientId string, clientSecret string) error {
 	fmt.Print("Logging in... ")
 	configuration := config.NewConfiguration(clientId, clientSecret)
 
-	err = cmd.configurationDirectory.WriteConfiguration(configuration)
+	err = cmd.appDirectory.WriteConfiguration(configuration)
 	if err != nil {
 		fmt.Println("[FAILED]")
 		fmt.Fprintln(os.Stderr, err.Error())

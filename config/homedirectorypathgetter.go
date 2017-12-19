@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"os/user"
 	"runtime"
 )
 
@@ -17,6 +19,9 @@ func (provider HomeDirectoryPathGetter) Path() string {
 		if home == "" {
 			home = os.Getenv("USERPROFILE")
 		}
+
+		user, _ := user.Current() //TODO: Check err
+		fmt.Println(user.HomeDir)
 		return home
 	}
 	return os.Getenv("HOME")
