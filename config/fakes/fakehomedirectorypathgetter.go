@@ -1,23 +1,27 @@
 package fakes
 
 import (
+	"github.com/CloudHub360/ch360.go/config"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
 type FakeHomeDirectoryPathGetter struct {
 	Guid string
+	path string
 }
 
 func (dir *FakeHomeDirectoryPathGetter) GetPath() string {
-	path := filepath.Join(
-		os.Getenv("GOPATH"),
-		"src", "github.com", "CloudHub360", "ch360.go", "test", "output", dir.Guid)
-	return path
+	if dir.path == "" {
+		tmpDir, _ := ioutil.TempDir("", "fakehome")
+		dir.path = filepath.Join(tmpDir, dir.Guid)
+	}
+	return dir.path
 }
 
 func (dir *FakeHomeDirectoryPathGetter) Create() {
-	os.MkdirAll(dir.GetPath(), 600)
+	os.MkdirAll(dir.GetPath(), config.DirRWPermissions)
 }
 
 func (dir *FakeHomeDirectoryPathGetter) Destroy() {

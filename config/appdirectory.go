@@ -15,7 +15,8 @@ type ConfigurationWriter interface {
 	WriteConfiguration(configuration *Configuration) error
 }
 
-var userReadWritePermissions os.FileMode = 0600
+const FileRWPermissions os.FileMode = 0600
+const DirRWPermissions os.FileMode = 0700
 
 func NewAppDirectory(homeDirProvider DirectoryPathGetter) *AppDirectory {
 	return &AppDirectory{
@@ -46,7 +47,7 @@ func (appDirectory *AppDirectory) write(data []byte) (int, error) {
 	appDirectory.createIfNotExists()
 
 	fullFilePath := filepath.Join(appDirectory.getPath(), "config.yaml")
-	err := ioutil.WriteFile(fullFilePath, data, userReadWritePermissions)
+	err := ioutil.WriteFile(fullFilePath, data, FileRWPermissions)
 	return 0, err
 }
 
@@ -71,7 +72,7 @@ func createDirectoryIfNotExists(dir string) error {
 	}
 
 	if !exists {
-		err := os.Mkdir(dir, userReadWritePermissions)
+		err := os.Mkdir(dir, DirRWPermissions)
 		return err
 	}
 	return nil
