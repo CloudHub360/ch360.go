@@ -55,7 +55,8 @@ func (suite *LoginSuite) TestLogin_Execute_Prompts_For_Secret_When_Secret_Not_Sp
 	suite.secretReader.AssertCalled(suite.T(), "Read")
 }
 
-func (suite *LoginSuite) TestLogin_Execute_Writes_Configuration_When_Secret_Not_Specified() {
+func (suite *LoginSuite) TestLogin_Execute_Writes_Configuration_When_Secret_Is_Entered_At_Prompt() {
+	// Simulate user entering secret at prompt by the mock SecretReader returning the secret
 	err := suite.sut.Execute(suite.clientId, "")
 	if err != nil {
 		assert.Error(suite.T(), err)
