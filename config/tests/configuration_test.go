@@ -43,12 +43,8 @@ func (suite *ConfigurationSuite) TestConfigurationSerialise_Can_Be_Deserialised_
 	configuration, err := config.DeserialiseConfiguration(bytes)
 	assert.Nil(suite.T(), err)
 
-	assert.Equal(suite.T(), len(suite.sut.Credentials), len(configuration.Credentials))
-	credentials := suite.sut.Credentials[0]
-	assert.Equal(suite.T(), credentials.Id, suite.clientId)
-	assert.Equal(suite.T(), credentials.Secret, suite.clientSecret)
-	assert.Equal(suite.T(), credentials.Key, "default")
-	assert.Equal(suite.T(), credentials.Url, "default")
+	expectedConfiguration := config.NewConfiguration(suite.clientId, suite.clientSecret)
+	assert.Equal(suite.T(), expectedConfiguration, configuration)
 }
 
 func (suite *ConfigurationSuite) TestConfigurationDeserialise_Returns_Error_If_Attempting_To_Deserialised_Invalid_Contents() {
