@@ -45,24 +45,22 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Parameters_If_Both_Se
 	assert.Equal(suite.T(), clientSecretParam, clientSecretActual)
 }
 
-func (suite *CredentialsResolverSuite) TestResolve_Returns_Id_Parameter_And_Config_Secret_If_Only_Id_Set() {
+func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Id_Parameter_Set_But_Not_Secret() {
 	clientIdParam := generators.String("clientid")
 	clientSecretParam := ""
+	expectedErr := errors.New("You must either specify both API Client ID and Secret parameters, or neither.")
 
-	clientIdActual, clientSecretActual, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), clientIdParam, clientIdActual)
-	assert.Equal(suite.T(), suite.configClientSecret, clientSecretActual)
+	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
+	assert.Equal(suite.T(), expectedErr, err)
 }
 
-func (suite *CredentialsResolverSuite) TestResolve_Returns_Secret_Parameter_And_Config_Id_If_Only_Secret_Set() {
+func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Secret_Parameter_Set_But_Not_Id() {
 	clientIdParam := ""
 	clientSecretParam := generators.String("clientsecret")
+	expectedErr := errors.New("You must either specify both API Client ID and Secret parameters, or neither.")
 
-	clientIdActual, clientSecretActual, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), suite.configClientId, clientIdActual)
-	assert.Equal(suite.T(), clientSecretParam, clientSecretActual)
+	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
+	assert.Equal(suite.T(), expectedErr, err)
 }
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Config_Values_If_Neither_Secret_Nor_Id_Set() {
@@ -77,7 +75,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Config_Values_If_Neit
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Values_Are_Needed_And_Id_Is_Empty() {
 	configuration := config.NewConfiguration("", suite.configClientSecret)
-	expectedErr := errors.New("Your configuration file does not contain an API Client Id. Please run 'ch360 login' to connect to your account.")
+	expectedErr := errors.New("Your configuration file does not contain valid credentials. Please run 'ch360 login' to connect to your account.")
 
 	suite.reader.ExpectedCalls = nil
 	suite.reader.On("ReadConfiguration").Return(configuration, nil)
@@ -88,7 +86,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Value
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Values_Are_Needed_And_Secret_Is_Empty() {
 	configuration := config.NewConfiguration(suite.configClientId, "")
-	expectedErr := errors.New("Your configuration file does not contain an API Client Secret. Please run 'ch360 login' to connect to your account.")
+	expectedErr := errors.New("Your configuration file does not contain valid credentials. Please run 'ch360 login' to connect to your account.")
 
 	suite.reader.ExpectedCalls = nil
 	suite.reader.On("ReadConfiguration").Return(configuration, nil)
