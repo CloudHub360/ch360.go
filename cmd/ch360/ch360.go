@@ -42,13 +42,20 @@ Options:
 		Timeout: time.Minute * 5,
 	}
 
+	clientId := args["--client-id"].(string)
+	clientSecret := ""
+	if args["--client-secret"] != nil {
+		clientSecret = args["--client-secret"].(string)
+	} else {
+		clientSecret, err = readSecret()
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+	}
+
 	if args["login"].(bool) {
 		id := args["--client-id"].(string)
-
-		var secret = ""
-		if args["--client-secret"] != nil {
-			secret = args["--client-secret"].(string)
-		}
 
 		user, err := user.Current()
 		if err != nil {
@@ -58,18 +65,15 @@ Options:
 
 		appDirectory := config.NewAppDirectory(user.HomeDir)
 		responseChecker := &response.ErrorChecker{}
-		tokenRetriever := auth.NewHttpTokenRetriever(id,
-			secret, httpClient, ch360.ApiAddress, responseChecker)
-		err = commands.NewLogin(appDirectory, &commands.ConsoleSecretReader{}, tokenRetriever).Execute(id, secret)
+		tokenRetriever := auth.NewHttpTokenRetriever(id, clientSecret, httpClient, ch360.ApiAddress, responseChecker)
+		err = commands.NewLogin(appDirectory, tokenRetriever).Execute(id, clientSecret)
 		if err != nil {
 			os.Exit(1)
 		}
 		return
 	}
 
-	id := args["--client-id"].(string)
-	secret := args["--client-secret"].(string)
-	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, id, secret)
+	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, clientId, clientSecret)
 
 	if args["create"].(bool) {
 		classifierName := args["<name>"].(string)
@@ -109,4 +113,14 @@ Options:
 			fmt.Println(classifier.Name)
 		}
 	}
+}
+
+func readSecret() (string, error) {
+	fmt.Print("API Client Secret: ")
+	secret, err := (&commands.ConsoleSecretReader{}).Read()
+	if err != nil {
+		fmt.Println(err.Error())
+		return "", err
+	}
+	return secret, nil
 }
