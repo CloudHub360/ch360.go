@@ -44,13 +44,6 @@ Options:
 
 	clientId := argAsString(args, "--client-id")
 	clientSecret := argAsString(args, "--client-secret")
-	if clientSecret == "" {
-		clientSecret, err = readSecret()
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-	}
 
 	user, err := user.Current()
 	if err != nil {
@@ -64,6 +57,14 @@ Options:
 			//TODO: Prompt for client id if not specified
 			fmt.Println("Please specify your API Client Id with the --client-id parameter")
 			os.Exit(1)
+		}
+
+		if clientSecret == "" {
+			clientSecret, err = readSecret()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
 		}
 
 		responseChecker := &response.ErrorChecker{}
