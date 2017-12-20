@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"os"
 )
 
 //go:generate mockery -name "Creator|Trainer|CreatorTrainer"
@@ -46,7 +45,7 @@ func (cmd *CreateClassifier) Execute(classifierName string, samplesPath string) 
 
 	if err != nil {
 		fmt.Println("[FAILED]")
-		fmt.Fprintln(os.Stderr, err.Error())
+		fmt.Println(err.Error())
 		cmd.deleteClassifier.Execute(classifierName)
 		return err
 	}
