@@ -54,8 +54,7 @@ func (appDirectory *AppDirectory) write(data []byte) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(appDirectory.configFilePath(), data, FileRWPermissions)
-	return err
+	return ioutil.WriteFile(appDirectory.configFilePath(), data, FileRWPermissions)
 }
 
 func (appDirectory *AppDirectory) read() ([]byte, error) {
