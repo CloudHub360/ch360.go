@@ -48,7 +48,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Parameters_If_Both_Se
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Id_Parameter_Set_But_Not_Secret() {
 	clientIdParam := generators.String("clientid")
 	clientSecretParam := ""
-	expectedErr := errors.New("You must either specify both API Client ID and Secret parameters, or neither.")
+	expectedErr := errors.New("You must either specify both --client-id and --client-secret, or neither.")
 
 	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.Equal(suite.T(), expectedErr, err)
@@ -57,7 +57,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Id_Parameter
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Secret_Parameter_Set_But_Not_Id() {
 	clientIdParam := ""
 	clientSecretParam := generators.String("clientsecret")
-	expectedErr := errors.New("You must either specify both API Client ID and Secret parameters, or neither.")
+	expectedErr := errors.New("You must either specify both --client-id and --client-secret, or neither.")
 
 	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.Equal(suite.T(), expectedErr, err)
