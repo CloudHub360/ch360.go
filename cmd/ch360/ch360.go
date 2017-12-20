@@ -18,10 +18,10 @@ func main() {
 	usage := `CloudHub360 command-line tool.
 
 Usage:
-  ch360 login --client-id=<id> [--client-secret=<secret>]
-  ch360 create classifier <name> --samples-zip=<path> [--client-id=<id> --client-secret=<secret>]
-  ch360 delete classifier <name> [--client-id=<id> --client-secret=<secret>]
-  ch360 list classifiers [--client-id=<id> --client-secret=<secret>]
+  ch360 login [options]
+  ch360 create classifier <name> --samples-zip=<path> [options]
+  ch360 delete classifier <name> [options]
+  ch360 list classifiers [options]
   ch360 -h | --help
   ch360 --version
 
@@ -42,11 +42,9 @@ Options:
 		Timeout: time.Minute * 5,
 	}
 
-	clientId := args["--client-id"].(string)
-	clientSecret := ""
-	if args["--client-secret"] != nil {
-		clientSecret = args["--client-secret"].(string)
-	} else {
+	clientId := argAsString(args, "--client-id")
+	clientSecret := argAsString(args, "--client-secret")
+	if clientSecret == "" {
 		clientSecret, err = readSecret()
 		if err != nil {
 			fmt.Println(err.Error())
@@ -62,6 +60,12 @@ Options:
 	appDirectory := config.NewAppDirectory(user.HomeDir)
 
 	if args["login"].(bool) {
+		if clientId == "" {
+			//TODO: Prompt for client id if not specified
+			fmt.Println("Please specify your API Client Id with the --client-id parameter")
+			os.Exit(1)
+		}
+
 		responseChecker := &response.ErrorChecker{}
 		tokenRetriever := auth.NewHttpTokenRetriever(clientId, clientSecret, httpClient, ch360.ApiAddress, responseChecker)
 		err = commands.NewLogin(appDirectory, tokenRetriever).Execute(clientId, clientSecret)
