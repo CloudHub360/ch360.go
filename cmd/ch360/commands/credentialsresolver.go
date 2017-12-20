@@ -17,7 +17,7 @@ func (resolver *CredentialsResolver) Resolve(clientId string, clientSecret strin
 
 	// Specifying (or piping) just one of Id and Secret is not valid
 	if (clientId != "" && clientSecret == "") || (clientId == "" && clientSecret != "") {
-		return "", "", errors.New("You must either specify both API Client ID and Secret parameters, or neither.")
+		return "", "", errors.New("You must either specify both --client-id and --client-secret, or neither.")
 	}
 
 	configuration, err := configurationReader.ReadConfiguration()
