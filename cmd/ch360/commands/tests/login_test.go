@@ -3,7 +3,6 @@ package tests
 import (
 	authmocks "github.com/CloudHub360/ch360.go/auth/mocks"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
-	cmdmocks "github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/config/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
@@ -19,7 +18,6 @@ type LoginSuite struct {
 	suite.Suite
 	sut            *commands.Login
 	configWriter   *mocks.ConfigurationWriter
-	secretReader   *cmdmocks.Reader
 	tokenRetriever *authmocks.TokenRetriever
 	clientId       string
 	clientSecret   string
@@ -35,9 +33,7 @@ func (suite *LoginSuite) SetupTest() {
 	suite.tokenRetriever = new(authmocks.TokenRetriever)
 	suite.tokenRetriever.On("RetrieveToken").Return("", nil)
 
-	suite.secretReader = new(cmdmocks.Reader)
-	suite.secretReader.On("Read").Return(suite.clientSecret, nil)
-	suite.sut = commands.NewLogin(suite.configWriter, suite.secretReader, suite.tokenRetriever)
+	suite.sut = commands.NewLogin(suite.configWriter, suite.tokenRetriever)
 }
 
 func TestLoginSuiteRunner(t *testing.T) {
@@ -46,25 +42,6 @@ func TestLoginSuiteRunner(t *testing.T) {
 
 func (suite *LoginSuite) TestLogin_Execute_Writes_Configuration_When_Id_And_Secret_Specified() {
 	err := suite.sut.Execute(suite.clientId, suite.clientSecret)
-	if err != nil {
-		assert.Error(suite.T(), err)
-	}
-
-	suite.assertConfigurationWrittenWithCredentials(suite.clientId, suite.clientSecret)
-}
-
-func (suite *LoginSuite) TestLogin_Execute_Prompts_For_Secret_When_Secret_Not_Specified() {
-	err := suite.sut.Execute(suite.clientId, "")
-	if err != nil {
-		assert.Error(suite.T(), err)
-	}
-
-	suite.secretReader.AssertCalled(suite.T(), "Read")
-}
-
-func (suite *LoginSuite) TestLogin_Execute_Writes_Configuration_When_Secret_Is_Entered_At_Prompt() {
-	// Simulate user entering secret at prompt by the mock Reader returning the secret
-	err := suite.sut.Execute(suite.clientId, "")
 	if err != nil {
 		assert.Error(suite.T(), err)
 	}
