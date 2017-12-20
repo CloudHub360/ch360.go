@@ -8,6 +8,7 @@ import (
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"os"
 	"testing"
 )
 
@@ -111,11 +112,10 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Value
 }
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_ConfigurationReader_Returns_A_No_ConfigFile_Error() {
-	configReadingError := &config.NoConfigurationFileError{}
 	expectedError := errors.New("Please run 'ch360 login' to connect to your account.")
 
 	suite.reader.ExpectedCalls = nil
-	suite.reader.On("ReadConfiguration").Return(nil, configReadingError)
+	suite.reader.On("ReadConfiguration").Return(nil, os.ErrNotExist)
 
 	_, _, err := suite.sut.Resolve("", "", suite.reader)
 	assert.Equal(suite.T(), expectedError, err)

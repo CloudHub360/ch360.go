@@ -39,11 +39,6 @@ func (appDirectory *AppDirectory) WriteConfiguration(configuration *Configuratio
 }
 
 func (appDirectory *AppDirectory) ReadConfiguration() (*Configuration, error) {
-	configFileExists, err := fs.DirectoryOrFileExists(appDirectory.configFilePath())
-	if !configFileExists {
-		return nil, &NoConfigurationFileError{}
-	}
-
 	contents, err := appDirectory.read()
 	if err != nil {
 		return nil, err
@@ -73,11 +68,4 @@ func (appDirectory *AppDirectory) getPath() string {
 
 func (appDirectory *AppDirectory) configFilePath() string {
 	return filepath.Join(appDirectory.getPath(), "config.yaml")
-}
-
-type NoConfigurationFileError struct {
-}
-
-func (err *NoConfigurationFileError) Error() string {
-	return "No configuration file is present."
 }
