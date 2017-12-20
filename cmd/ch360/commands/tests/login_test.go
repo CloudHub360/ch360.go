@@ -1,11 +1,13 @@
 package tests
 
 import (
+	authmocks "github.com/CloudHub360/ch360.go/auth/mocks"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	cmdmocks "github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/config/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -15,11 +17,12 @@ import (
 
 type LoginSuite struct {
 	suite.Suite
-	sut          *commands.Login
-	configWriter *mocks.ConfigurationWriter
-	secretReader *cmdmocks.Reader
-	clientId     string
-	clientSecret string
+	sut            *commands.Login
+	configWriter   *mocks.ConfigurationWriter
+	secretReader   *cmdmocks.Reader
+	tokenRetriever *authmocks.TokenRetriever
+	clientId       string
+	clientSecret   string
 }
 
 func (suite *LoginSuite) SetupTest() {
@@ -29,9 +32,12 @@ func (suite *LoginSuite) SetupTest() {
 	suite.configWriter = new(mocks.ConfigurationWriter)
 	suite.configWriter.On("WriteConfiguration", mock.Anything).Return(nil)
 
+	suite.tokenRetriever = new(authmocks.TokenRetriever)
+	suite.tokenRetriever.On("RetrieveToken").Return("", nil)
+
 	suite.secretReader = new(cmdmocks.Reader)
 	suite.secretReader.On("Read").Return(suite.clientSecret, nil)
-	suite.sut = commands.NewLogin(suite.configWriter, suite.secretReader)
+	suite.sut = commands.NewLogin(suite.configWriter, suite.secretReader, suite.tokenRetriever)
 }
 
 func TestLoginSuiteRunner(t *testing.T) {
@@ -64,6 +70,30 @@ func (suite *LoginSuite) TestLogin_Execute_Writes_Configuration_When_Secret_Is_E
 	}
 
 	suite.assertConfigurationWrittenWithCredentials(suite.clientId, suite.clientSecret)
+}
+
+func (suite *LoginSuite) TestLogin_Execute_Requests_Auth_Token() {
+	err := suite.sut.Execute(suite.clientId, suite.clientSecret)
+	if err != nil {
+		assert.Error(suite.T(), err)
+	}
+
+	suite.tokenRetriever.AssertCalled(suite.T(), "RetrieveToken")
+}
+
+func (suite *LoginSuite) TestLogin_Execute_Returns_Err_From_Token_Retriever() {
+	// Arrange
+	suite.tokenRetriever.ExpectedCalls = nil
+
+	expectedErr := errors.New("An error")
+	suite.tokenRetriever.On("RetrieveToken").Return("", expectedErr)
+
+	// Act
+	err := suite.sut.Execute(suite.clientId, suite.clientSecret)
+
+	// Assert
+	suite.tokenRetriever.AssertCalled(suite.T(), "RetrieveToken")
+	assert.Equal(suite.T(), expectedErr, err)
 }
 
 func (suite *LoginSuite) assertConfigurationWrittenWithCredentials(clientId string, clientSecret string) {

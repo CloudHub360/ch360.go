@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/CloudHub360/ch360.go/auth"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/CloudHub360/ch360.go/response"
 	"github.com/docopt/docopt-go"
 	"net/http"
 	"os"
@@ -36,6 +38,10 @@ Options:
 		os.Exit(1)
 	}
 
+	httpClient := &http.Client{
+		Timeout: time.Minute * 5,
+	}
+
 	if args["login"].(bool) {
 		id := args["--client-id"].(string)
 
@@ -51,15 +57,14 @@ Options:
 		}
 
 		appDirectory := config.NewAppDirectory(user.HomeDir)
-		err = commands.NewLogin(appDirectory, &commands.ConsoleSecretReader{}).Execute(id, secret)
+		responseChecker := &response.ErrorChecker{}
+		tokenRetriever := auth.NewHttpTokenRetriever(id,
+			secret, httpClient, ch360.ApiAddress, responseChecker)
+		err = commands.NewLogin(appDirectory, &commands.ConsoleSecretReader{}, tokenRetriever).Execute(id, secret)
 		if err != nil {
 			os.Exit(1)
 		}
 		return
-	}
-
-	var httpClient = &http.Client{
-		Timeout: time.Minute * 5,
 	}
 
 	id := args["--client-id"].(string)
