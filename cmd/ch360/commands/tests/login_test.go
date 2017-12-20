@@ -42,18 +42,14 @@ func TestLoginSuiteRunner(t *testing.T) {
 
 func (suite *LoginSuite) TestLogin_Execute_Writes_Configuration_When_Id_And_Secret_Specified() {
 	err := suite.sut.Execute(suite.clientId, suite.clientSecret)
-	if err != nil {
-		assert.Error(suite.T(), err)
-	}
+	assert.Nil(suite.T(), err)
 
 	suite.assertConfigurationWrittenWithCredentials(suite.clientId, suite.clientSecret)
 }
 
 func (suite *LoginSuite) TestLogin_Execute_Requests_Auth_Token() {
 	err := suite.sut.Execute(suite.clientId, suite.clientSecret)
-	if err != nil {
-		assert.Error(suite.T(), err)
-	}
+	assert.Nil(suite.T(), err)
 
 	suite.tokenRetriever.AssertCalled(suite.T(), "RetrieveToken")
 }
