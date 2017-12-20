@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/auth"
 	"github.com/CloudHub360/ch360.go/config"
-	"os"
 )
 
 type Login struct {
@@ -27,7 +26,7 @@ func (cmd *Login) Execute(clientId string, clientSecret string) error {
 
 	if err != nil {
 		fmt.Println("[FAILED]")
-		fmt.Fprintln(os.Stderr, err.Error())
+		fmt.Println(err.Error())
 	} else {
 		fmt.Println("[OK]")
 	}

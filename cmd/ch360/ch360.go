@@ -34,7 +34,7 @@ Options:
 	args, err := docopt.Parse(usage, nil, true, ch360.Version, false)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
+		fmt.Printf(err.Error())
 		os.Exit(1)
 	}
 
@@ -92,7 +92,7 @@ Options:
 		fmt.Printf("Deleting classifier '%s'... ", classifierName)
 		err = commands.NewDeleteClassifier(apiClient.Classifiers).Execute(classifierName)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
+			fmt.Println(err.Error())
 			os.Exit(1)
 		}
 		fmt.Println("[OK]")
@@ -101,7 +101,7 @@ Options:
 		classifiers, err = commands.NewListClassifiers(apiClient.Classifiers).Execute()
 
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
+			fmt.Println(err.Error())
 			os.Exit(1)
 		}
 
