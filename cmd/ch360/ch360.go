@@ -72,8 +72,7 @@ Options:
 	}
 
 	// Get credentials from configuration
-	//TODO: Move resolver back to commands
-	resolver := &config.CredentialsResolver{}
+	resolver := &commands.CredentialsResolver{}
 	clientId, clientSecret, err = resolver.Resolve(clientId, clientSecret, appDirectory)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
