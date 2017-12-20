@@ -101,7 +101,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Value
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Values_Are_Needed_And_Contains_No_Credentials() {
 	clientIdParam := ""
 	clientSecretParam := ""
-	expectedErr := errors.New("Your configuration file does not contain any credentials. Please run ch360 login.")
+	expectedErr := errors.New("Your configuration file does not contain any credentials. Please run 'ch360 login' to connect to your account.")
 
 	suite.reader.ExpectedCalls = nil
 	var credentials = make(config.ApiCredentialsList, 0)
@@ -115,13 +115,28 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Value
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
-func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_ConfigurationReader_Returns_An_Error() {
+func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_ConfigurationReader_Returns_A_No_ConfigFile_Error() {
 	clientIdParam := ""
 	clientSecretParam := ""
 
 	suite.reader.ExpectedCalls = nil
-	expectedError := errors.New("Simulated config reading error")
-	suite.reader.On("ReadConfiguration").Return(nil, expectedError)
+	configReadingError := &config.NoConfigurationFileError{}
+	suite.reader.On("ReadConfiguration").Return(nil, configReadingError)
+	expectedError := errors.New("Please run 'ch360 login' to connect to your account.")
+
+	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
+	assert.Equal(suite.T(), expectedError, err)
+}
+
+func (suite *CredentialsResolverSuite) TestResolve_Returns_Wrapped_Error_If_ConfigurationReader_Returns_Another_Error() {
+	clientIdParam := ""
+	clientSecretParam := ""
+
+	suite.reader.ExpectedCalls = nil
+	errorText := "Corrupted file"
+	configReadingError := errors.New(errorText)
+	suite.reader.On("ReadConfiguration").Return(nil, configReadingError)
+	expectedError := errors.New("There was an error loading your configuration file. Please run 'ch360 login' to connect to your account. Error: " + errorText)
 
 	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.Equal(suite.T(), expectedError, err)
