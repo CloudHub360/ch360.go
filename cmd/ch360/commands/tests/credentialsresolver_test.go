@@ -2,6 +2,7 @@ package tests
 
 import (
 	"errors"
+	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/config/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
@@ -12,8 +13,8 @@ import (
 
 type CredentialsResolverSuite struct {
 	suite.Suite
-	sut                *config.CredentialsResolver
-	appDirectory       *mocks.ConfigurationReader
+	sut                *commands.CredentialsResolver
+	reader             *mocks.ConfigurationReader
 	configClientId     string
 	configClientSecret string
 }
@@ -23,10 +24,10 @@ func (suite *CredentialsResolverSuite) SetupTest() {
 	suite.configClientSecret = generators.String("config-clientsecret")
 
 	configuration := config.NewConfiguration(suite.configClientId, suite.configClientSecret)
-	suite.appDirectory = new(mocks.ConfigurationReader)
-	suite.appDirectory.On("ReadConfiguration").Return(configuration, nil)
+	suite.reader = new(mocks.ConfigurationReader)
+	suite.reader.On("ReadConfiguration").Return(configuration, nil)
 
-	suite.sut = &config.CredentialsResolver{}
+	suite.sut = &commands.CredentialsResolver{}
 }
 
 func TestCredentialsResolverSuiteRunner(t *testing.T) {
@@ -37,7 +38,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Parameters_If_Both_Se
 	clientIdParam := generators.String("clientid")
 	clientSecretParam := generators.String("clientsecret")
 
-	clientIdActual, clientSecretActual, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.appDirectory)
+	clientIdActual, clientSecretActual, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), clientIdParam, clientIdActual)
 	assert.Equal(suite.T(), clientSecretParam, clientSecretActual)
@@ -47,7 +48,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Id_Parameter_And_Conf
 	clientIdParam := generators.String("clientid")
 	clientSecretParam := ""
 
-	clientIdActual, clientSecretActual, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.appDirectory)
+	clientIdActual, clientSecretActual, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), clientIdParam, clientIdActual)
 	assert.Equal(suite.T(), suite.configClientSecret, clientSecretActual)
@@ -57,7 +58,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Secret_Parameter_And_
 	clientIdParam := ""
 	clientSecretParam := generators.String("clientsecret")
 
-	clientIdActual, clientSecretActual, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.appDirectory)
+	clientIdActual, clientSecretActual, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), suite.configClientId, clientIdActual)
 	assert.Equal(suite.T(), clientSecretParam, clientSecretActual)
@@ -67,7 +68,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Config_Values_If_Neit
 	clientIdParam := ""
 	clientSecretParam := ""
 
-	clientIdActual, clientSecretActual, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.appDirectory)
+	clientIdActual, clientSecretActual, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), suite.configClientId, clientIdActual)
 	assert.Equal(suite.T(), suite.configClientSecret, clientSecretActual)
@@ -77,11 +78,11 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Value
 	clientIdParam := ""
 	clientSecretParam := ""
 
-	suite.appDirectory.ExpectedCalls = nil
+	suite.reader.ExpectedCalls = nil
 	configuration := config.NewConfiguration("", suite.configClientSecret)
-	suite.appDirectory.On("ReadConfiguration").Return(configuration, nil)
+	suite.reader.On("ReadConfiguration").Return(configuration, nil)
 
-	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.appDirectory)
+	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.NotNil(suite.T(), err)
 }
 
@@ -89,11 +90,11 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Value
 	clientIdParam := ""
 	clientSecretParam := ""
 
-	suite.appDirectory.ExpectedCalls = nil
+	suite.reader.ExpectedCalls = nil
 	configuration := config.NewConfiguration(suite.configClientId, "")
-	suite.appDirectory.On("ReadConfiguration").Return(configuration, nil)
+	suite.reader.On("ReadConfiguration").Return(configuration, nil)
 
-	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.appDirectory)
+	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.NotNil(suite.T(), err)
 }
 
@@ -102,14 +103,14 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Value
 	clientSecretParam := ""
 	expectedErr := errors.New("Your configuration file does not contain any credentials. Please run ch360 login.")
 
-	suite.appDirectory.ExpectedCalls = nil
+	suite.reader.ExpectedCalls = nil
 	var credentials = make(config.ApiCredentialsList, 0)
 	configuration := &config.Configuration{
 		Credentials: credentials,
 	}
-	suite.appDirectory.On("ReadConfiguration").Return(configuration, nil)
+	suite.reader.On("ReadConfiguration").Return(configuration, nil)
 
-	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.appDirectory)
+	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), expectedErr, err)
 }
@@ -118,10 +119,10 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Configuratio
 	clientIdParam := ""
 	clientSecretParam := ""
 
-	suite.appDirectory.ExpectedCalls = nil
+	suite.reader.ExpectedCalls = nil
 	expectedError := errors.New("Simulated config reading error")
-	suite.appDirectory.On("ReadConfiguration").Return(nil, expectedError)
+	suite.reader.On("ReadConfiguration").Return(nil, expectedError)
 
-	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.appDirectory)
+	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
 	assert.Equal(suite.T(), expectedError, err)
 }
