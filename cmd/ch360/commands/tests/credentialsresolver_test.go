@@ -75,69 +75,60 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Config_Values_If_Neit
 }
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Values_Are_Needed_And_Id_Is_Empty() {
-	clientIdParam := ""
-	clientSecretParam := ""
+	configuration := config.NewConfiguration("", suite.configClientSecret)
+	expectedErr := errors.New("Your configuration file does not contain an API Client Id. Please run 'ch360 login' to connect to your account.")
 
 	suite.reader.ExpectedCalls = nil
-	configuration := config.NewConfiguration("", suite.configClientSecret)
 	suite.reader.On("ReadConfiguration").Return(configuration, nil)
 
-	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
-	assert.NotNil(suite.T(), err)
+	_, _, err := suite.sut.Resolve("", "", suite.reader)
+	assert.Equal(suite.T(), expectedErr, err)
 }
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Values_Are_Needed_And_Secret_Is_Empty() {
-	clientIdParam := ""
-	clientSecretParam := ""
+	configuration := config.NewConfiguration(suite.configClientId, "")
+	expectedErr := errors.New("Your configuration file does not contain an API Client Secret. Please run 'ch360 login' to connect to your account.")
 
 	suite.reader.ExpectedCalls = nil
-	configuration := config.NewConfiguration(suite.configClientId, "")
 	suite.reader.On("ReadConfiguration").Return(configuration, nil)
 
-	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
-	assert.NotNil(suite.T(), err)
+	_, _, err := suite.sut.Resolve("", "", suite.reader)
+	assert.Equal(suite.T(), expectedErr, err)
 }
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Values_Are_Needed_And_Contains_No_Credentials() {
-	clientIdParam := ""
-	clientSecretParam := ""
-	expectedErr := errors.New("Your configuration file does not contain any credentials. Please run 'ch360 login' to connect to your account.")
-
-	suite.reader.ExpectedCalls = nil
 	var credentials = make(config.ApiCredentialsList, 0)
 	configuration := &config.Configuration{
 		Credentials: credentials,
 	}
+	expectedErr := errors.New("Your configuration file does not contain any credentials. Please run 'ch360 login' to connect to your account.")
+
+	suite.reader.ExpectedCalls = nil
 	suite.reader.On("ReadConfiguration").Return(configuration, nil)
 
-	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
-	assert.NotNil(suite.T(), err)
+	_, _, err := suite.sut.Resolve("", "", suite.reader)
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_ConfigurationReader_Returns_A_No_ConfigFile_Error() {
-	clientIdParam := ""
-	clientSecretParam := ""
-
-	suite.reader.ExpectedCalls = nil
 	configReadingError := &config.NoConfigurationFileError{}
-	suite.reader.On("ReadConfiguration").Return(nil, configReadingError)
 	expectedError := errors.New("Please run 'ch360 login' to connect to your account.")
 
-	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
+	suite.reader.ExpectedCalls = nil
+	suite.reader.On("ReadConfiguration").Return(nil, configReadingError)
+
+	_, _, err := suite.sut.Resolve("", "", suite.reader)
 	assert.Equal(suite.T(), expectedError, err)
 }
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Wrapped_Error_If_ConfigurationReader_Returns_Another_Error() {
-	clientIdParam := ""
-	clientSecretParam := ""
-
-	suite.reader.ExpectedCalls = nil
 	errorText := "Corrupted file"
 	configReadingError := errors.New(errorText)
-	suite.reader.On("ReadConfiguration").Return(nil, configReadingError)
 	expectedError := errors.New("There was an error loading your configuration file. Please run 'ch360 login' to connect to your account. Error: " + errorText)
 
-	_, _, err := suite.sut.Resolve(clientIdParam, clientSecretParam, suite.reader)
+	suite.reader.ExpectedCalls = nil
+	suite.reader.On("ReadConfiguration").Return(nil, configReadingError)
+
+	_, _, err := suite.sut.Resolve("", "", suite.reader)
 	assert.Equal(suite.T(), expectedError, err)
 }
