@@ -16,6 +16,11 @@ type ConfigurationWriter interface {
 	WriteConfiguration(configuration *Configuration) error
 }
 
+//go:generate mockery -name "ConfigurationReader"
+type ConfigurationReader interface {
+	ReadConfiguration() (*Configuration, error)
+}
+
 const FileRWPermissions os.FileMode = 0600
 const DirRWPermissions os.FileMode = 0700
 
@@ -34,6 +39,11 @@ func (appDirectory *AppDirectory) WriteConfiguration(configuration *Configuratio
 }
 
 func (appDirectory *AppDirectory) ReadConfiguration() (*Configuration, error) {
+	configFileExists, err := fs.DirectoryOrFileExists(appDirectory.configFilePath())
+	if !configFileExists {
+		return nil, &NoConfigurationFileError{}
+	}
+
 	contents, err := appDirectory.read()
 	if err != nil {
 		return nil, err
@@ -49,16 +59,25 @@ func (appDirectory *AppDirectory) write(data []byte) error {
 		return err
 	}
 
-	fullFilePath := filepath.Join(appDirectory.getPath(), "config.yaml")
-	err = ioutil.WriteFile(fullFilePath, data, FileRWPermissions)
+	err = ioutil.WriteFile(appDirectory.configFilePath(), data, FileRWPermissions)
 	return err
 }
 
 func (appDirectory *AppDirectory) read() ([]byte, error) {
-	fullFilePath := filepath.Join(appDirectory.getPath(), "config.yaml")
-	return ioutil.ReadFile(fullFilePath)
+	return ioutil.ReadFile(appDirectory.configFilePath())
 }
 
 func (appDirectory *AppDirectory) getPath() string {
 	return filepath.Join(appDirectory.homeDirectory, ".ch360")
+}
+
+func (appDirectory *AppDirectory) configFilePath() string {
+	return filepath.Join(appDirectory.getPath(), "config.yaml")
+}
+
+type NoConfigurationFileError struct {
+}
+
+func (err *NoConfigurationFileError) Error() string {
+	return "No configuration file is present."
 }
