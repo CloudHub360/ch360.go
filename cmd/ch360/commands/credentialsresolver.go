@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/config"
+	"os"
 )
 
 type CredentialsResolver struct{}
@@ -15,8 +16,7 @@ func (resolver *CredentialsResolver) Resolve(clientId string, clientSecret strin
 
 	configuration, err := configurationReader.ReadConfiguration()
 	if err != nil {
-		_, noConfigurationFile := err.(*config.NoConfigurationFileError)
-		if noConfigurationFile {
+		if os.IsNotExist(err) {
 			// Return sensible error if user hasn't logged in and there therefore is no
 			// configuration file. This also masks other errors due to e.g. malformed
 			// configuration file.
