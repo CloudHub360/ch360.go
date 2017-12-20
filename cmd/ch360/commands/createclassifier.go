@@ -46,7 +46,7 @@ func (cmd *CreateClassifier) Execute(classifierName string, samplesPath string) 
 
 	if err != nil {
 		fmt.Println("[FAILED]")
-		fmt.Fprint(os.Stderr, err.Error())
+		fmt.Fprintln(os.Stderr, err.Error())
 		cmd.deleteClassifier.Execute(classifierName)
 		return err
 	}
