@@ -19,9 +19,9 @@ func main() {
 
 Usage:
   ch360 login --client-id=<id> [--client-secret=<secret>]
-  ch360 create classifier <name> --client-id=<id> --client-secret=<secret> --samples-zip=<path>
-  ch360 delete classifier <name> --client-id=<id> --client-secret=<secret>
-  ch360 list classifiers --client-id=<id> --client-secret=<secret>
+  ch360 create classifier <name> --samples-zip=<path> [--client-id=<id> --client-secret=<secret>]
+  ch360 delete classifier <name> [--client-id=<id> --client-secret=<secret>]
+  ch360 list classifiers [--client-id=<id> --client-secret=<secret>]
   ch360 -h | --help
   ch360 --version
 
@@ -54,23 +54,30 @@ Options:
 		}
 	}
 
+	user, err := user.Current()
+	if err != nil {
+		fmt.Println(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+	appDirectory := config.NewAppDirectory(user.HomeDir)
+
 	if args["login"].(bool) {
-		id := args["--client-id"].(string)
-
-		user, err := user.Current()
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-
-		appDirectory := config.NewAppDirectory(user.HomeDir)
 		responseChecker := &response.ErrorChecker{}
-		tokenRetriever := auth.NewHttpTokenRetriever(id, clientSecret, httpClient, ch360.ApiAddress, responseChecker)
-		err = commands.NewLogin(appDirectory, tokenRetriever).Execute(id, clientSecret)
+		tokenRetriever := auth.NewHttpTokenRetriever(clientId, clientSecret, httpClient, ch360.ApiAddress, responseChecker)
+		err = commands.NewLogin(appDirectory, tokenRetriever).Execute(clientId, clientSecret)
 		if err != nil {
 			os.Exit(1)
 		}
 		return
+	}
+
+	// Get credentials from configuration
+	//TODO: Move resolver back to commands
+	resolver := &config.CredentialsResolver{}
+	clientId, clientSecret, err = resolver.Resolve(clientId, clientSecret, appDirectory)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
 
 	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, clientId, clientSecret)
@@ -113,6 +120,15 @@ Options:
 			fmt.Println(classifier.Name)
 		}
 	}
+}
+
+func argAsString(args map[string]interface{}, name string) string {
+	var result string = ""
+	if args[name] != nil {
+		result = args[name].(string)
+	}
+
+	return result
 }
 
 func readSecret() (string, error) {
