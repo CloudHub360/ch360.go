@@ -10,6 +10,7 @@ const ApiAddress = "https://api.cloudhub360.com"
 
 type ApiClient struct {
 	Classifiers *ClassifiersClient
+	Documents   *DocumentsClient
 }
 
 func NewApiClient(httpClient *http.Client, apiUrl string, clientId string, clientSecret string) *ApiClient {
@@ -31,6 +32,10 @@ func NewApiClient(httpClient *http.Client, apiUrl string, clientId string, clien
 
 	apiClient := &ApiClient{
 		Classifiers: &ClassifiersClient{
+			baseUrl:       apiUrl,
+			requestSender: &responseCheckingDoer,
+		},
+		Documents: &DocumentsClient{
 			baseUrl:       apiUrl,
 			requestSender: &responseCheckingDoer,
 		},

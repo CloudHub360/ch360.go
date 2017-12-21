@@ -22,6 +22,7 @@ Usage:
   ch360 create classifier <name> --samples-zip=<path> [options]
   ch360 delete classifier <name> [options]
   ch360 list classifiers [options]
+  ch360 classify --file=<file> --classifier-name=<name> [options]
   ch360 -h | --help
   ch360 --version
 
@@ -122,6 +123,15 @@ Options:
 
 		for _, classifier := range classifiers {
 			fmt.Println(classifier.Name)
+		}
+	} else if args["classify"].(bool) {
+		filePattern := args["--file"].(string)
+		classifierName := args["--classifier-name"].(string)
+
+		err = commands.NewClassifyDoer(os.Stdout, apiClient.Documents).Execute(filePattern, classifierName)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
 		}
 	}
 }

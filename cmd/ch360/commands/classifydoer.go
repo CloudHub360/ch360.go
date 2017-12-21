@@ -32,15 +32,15 @@ func (cmd *ClassifyDoer) Execute(filePath, classifierName string) error {
 		}
 	}
 
-	documentId, err := cmd.client.Create(fileContents)
+	documentId, err := cmd.client.CreateDocument(fileContents)
 	if err != nil {
 		return err
 	}
 
-	documentType, classifyErr := cmd.client.Classify(documentId, classifierName)
+	documentType, classifyErr := cmd.client.ClassifyDocument(documentId, classifierName)
 
-	// Always delete the document, even if Classify returned an error
-	deleteErr := cmd.client.Delete(documentId)
+	// Always delete the document, even if ClassifyDocument returned an error
+	deleteErr := cmd.client.DeleteDocument(documentId)
 
 	if classifyErr != nil {
 		return classifyErr

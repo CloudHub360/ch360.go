@@ -8,8 +8,8 @@ type DocumentCreatorDeleterClassifier struct {
 	mock.Mock
 }
 
-// Classify provides a mock function with given fields: documentId, classifierName
-func (_m *DocumentCreatorDeleterClassifier) Classify(documentId string, classifierName string) (string, error) {
+// ClassifyDocument provides a mock function with given fields: documentId, classifierName
+func (_m *DocumentCreatorDeleterClassifier) ClassifyDocument(documentId string, classifierName string) (string, error) {
 	ret := _m.Called(documentId, classifierName)
 
 	var r0 string
@@ -29,8 +29,8 @@ func (_m *DocumentCreatorDeleterClassifier) Classify(documentId string, classifi
 	return r0, r1
 }
 
-// Create provides a mock function with given fields: fileContents
-func (_m *DocumentCreatorDeleterClassifier) Create(fileContents []byte) (string, error) {
+// CreateDocument provides a mock function with given fields: fileContents
+func (_m *DocumentCreatorDeleterClassifier) CreateDocument(fileContents []byte) (string, error) {
 	ret := _m.Called(fileContents)
 
 	var r0 string
@@ -50,8 +50,8 @@ func (_m *DocumentCreatorDeleterClassifier) Create(fileContents []byte) (string,
 	return r0, r1
 }
 
-// Delete provides a mock function with given fields: documentId
-func (_m *DocumentCreatorDeleterClassifier) Delete(documentId string) error {
+// DeleteDocument provides a mock function with given fields: documentId
+func (_m *DocumentCreatorDeleterClassifier) DeleteDocument(documentId string) error {
 	ret := _m.Called(documentId)
 
 	var r0 error
