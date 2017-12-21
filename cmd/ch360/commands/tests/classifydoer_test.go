@@ -33,9 +33,9 @@ func (suite *ClassifySuite) SetupTest() {
 	suite.testFilePath = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/document1.pdf"
 
 	suite.client = new(mocks.DocumentCreatorDeleterClassifier)
-	suite.client.On("Create", mock.Anything).Return(suite.documentId, nil)
-	suite.client.On("Classify", mock.Anything, mock.Anything).Return(suite.documentType, nil)
-	suite.client.On("Delete", mock.Anything).Return(nil)
+	suite.client.On("CreateDocument", mock.Anything).Return(suite.documentId, nil)
+	suite.client.On("ClassifyDocument", mock.Anything, mock.Anything).Return(suite.documentType, nil)
+	suite.client.On("DeleteDocument", mock.Anything).Return(nil)
 
 	suite.output = &bytes.Buffer{}
 	suite.sut = commands.NewClassifyDoer(suite.output, suite.client)
@@ -52,21 +52,21 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_Create_Document_With_
 	err = suite.sut.Execute(suite.testFilePath, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
-	suite.client.AssertCalled(suite.T(), "Create", expectedContents)
+	suite.client.AssertCalled(suite.T(), "CreateDocument", expectedContents)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_Classify_With_DocumentId_And_ClassifierName() {
 	err := suite.sut.Execute(suite.testFilePath, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
-	suite.client.AssertCalled(suite.T(), "Classify", suite.documentId, suite.classifierName)
+	suite.client.AssertCalled(suite.T(), "ClassifyDocument", suite.documentId, suite.classifierName)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_Delete_With_DocumentId() {
 	err := suite.sut.Execute(suite.testFilePath, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
-	suite.client.AssertCalled(suite.T(), "Delete", suite.documentId)
+	suite.client.AssertCalled(suite.T(), "DeleteDocument", suite.documentId)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Writes_DocumentType_To_StdOut() {
@@ -87,7 +87,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Returns_Specific_Error_If_File_Does
 	err := suite.sut.Execute(nonExistentFile, suite.classifierName)
 
 	assert.Equal(suite.T(), expectedErr, err)
-	suite.client.AssertNotCalled(suite.T(), "Create", mock.Anything)
+	suite.client.AssertNotCalled(suite.T(), "CreateDocument", mock.Anything)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_ReadFile_Fails() {
@@ -95,13 +95,13 @@ func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_ReadFile_Fails() {
 	err := suite.sut.Execute(nonExistentFile, suite.classifierName)
 
 	assert.NotNil(suite.T(), err)
-	suite.client.AssertNotCalled(suite.T(), "Create", mock.Anything)
+	suite.client.AssertNotCalled(suite.T(), "CreateDocument", mock.Anything)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_CreateDocument_Fails() {
 	suite.client.ExpectedCalls = nil
 	expectedErr := errors.New("simulated error")
-	suite.client.On("Create", mock.Anything).Return("", expectedErr)
+	suite.client.On("CreateDocument", mock.Anything).Return("", expectedErr)
 	err := suite.sut.Execute(suite.testFilePath, suite.classifierName)
 
 	assert.Equal(suite.T(), expectedErr, err)
@@ -110,9 +110,9 @@ func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_CreateDocument_Fai
 func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_ClassifyDocument_Fails() {
 	suite.client.ExpectedCalls = nil
 	expectedErr := errors.New("simulated error")
-	suite.client.On("Create", mock.Anything).Return(suite.documentId, nil)
-	suite.client.On("Classify", mock.Anything, mock.Anything).Return("", expectedErr)
-	suite.client.On("Delete", mock.Anything).Return(nil)
+	suite.client.On("CreateDocument", mock.Anything).Return(suite.documentId, nil)
+	suite.client.On("ClassifyDocument", mock.Anything, mock.Anything).Return("", expectedErr)
+	suite.client.On("DeleteDocument", mock.Anything).Return(nil)
 
 	err := suite.sut.Execute(suite.testFilePath, suite.classifierName)
 
@@ -122,11 +122,11 @@ func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_ClassifyDocument_F
 func (suite *ClassifySuite) TestClassifyDoer_Deletes_Document_If_ClassifyDocument_Fails() {
 	suite.client.ExpectedCalls = nil
 	expectedErr := errors.New("simulated error")
-	suite.client.On("Create", mock.Anything).Return(suite.documentId, nil)
-	suite.client.On("Classify", mock.Anything, mock.Anything).Return("", expectedErr)
-	suite.client.On("Delete", mock.Anything).Return(nil)
+	suite.client.On("CreateDocument", mock.Anything).Return(suite.documentId, nil)
+	suite.client.On("ClassifyDocument", mock.Anything, mock.Anything).Return("", expectedErr)
+	suite.client.On("DeleteDocument", mock.Anything).Return(nil)
 
 	suite.sut.Execute(suite.testFilePath, suite.classifierName)
 
-	suite.client.AssertCalled(suite.T(), "Delete", suite.documentId)
+	suite.client.AssertCalled(suite.T(), "DeleteDocument", suite.documentId)
 }
