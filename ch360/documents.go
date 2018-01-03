@@ -2,8 +2,8 @@ package ch360
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
-	"github.com/Jeffail/gabs"
 	"net/http"
 )
 
@@ -21,6 +21,19 @@ type DocumentsClient struct {
 
 type CreateDocumentRequest struct {
 	FileContents []byte
+}
+
+type createDocumentResponse struct {
+	Id string `json:"id"`
+}
+
+type classifyDocumentResponse struct {
+	Id      string                          `json:"_id"`
+	Results classifyDocumentResultsResponse `json:"classification_results"`
+}
+
+type classifyDocumentResultsResponse struct {
+	DocumentType string `json:"document_type"`
 }
 
 //TODO: Return domain object with links to ClassifyDocument & DeleteDocument urls
@@ -45,12 +58,13 @@ func (client *DocumentsClient) CreateDocument(fileContents []byte) (string, erro
 		return "", err
 	}
 
-	jsonParsed, err := gabs.ParseJSON(buf.Bytes())
-
-	if documentId, ok := jsonParsed.Path("id").Data().(string); ok {
-		return documentId, nil
+	documentResponse := createDocumentResponse{}
+	err = json.Unmarshal(buf.Bytes(), &documentResponse)
+	if err != nil {
+		return "", errors.New("Could not retrieve document ID from Create Document response")
 	}
-	return "", errors.New("Could not retrieve document ID from Create Document response")
+
+	return documentResponse.Id, nil
 }
 
 func (client *DocumentsClient) DeleteDocument(documentId string) error {
@@ -91,15 +105,11 @@ func (client *DocumentsClient) ClassifyDocument(documentId string, classifierNam
 		return "", err
 	}
 
-	jsonParsed, err := gabs.ParseJSON(buf.Bytes())
-	var documentType string
-	var ok bool
-
-	//TODO: Return results struct
-	documentType, ok = jsonParsed.Path("classification_results.document_type").Data().(string)
-	if ok {
-		return documentType, nil
+	classifyDocumentResponse := classifyDocumentResponse{}
+	err = json.Unmarshal(buf.Bytes(), &classifyDocumentResponse)
+	if err != nil {
+		return "", errors.New("Could not retrieve document type from ClassifyDocument response")
 	}
 
-	return "", errors.New("Could not retrieve document type from ClassifyDocument Document response")
+	return classifyDocumentResponse.Results.DocumentType, nil
 }
