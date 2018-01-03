@@ -9,6 +9,7 @@ import (
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go/build"
 	"io/ioutil"
@@ -50,7 +51,7 @@ func TestClassifySuiteRunner(t *testing.T) {
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_Create_Document_With_File_Content() {
 	expectedContents, err := ioutil.ReadFile(suite.testFilePath)
-	assert.Nil(suite.T(), err)
+	require.Nil(suite.T(), err)
 
 	err = suite.sut.Execute(suite.testFilePath, suite.classifierName)
 

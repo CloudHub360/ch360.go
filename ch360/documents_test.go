@@ -7,6 +7,7 @@ import (
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"net/http"
 	"testing"
@@ -40,10 +41,10 @@ func TestDocumentsClientSuiteRunner(t *testing.T) {
 }
 
 func (suite *DocumentsClientSuite) request() *http.Request {
-	assert.Len(suite.T(), suite.httpClient.Calls, 1)
+	require.Len(suite.T(), suite.httpClient.Calls, 1)
 
 	call := suite.httpClient.Calls[0]
-	assert.Len(suite.T(), call.Arguments, 1)
+	require.Len(suite.T(), call.Arguments, 1)
 
 	return (call.Arguments[0]).(*http.Request)
 }
