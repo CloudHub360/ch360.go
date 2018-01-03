@@ -128,7 +128,7 @@ Options:
 		filePattern := args["--file"].(string)
 		classifierName := args["--classifier-name"].(string)
 
-		err = commands.NewClassifyDoer(os.Stdout, apiClient.Documents).Execute(filePattern, classifierName)
+		err = commands.NewClassifyCommand(os.Stdout, apiClient.Documents).Execute(filePattern, classifierName)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)

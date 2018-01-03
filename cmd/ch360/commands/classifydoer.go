@@ -11,19 +11,19 @@ import (
 	"path/filepath"
 )
 
-type ClassifyDoer struct {
+type ClassifyCommand struct {
 	writer io.Writer
 	client ch360.DocumentCreatorDeleterClassifier
 }
 
-func NewClassifyDoer(writer io.Writer, client ch360.DocumentCreatorDeleterClassifier) *ClassifyDoer {
-	return &ClassifyDoer{
+func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterClassifier) *ClassifyCommand {
+	return &ClassifyCommand{
 		writer: writer,
 		client: client,
 	}
 }
 
-func (cmd *ClassifyDoer) Execute(filePattern string, classifierName string) error {
+func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) error {
 	matches, err := zglob.Glob(filePattern)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -56,7 +56,7 @@ func (cmd *ClassifyDoer) Execute(filePattern string, classifierName string) erro
 	return nil
 }
 
-func (cmd *ClassifyDoer) processFile(filePath string, classifierName string) (string, error) {
+func (cmd *ClassifyCommand) processFile(filePath string, classifierName string) (string, error) {
 	fileContents, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return "", err
