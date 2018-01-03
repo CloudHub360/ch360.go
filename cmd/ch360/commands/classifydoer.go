@@ -27,10 +27,15 @@ func (cmd *ClassifyDoer) Execute(filePattern string, classifierName string) erro
 	matches, err := zglob.Glob(filePattern)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return errors.New(fmt.Sprintf("File or file pattern %s does not match any files", filePattern))
+			// The file pattern is for a specific (single) file that doesn't exist
+			return errors.New(fmt.Sprintf("File %s does not exist", filePattern))
 		} else {
 			return err
 		}
+	}
+
+	if len(matches) == 0 {
+		return errors.New(fmt.Sprintf("File pattern %s does not match any files", filePattern))
 	}
 
 	fmt.Fprintf(cmd.writer, "%-40.40s  %s", "FILE", "DOCUMENT TYPE")
