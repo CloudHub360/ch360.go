@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/mocks"
+	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
@@ -19,26 +20,28 @@ import (
 
 type ClassifySuite struct {
 	suite.Suite
-	sut              *commands.ClassifyCommand
-	client           *mocks.DocumentCreatorDeleterClassifier
-	classifierName   string
-	documentId       string
-	documentType     string
-	testFilePath     string
-	testFilesPattern string
-	output           *bytes.Buffer
+	sut                  *commands.ClassifyCommand
+	client               *mocks.DocumentCreatorDeleterClassifier
+	classifierName       string
+	documentId           string
+	classificationResult *types.ClassificationResult
+	testFilePath         string
+	testFilesPattern     string
+	output               *bytes.Buffer
 }
 
 func (suite *ClassifySuite) SetupTest() {
 	suite.classifierName = generators.String("classifiername")
 	suite.documentId = generators.String("documentId")
-	suite.documentType = generators.String("documentType")
+	suite.classificationResult = &types.ClassificationResult{
+		DocumentType: generators.String("documentType"),
+	}
 	suite.testFilePath = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/document1.pdf"
 	suite.testFilesPattern = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/**/*.pdf"
 
 	suite.client = new(mocks.DocumentCreatorDeleterClassifier)
 	suite.client.On("CreateDocument", mock.Anything).Return(suite.documentId, nil)
-	suite.client.On("ClassifyDocument", mock.Anything, mock.Anything).Return(suite.documentType, nil)
+	suite.client.On("ClassifyDocument", mock.Anything, mock.Anything).Return(suite.classificationResult, nil)
 	suite.client.On("DeleteDocument", mock.Anything).Return(nil)
 
 	suite.output = &bytes.Buffer{}
@@ -83,7 +86,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Writes_DocumentType_To_StdO
 	suite.sut.Execute(suite.testFilePath, suite.classifierName)
 
 	header := fmt.Sprintf("%-40.40s  %s", "FILE", "DOCUMENT TYPE")
-	results := fmt.Sprintf("%-40.40s  %s", filepath.Base(suite.testFilePath), suite.documentType)
+	results := fmt.Sprintf("%-40.40s  %s", filepath.Base(suite.testFilePath), suite.classificationResult.DocumentType)
 	assert.Equal(suite.T(), header+"\n"+results+"\n", suite.output.String())
 }
 
@@ -125,7 +128,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_ClassifyDocument_F
 	classifyErr := errors.New("simulated error")
 	expectedErr := errors.New(fmt.Sprintf("Error classifying file %s: %s", suite.testFilePath, classifyErr.Error()))
 	suite.client.On("CreateDocument", mock.Anything).Return(suite.documentId, nil)
-	suite.client.On("ClassifyDocument", mock.Anything, mock.Anything).Return("", classifyErr)
+	suite.client.On("ClassifyDocument", mock.Anything, mock.Anything).Return(nil, classifyErr)
 	suite.client.On("DeleteDocument", mock.Anything).Return(nil)
 
 	err := suite.sut.Execute(suite.testFilePath, suite.classifierName)
@@ -137,7 +140,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Deletes_Document_If_ClassifyDocumen
 	suite.client.ExpectedCalls = nil
 	expectedErr := errors.New("simulated error")
 	suite.client.On("CreateDocument", mock.Anything).Return(suite.documentId, nil)
-	suite.client.On("ClassifyDocument", mock.Anything, mock.Anything).Return("", expectedErr)
+	suite.client.On("ClassifyDocument", mock.Anything, mock.Anything).Return(nil, expectedErr)
 	suite.client.On("DeleteDocument", mock.Anything).Return(nil)
 
 	suite.sut.Execute(suite.testFilePath, suite.classifierName)

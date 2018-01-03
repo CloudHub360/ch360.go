@@ -126,8 +126,8 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_From_Send
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(nil, expectedErr)
 
-	documentType, err := suite.sut.ClassifyDocument(suite.documentId, suite.classifierName)
-	assert.Equal(suite.T(), "", documentType)
+	classificationResult, err := suite.sut.ClassifyDocument(suite.documentId, suite.classifierName)
+	assert.Nil(suite.T(), classificationResult)
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
@@ -135,10 +135,10 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Document_Type()
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
 
-	documentType, err := suite.sut.ClassifyDocument(suite.documentId, suite.classifierName)
+	classificationResult, err := suite.sut.ClassifyDocument(suite.documentId, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "Assignment of Deed of Trust", documentType)
+	assert.Equal(suite.T(), "Assignment of Deed of Trust", classificationResult.DocumentType)
 }
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_If_DocumentType_Cannot_Be_Parsed_From_Response() {
@@ -146,9 +146,9 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_If_Docume
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte("")), nil)
 
-	documentType, err := suite.sut.ClassifyDocument(suite.documentId, suite.classifierName)
+	classificationResult, err := suite.sut.ClassifyDocument(suite.documentId, suite.classifierName)
 
-	assert.Equal(suite.T(), "", documentType)
+	assert.Nil(suite.T(), classificationResult)
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
