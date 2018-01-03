@@ -36,7 +36,6 @@ type classifyDocumentResultsResponse struct {
 	DocumentType string `json:"document_type"`
 }
 
-//TODO: Return domain object with links to ClassifyDocument & DeleteDocument urls
 func (client *DocumentsClient) CreateDocument(fileContents []byte) (string, error) {
 	request, err := http.NewRequest("POST",
 		client.baseUrl+"/documents",

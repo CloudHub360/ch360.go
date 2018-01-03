@@ -55,7 +55,6 @@ Options:
 
 	if args["login"].(bool) {
 		if clientId == "" {
-			//TODO: Prompt for client id if not specified
 			fmt.Println("Please specify your API Client Id with the --client-id parameter")
 			os.Exit(1)
 		}
