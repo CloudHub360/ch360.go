@@ -24,7 +24,7 @@ type DocumentsClientSuite struct {
 
 func (suite *DocumentsClientSuite) SetupTest() {
 	suite.httpClient = new(mocks.HttpDoer)
-	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(createDocumentResponse)), nil)
+	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleCreateDocumentResponse)), nil)
 
 	suite.sut = &DocumentsClient{
 		requestSender: suite.httpClient,
@@ -133,7 +133,7 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_From_Send
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Document_Type() {
 	suite.ClearExpectedCalls()
-	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(classifyDocumentResponse)), nil)
+	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
 
 	documentType, err := suite.sut.ClassifyDocument(suite.documentId, suite.classifierName)
 
@@ -142,7 +142,7 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Document_Type()
 }
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_If_DocumentType_Cannot_Be_Parsed_From_Response() {
-	expectedErr := errors.New("Could not retrieve document type from ClassifyDocument Document response")
+	expectedErr := errors.New("Could not retrieve document type from ClassifyDocument response")
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte("")), nil)
 
@@ -152,13 +152,13 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_If_Docume
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
-var createDocumentResponse = `
+var exampleCreateDocumentResponse = `
 {
 	"id": "exampleDocumentId"
 }
 `
 
-var classifyDocumentResponse = `
+var exampleClassifyDocumentResponse = `
 {
 	"_id": "exampleDocumentId",
 	"classification_results": {
