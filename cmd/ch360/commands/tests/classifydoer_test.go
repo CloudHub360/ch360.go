@@ -94,7 +94,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Return_Nil_On_Success() {
 
 func (suite *ClassifySuite) TestClassifyDoer_Returns_Specific_Error_If_File_Does_Not_Exist() {
 	nonExistentFile := build.Default.GOPATH + "/non-existentfile.pdf"
-	expectedErr := errors.New(fmt.Sprintf("File or file pattern %s does not match any files", nonExistentFile))
+	expectedErr := errors.New(fmt.Sprintf("File %s does not exist", nonExistentFile))
 
 	err := suite.sut.Execute(nonExistentFile, suite.classifierName)
 
