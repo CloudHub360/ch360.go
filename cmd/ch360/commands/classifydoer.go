@@ -47,8 +47,6 @@ func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) e
 			return errors.New(fmt.Sprintf("Error classifying file %s: %s", filename, err.Error()))
 		} else {
 			base := filepath.Base(filename)
-			//TODO Include parent folder (optional columns?)
-			//TODO Determine filename column width from width of largest filename (upto a max)
 			fmt.Fprintf(cmd.writer, "%-40.40s  %s", base, documentType)
 		}
 		fmt.Fprintln(cmd.writer)
@@ -70,7 +68,6 @@ func (cmd *ClassifyCommand) processFile(filePath string, classifierName string) 
 	documentType, classifyErr := cmd.client.ClassifyDocument(documentId, classifierName)
 
 	// Always delete the document, even if ClassifyDocument returned an error
-	// TODO: Delete document if user Ctrl+C's during processing
 	deleteErr := cmd.client.DeleteDocument(documentId)
 
 	if classifyErr != nil {
