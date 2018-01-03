@@ -19,7 +19,7 @@ import (
 
 type ClassifySuite struct {
 	suite.Suite
-	sut              *commands.ClassifyDoer
+	sut              *commands.ClassifyCommand
 	client           *mocks.DocumentCreatorDeleterClassifier
 	classifierName   string
 	documentId       string
@@ -42,7 +42,7 @@ func (suite *ClassifySuite) SetupTest() {
 	suite.client.On("DeleteDocument", mock.Anything).Return(nil)
 
 	suite.output = &bytes.Buffer{}
-	suite.sut = commands.NewClassifyDoer(suite.output, suite.client)
+	suite.sut = commands.NewClassifyCommand(suite.output, suite.client)
 }
 
 func TestClassifySuiteRunner(t *testing.T) {
