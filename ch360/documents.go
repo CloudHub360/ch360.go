@@ -7,23 +7,11 @@ import (
 	"net/http"
 )
 
-type DocumentCreator interface {
-	CreateDocument(fileContents []byte) (string, error)
-}
-
-type DocumentDeleter interface {
-	DeleteDocument(documentId string) error
-}
-
-type DocumentClassifier interface {
-	ClassifyDocument(documentId string, classifierName string) (string, error)
-}
-
 //go:generate mockery -name "DocumentCreatorDeleterClassifier"
 type DocumentCreatorDeleterClassifier interface {
-	DocumentCreator
-	DocumentDeleter
-	DocumentClassifier
+	CreateDocument(fileContents []byte) (string, error)
+	DeleteDocument(documentId string) error
+	ClassifyDocument(documentId string, classifierName string) (string, error)
 }
 
 type DocumentsClient struct {
