@@ -35,6 +35,7 @@ type classifyDocumentResponse struct {
 
 type classifyDocumentResultsResponse struct {
 	DocumentType string `json:"document_type"`
+	IsConfident  bool   `json:"is_confident"`
 }
 
 func (client *DocumentsClient) CreateDocument(fileContents []byte) (string, error) {
@@ -113,5 +114,6 @@ func (client *DocumentsClient) ClassifyDocument(documentId string, classifierNam
 
 	return &types.ClassificationResult{
 		DocumentType: classifyDocumentResponse.Results.DocumentType,
+		IsConfident:  classifyDocumentResponse.Results.IsConfident,
 	}, nil
 }

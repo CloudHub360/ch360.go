@@ -141,6 +141,16 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Document_Type()
 	assert.Equal(suite.T(), "Assignment of Deed of Trust", classificationResult.DocumentType)
 }
 
+func (suite *DocumentsClientSuite) Test_ClassifyDocument_Indicates_Confidence_Of_Result() {
+	suite.ClearExpectedCalls()
+	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
+
+	classificationResult, err := suite.sut.ClassifyDocument(suite.documentId, suite.classifierName)
+
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), true, classificationResult.IsConfident)
+}
+
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_If_DocumentType_Cannot_Be_Parsed_From_Response() {
 	expectedErr := errors.New("Could not retrieve document type from ClassifyDocument response")
 	suite.ClearExpectedCalls()
