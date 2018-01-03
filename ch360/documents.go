@@ -58,11 +58,8 @@ func (client *DocumentsClient) CreateDocument(fileContents []byte) (string, erro
 	}
 
 	jsonParsed, err := gabs.ParseJSON(buf.Bytes())
-	var documentId string
-	var ok bool
 
-	documentId, ok = jsonParsed.Path("id").Data().(string)
-	if ok {
+	if documentId, ok := jsonParsed.Path("id").Data().(string); ok {
 		return documentId, nil
 	}
 	return "", errors.New("Could not retrieve document ID from Create Document response")
