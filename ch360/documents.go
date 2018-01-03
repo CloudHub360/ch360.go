@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/CloudHub360/ch360.go/ch360/types"
 	"net/http"
 )
 
@@ -11,7 +12,7 @@ import (
 type DocumentCreatorDeleterClassifier interface {
 	CreateDocument(fileContents []byte) (string, error)
 	DeleteDocument(documentId string) error
-	ClassifyDocument(documentId string, classifierName string) (string, error)
+	ClassifyDocument(documentId string, classifierName string) (*types.ClassificationResult, error)
 }
 
 type DocumentsClient struct {
@@ -83,32 +84,34 @@ func (client *DocumentsClient) DeleteDocument(documentId string) error {
 	return nil
 }
 
-func (client *DocumentsClient) ClassifyDocument(documentId string, classifierName string) (string, error) {
+func (client *DocumentsClient) ClassifyDocument(documentId string, classifierName string) (*types.ClassificationResult, error) {
 	request, err := http.NewRequest("POST",
 		client.baseUrl+"/documents/"+documentId+"/classify/"+classifierName,
 		nil)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	response, err := client.requestSender.Do(request)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	buf := bytes.Buffer{}
 	_, err = buf.ReadFrom(response.Body)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	classifyDocumentResponse := classifyDocumentResponse{}
 	err = json.Unmarshal(buf.Bytes(), &classifyDocumentResponse)
 	if err != nil {
-		return "", errors.New("Could not retrieve document type from ClassifyDocument response")
+		return nil, errors.New("Could not retrieve document type from ClassifyDocument response")
 	}
 
-	return classifyDocumentResponse.Results.DocumentType, nil
+	return &types.ClassificationResult{
+		DocumentType: classifyDocumentResponse.Results.DocumentType,
+	}, nil
 }
