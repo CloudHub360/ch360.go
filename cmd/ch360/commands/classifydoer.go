@@ -39,7 +39,7 @@ func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) e
 		return errors.New(fmt.Sprintf("File pattern %s does not match any files", filePattern))
 	}
 
-	fmt.Fprintf(cmd.writer, "%-40.40s  %s", "FILE", "DOCUMENT TYPE")
+	fmt.Fprintf(cmd.writer, "%-40.40s  %s  %s", "FILE", "DOCUMENT TYPE", "IS CONFIDENT?")
 	fmt.Fprintln(cmd.writer)
 
 	for _, filename := range matches {
@@ -48,7 +48,7 @@ func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) e
 			return errors.New(fmt.Sprintf("Error classifying file %s: %s", filename, err.Error()))
 		} else {
 			base := filepath.Base(filename)
-			fmt.Fprintf(cmd.writer, "%-40.40s  %s", base, result.DocumentType)
+			fmt.Fprintf(cmd.writer, "%-40.40s  %s  %s", base, result.DocumentType, result.IsConfident)
 		}
 		fmt.Fprintln(cmd.writer)
 	}
