@@ -31,6 +31,10 @@ function Remove-Classifier([Parameter(ValueFromPipeline=$true)]$classifierName) 
     Invoke-App delete classifier $classifierName 2>&1
 }
 
+function Invoke-Classifier([Io.FileInfo]$file, [string]$classifierName) {
+    Invoke-App classify --file=$($file.FullName) --classifier-name=$classifierName
+}
+
 function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){
     $input -join [Environment]::NewLine
 }
@@ -121,6 +125,20 @@ The file '$samples' could not be found.
 "@
 
         $LASTEXITCODE | Should -Be 1
+    }
+
+    It "should attempt to classify a file" {
+        $samples = (Join-Path $PSScriptRoot "samples.zip")
+        New-Classifier $classifierName $samples
+
+        $document = (Join-Path $PSScriptRoot "documents/document1.pdf")
+        Invoke-Classifier $document $classifierName | Format-MultilineOutput | Should -Be @"
+FILE                                      DOCUMENT TYPE  IS CONFIDENT?
+document1.pdf                             Notice of Lien  %!s(bool=true)
+"@
+
+        # Teardown
+        Remove-Classifier $classifierName
     }
 
     AfterAll {
