@@ -9,18 +9,30 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"path/filepath"
 )
 
 type ClassifyCommand struct {
-	writer io.Writer
-	client ch360.DocumentCreatorDeleterClassifier
+	writer    io.Writer
+	client    ch360.DocumentCreatorDeleterClassifier
+	interrupt chan os.Signal
 }
 
 func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterClassifier) *ClassifyCommand {
+	// Set up channel on which to send signal notifications.
+	// We must use a buffered channel or risk missing the signal
+	// if we're not ready to receive when the signal is sent.
+	quitChan := make(chan os.Signal, 1)
+	signal.Notify(quitChan, os.Interrupt)
+
+	// Block until a signal is received.
+	//<-quitChan
+
 	return &ClassifyCommand{
-		writer: writer,
-		client: client,
+		writer:    writer,
+		client:    client,
+		interrupt: quitChan,
 	}
 }
 
@@ -67,6 +79,11 @@ func (cmd *ClassifyCommand) processFile(filePath string, classifierName string) 
 	if err != nil {
 		return nil, err
 	}
+
+	go func() {
+		<-cmd.interrupt
+		cmd.client.DeleteDocument(documentId)
+	}()
 
 	result, classifyErr := cmd.client.ClassifyDocument(documentId, classifierName)
 
