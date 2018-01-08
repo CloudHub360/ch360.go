@@ -35,6 +35,7 @@ func (cmd *CreateClassifier) Execute(classifierName string, samplesPath string) 
 	err := cmd.client.Create(classifierName)
 	if err != nil {
 		fmt.Println("[FAILED]")
+		fmt.Println(err.Error())
 		return err
 	}
 
