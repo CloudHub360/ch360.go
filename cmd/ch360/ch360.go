@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/user"
+	"path/filepath"
 	"time"
 )
 
@@ -32,7 +33,19 @@ Options:
   --client-id <id>                             Client ID
   --client-secret <secret>                     Client secret
   -c <classifier>, --classifier=<classifier>   Classifier name
-  -f <file>, --file=<file>                     Filename or glob pattern`
+  -f <file>, --file=<file>                     Filename or glob pattern
+`
+
+	filenameExamples := `
+Filename and glob pattern examples:
+  file1.pdf        Specific file
+  *.*              All files in the current folder
+  *.pdf            All PDFs in the current folder
+  foo/*.tif        All TIFs in folder foo
+  bar/**/*.*       All files in subfolders of folder bar`
+
+	// Replace slashes with OS-specific path separators
+	usage = usage + filepath.FromSlash(filenameExamples)
 
 	args, err := docopt.Parse(usage, nil, true, ch360.Version, false)
 
