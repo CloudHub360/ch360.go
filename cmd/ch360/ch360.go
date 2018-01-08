@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/auth"
 	"github.com/CloudHub360/ch360.go/ch360"
@@ -10,6 +11,7 @@ import (
 	"github.com/docopt/docopt-go"
 	"net/http"
 	"os"
+	"os/signal"
 	"os/user"
 	"path/filepath"
 	"time"
@@ -65,6 +67,10 @@ Filename and glob pattern examples:
 		os.Exit(1)
 	}
 	appDirectory := config.NewAppDirectory(user.HomeDir)
+
+	ctx, canceller := context.WithCancel(context.Background())
+
+	go handleInterrupt(canceller)
 
 	if args["login"].(bool) {
 		if clientId == "" {
@@ -140,12 +146,21 @@ Filename and glob pattern examples:
 		filePattern := args["<file>"].(string)
 		classifierName := args["<classifier>"].(string)
 
-		err = commands.NewClassifyCommand(os.Stdout, apiClient.Documents).Execute(filePattern, classifierName)
+		err = commands.NewClassifyCommand(os.Stdout, apiClient.Documents).Execute(ctx, filePattern, classifierName)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
 	}
+}
+
+func handleInterrupt(canceller context.CancelFunc) {
+	interruptChan := make(chan os.Signal, 1)
+	signal.Notify(interruptChan, os.Interrupt)
+
+	<-interruptChan // ctrl-c received
+	fmt.Fprintln(os.Stderr, "Caught Ctrl-C...")
+	canceller()
 }
 
 func argAsString(args map[string]interface{}, name string) string {
