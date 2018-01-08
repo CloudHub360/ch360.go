@@ -25,7 +25,7 @@ func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterCla
 	}
 }
 
-var ClassifyOutputFormat = "%-44.44s %-24.24s %v"
+var ClassifyOutputFormat = "%-44.44s %-24.24s %v\n"
 
 func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, classifierName string) error {
 	matches, err := zglob.Glob(filePattern)
@@ -43,63 +43,57 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 	}
 
 	fmt.Fprintf(cmd.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
-	fmt.Fprintln(cmd.writer)
 
 	for _, filename := range matches {
 		result, err := cmd.processFile(ctx, filename, classifierName)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Error classifying file %s: %s", filename, err.Error()))
-		} else {
+		} else if result != nil {
 			base := filepath.Base(filename)
 			fmt.Fprintf(cmd.writer, ClassifyOutputFormat, base, result.DocumentType, result.IsConfident)
 		}
-		fmt.Fprintln(cmd.writer)
+
+		if ctx.Err() == context.Canceled {
+			return nil
+		}
 	}
 	return nil
 }
 
 func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, classifierName string) (*types.ClassificationResult, error) {
-
 	fileContents, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	var (
-		result     *types.ClassificationResult
-		documentId string
-	)
+	// Use a different context here so we don't cancel this req on ctrl-c. We need
+	// the docId result to perform cleanup
+	documentId, err := cmd.client.CreateDocument(context.Background(), fileContents)
+	if err != nil {
+		return nil, err
+	}
 
 	errChan := make(chan error, 1)
+	var result *types.ClassificationResult
 	go func() {
-		errChan <- func() error {
-			documentId, err = cmd.client.CreateDocument(ctx, fileContents)
-			if err != nil {
-				return err
-			}
+		result, err = cmd.client.ClassifyDocument(ctx, documentId, classifierName)
 
-			result, err = cmd.client.ClassifyDocument(ctx, documentId, classifierName)
-
-			if err != nil {
-				return err
-			}
-
-			return nil
-		}()
+		if err != nil {
+			errChan <- err
+		}
 	}()
 
 	var classifyErr error
 	var deleteErr error
-	cancelled := false
+
 	select {
 	case <-ctx.Done():
-		cancelled = true
 	case classifyErr = <-errChan:
 	}
 
 	if documentId != "" {
 		// Always delete the document, even if ClassifyDocument returned an error.
-		// Don't cancel on ctrl-c
+		// Don't cancel on ctrl-c.
 		deleteErr = cmd.client.DeleteDocument(context.Background(), documentId)
 	}
 
@@ -109,10 +103,6 @@ func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, cl
 
 	if deleteErr != nil {
 		return nil, deleteErr
-	}
-
-	if cancelled {
-		return nil, ctx.Err()
 	}
 
 	return result, nil
