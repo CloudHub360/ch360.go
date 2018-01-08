@@ -20,7 +20,7 @@ function Invoke-App {
 }
 
 function New-Classifier([string]$classifierName, [Io.FileInfo]$samples) {
-    Invoke-App create classifier $classifierName --samples-zip=$samples 2>&1
+    Invoke-App create classifier $classifierName $samples 2>&1
 }
 
 function Get-Classifiers {
@@ -32,7 +32,7 @@ function Remove-Classifier([Parameter(ValueFromPipeline=$true)]$classifierName) 
 }
 
 function Invoke-Classifier([Io.FileInfo]$file, [string]$classifierName) {
-    Invoke-App classify --file=$($file.FullName) --classifier-name=$classifierName
+    Invoke-App classify $($file.FullName) $classifierName
 }
 
 function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){

@@ -20,10 +20,10 @@ func main() {
 
 Usage:
   ch360 login [options]
-  ch360 create classifier <name> --samples-zip=<path> [options]
+  ch360 create classifier <name> <samples-zip> [options]
   ch360 delete classifier <name> [options]
   ch360 list classifiers [options]
-  ch360 classify -f <file> -c <classifier> [options]
+  ch360 classify <file> <classifier> [options]
   ch360 -h | --help
   ch360 -v | --version
 
@@ -32,8 +32,6 @@ Options:
   -v, --version                                Show application version
   --client-id <id>                             Client ID
   --client-secret <secret>                     Client secret
-  -c <classifier>, --classifier=<classifier>   Classifier name
-  -f <file>, --file=<file>                     Filename or glob pattern
 `
 
 	filenameExamples := `
@@ -103,7 +101,7 @@ Filename and glob pattern examples:
 
 	if args["create"].(bool) {
 		classifierName := args["<name>"].(string)
-		samplesPath := args["--samples-zip"].(string)
+		samplesPath := args["<samples-zip>"].(string)
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
 		err = commands.NewCreateClassifier(
 			apiClient.Classifiers,
@@ -139,8 +137,8 @@ Filename and glob pattern examples:
 			fmt.Println(classifier.Name)
 		}
 	} else if args["classify"].(bool) {
-		filePattern := args["--file"].(string)
-		classifierName := args["--classifier"].(string)
+		filePattern := args["<file>"].(string)
+		classifierName := args["<classifier>"].(string)
 
 		err = commands.NewClassifyCommand(os.Stdout, apiClient.Documents).Execute(filePattern, classifierName)
 		if err != nil {
