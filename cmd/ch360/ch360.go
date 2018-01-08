@@ -110,6 +110,7 @@ Filename and glob pattern examples:
 		samplesPath := args["<samples-zip>"].(string)
 		fmt.Printf("Creating classifier '%s'... ", classifierName)
 		err = commands.NewCreateClassifier(
+			os.Stdout,
 			apiClient.Classifiers,
 			commands.NewDeleteClassifier(apiClient.Classifiers),
 		).Execute(classifierName, samplesPath)
