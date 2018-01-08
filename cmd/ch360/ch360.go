@@ -20,7 +20,7 @@ func main() {
 
 Usage:
   ch360 login [options]
-  ch360 create classifier <name> --samples-zip <path> [options]
+  ch360 create classifier <name> --samples-zip=<path> [options]
   ch360 delete classifier <name> [options]
   ch360 list classifiers [options]
   ch360 classify -f <file> -c <classifier> [options]
