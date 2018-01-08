@@ -19,18 +19,20 @@ func main() {
 
 Usage:
   ch360 login [options]
-  ch360 create classifier <name> --samples-zip=<path> [options]
+  ch360 create classifier <name> --samples-zip <path> [options]
   ch360 delete classifier <name> [options]
   ch360 list classifiers [options]
-  ch360 classify --file=<file> --classifier-name=<name> [options]
+  ch360 classify -f <file> -c <classifier> [options]
   ch360 -h | --help
-  ch360 --version
+  ch360 -v | --version
 
 Options:
-  -h --help          Show this help message.
-  --version          Show version.
-  --client-id=<id>          API Client ID
-  --client-secret=<secret>  API Client secret`
+  -h, --help                                   Show this help message
+  -v, --version                                Show application version
+  --client-id <id>                             Client ID
+  --client-secret <secret>                     Client secret
+  -c <classifier>, --classifier=<classifier>   Classifier name
+  -f <file>, --file=<file>                     Filename or glob pattern`
 
 	args, err := docopt.Parse(usage, nil, true, ch360.Version, false)
 
@@ -125,7 +127,7 @@ Options:
 		}
 	} else if args["classify"].(bool) {
 		filePattern := args["--file"].(string)
-		classifierName := args["--classifier-name"].(string)
+		classifierName := args["--classifier"].(string)
 
 		err = commands.NewClassifyCommand(os.Stdout, apiClient.Documents).Execute(filePattern, classifierName)
 		if err != nil {
