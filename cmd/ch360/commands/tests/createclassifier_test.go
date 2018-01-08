@@ -63,6 +63,21 @@ func TestCreateClassifier_Execute_Writes_Error_To_Output_If_The_Classifier_Canno
 	assert.Equal(t, fmt.Sprintf("[FAILED]\n%s\n", expected.Error()), output.String())
 }
 
+func TestCreateClassifier_Execute_Writes_Error_To_Output_If_The_Classifier_Cannot_Be_Trained(t *testing.T) {
+	deleteClassifier := new(mocks.ClassifierCommand)
+	client := new(mocks.CreatorTrainer)
+	expected := errors.New("Error message")
+	output := &bytes.Buffer{}
+	client.On("Create", mock.Anything).Return(nil)
+	client.On("Train", mock.Anything, mock.Anything).Return(expected)
+	deleteClassifier.On("Execute", mock.Anything).Return(nil)
+
+	sut := commands.NewCreateClassifier(output, client, deleteClassifier)
+	sut.Execute("charlie", "samples.zip")
+
+	assert.Equal(t, fmt.Sprintf("[OK]\nAdding samples from file 'samples.zip'... [FAILED]\n%s\n", expected.Error()), output.String())
+}
+
 func TestCreateClassifier_Execute_Deletes_The_Classifier_If_The_Classifier_Cannot_Be_Trained_From_The_Samples(t *testing.T) {
 	deleteClassifier := new(mocks.ClassifierCommand)
 	deleteClassifier.On("Execute", mock.Anything).Return(nil)
