@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
@@ -9,36 +10,24 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/signal"
 	"path/filepath"
 )
 
 type ClassifyCommand struct {
-	writer    io.Writer
-	client    ch360.DocumentCreatorDeleterClassifier
-	interrupt chan os.Signal
+	writer io.Writer
+	client ch360.DocumentCreatorDeleterClassifier
 }
 
 func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterClassifier) *ClassifyCommand {
-	// Set up channel on which to send signal notifications.
-	// We must use a buffered channel or risk missing the signal
-	// if we're not ready to receive when the signal is sent.
-	quitChan := make(chan os.Signal, 1)
-	signal.Notify(quitChan, os.Interrupt)
-
-	// Block until a signal is received.
-	//<-quitChan
-
 	return &ClassifyCommand{
-		writer:    writer,
-		client:    client,
-		interrupt: quitChan,
+		writer: writer,
+		client: client,
 	}
 }
 
 var ClassifyOutputFormat = "%-44.44s %-24.24s %v"
 
-func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) error {
+func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, classifierName string) error {
 	matches, err := zglob.Glob(filePattern)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -57,7 +46,7 @@ func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) e
 	fmt.Fprintln(cmd.writer)
 
 	for _, filename := range matches {
-		result, err := cmd.processFile(filename, classifierName)
+		result, err := cmd.processFile(ctx, filename, classifierName)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Error classifying file %s: %s", filename, err.Error()))
 		} else {
@@ -69,26 +58,50 @@ func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) e
 	return nil
 }
 
-func (cmd *ClassifyCommand) processFile(filePath string, classifierName string) (*types.ClassificationResult, error) {
+func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, classifierName string) (*types.ClassificationResult, error) {
+
 	fileContents, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	documentId, err := cmd.client.CreateDocument(fileContents)
-	if err != nil {
-		return nil, err
-	}
+	var (
+		result     *types.ClassificationResult
+		documentId string
+	)
 
+	errChan := make(chan error, 1)
 	go func() {
-		<-cmd.interrupt
-		cmd.client.DeleteDocument(documentId)
+		errChan <- func() error {
+			documentId, err = cmd.client.CreateDocument(ctx, fileContents)
+			if err != nil {
+				return err
+			}
+
+			result, err = cmd.client.ClassifyDocument(ctx, documentId, classifierName)
+
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}()
 	}()
 
-	result, classifyErr := cmd.client.ClassifyDocument(documentId, classifierName)
+	var classifyErr error
+	var deleteErr error
+	cancelled := false
+	select {
+	case <-ctx.Done():
+		cancelled = true
+	case classifyErr = <-errChan:
+	}
 
-	// Always delete the document, even if ClassifyDocument returned an error
-	deleteErr := cmd.client.DeleteDocument(documentId)
+	if documentId != "" {
+		// Always delete the document, even if ClassifyDocument returned an error.
+		// Don't cancel on ctrl-c
+		deleteErr = cmd.client.DeleteDocument(context.Background(), documentId)
+	}
 
 	if classifyErr != nil {
 		return nil, classifyErr
@@ -96,6 +109,10 @@ func (cmd *ClassifyCommand) processFile(filePath string, classifierName string) 
 
 	if deleteErr != nil {
 		return nil, deleteErr
+	}
+
+	if cancelled {
+		return nil, ctx.Err()
 	}
 
 	return result, nil

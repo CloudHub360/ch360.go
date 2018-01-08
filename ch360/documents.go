@@ -2,6 +2,7 @@ package ch360
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360/types"
@@ -10,9 +11,9 @@ import (
 
 //go:generate mockery -name "DocumentCreatorDeleterClassifier"
 type DocumentCreatorDeleterClassifier interface {
-	CreateDocument(fileContents []byte) (string, error)
-	DeleteDocument(documentId string) error
-	ClassifyDocument(documentId string, classifierName string) (*types.ClassificationResult, error)
+	CreateDocument(ctx context.Context, fileContents []byte) (string, error)
+	DeleteDocument(ctx context.Context, documentId string) error
+	ClassifyDocument(ctx context.Context, documentId string, classifierName string) (*types.ClassificationResult, error)
 }
 
 type DocumentsClient struct {
@@ -38,10 +39,11 @@ type classifyDocumentResultsResponse struct {
 	IsConfident  bool   `json:"is_confident"`
 }
 
-func (client *DocumentsClient) CreateDocument(fileContents []byte) (string, error) {
+func (client *DocumentsClient) CreateDocument(ctx context.Context, fileContents []byte) (string, error) {
 	request, err := http.NewRequest("POST",
 		client.baseUrl+"/documents",
 		bytes.NewBuffer(fileContents))
+	request = request.WithContext(ctx)
 
 	if err != nil {
 		return "", err
@@ -68,10 +70,11 @@ func (client *DocumentsClient) CreateDocument(fileContents []byte) (string, erro
 	return documentResponse.Id, nil
 }
 
-func (client *DocumentsClient) DeleteDocument(documentId string) error {
+func (client *DocumentsClient) DeleteDocument(ctx context.Context, documentId string) error {
 	request, err := http.NewRequest("DELETE",
 		client.baseUrl+"/documents/"+documentId,
 		nil)
+	request = request.WithContext(ctx)
 
 	if err != nil {
 		return err
@@ -85,10 +88,11 @@ func (client *DocumentsClient) DeleteDocument(documentId string) error {
 	return nil
 }
 
-func (client *DocumentsClient) ClassifyDocument(documentId string, classifierName string) (*types.ClassificationResult, error) {
+func (client *DocumentsClient) ClassifyDocument(ctx context.Context, documentId string, classifierName string) (*types.ClassificationResult, error) {
 	request, err := http.NewRequest("POST",
 		client.baseUrl+"/documents/"+documentId+"/classify/"+classifierName,
 		nil)
+	request = request.WithContext(ctx)
 
 	if err != nil {
 		return nil, err
