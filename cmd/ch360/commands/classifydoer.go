@@ -38,7 +38,7 @@ func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) e
 	}
 
 	if len(matches) == 0 {
-		return errors.New(fmt.Sprintf("File pattern %s does not match any files", filePattern))
+		return errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'ch360 -h' for glob pattern examples.", filePattern))
 	}
 
 	fmt.Fprintf(cmd.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
