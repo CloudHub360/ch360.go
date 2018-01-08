@@ -85,8 +85,8 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Processes_All_Files_Matched
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Writes_DocumentType_To_StdOut() {
 	suite.sut.Execute(suite.testFilePath, suite.classifierName)
 
-	header := fmt.Sprintf("%-40.40s  %s  %s", "FILE", "DOCUMENT TYPE", "IS CONFIDENT?")
-	results := fmt.Sprintf("%-40.40s  %s  %s", filepath.Base(suite.testFilePath), suite.classificationResult.DocumentType, suite.classificationResult.IsConfident)
+	header := fmt.Sprintf(commands.ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
+	results := fmt.Sprintf(commands.ClassifyOutputFormat, filepath.Base(suite.testFilePath), suite.classificationResult.DocumentType, suite.classificationResult.IsConfident)
 	assert.Equal(suite.T(), header+"\n"+results+"\n", suite.output.String())
 }
 

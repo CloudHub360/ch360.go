@@ -24,6 +24,8 @@ func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterCla
 	}
 }
 
+var ClassifyOutputFormat = "%-44.44s %-24.24s %v"
+
 func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) error {
 	matches, err := zglob.Glob(filePattern)
 	if err != nil {
@@ -39,7 +41,7 @@ func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) e
 		return errors.New(fmt.Sprintf("File pattern %s does not match any files", filePattern))
 	}
 
-	fmt.Fprintf(cmd.writer, "%-40.40s  %s  %s", "FILE", "DOCUMENT TYPE", "IS CONFIDENT?")
+	fmt.Fprintf(cmd.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
 	fmt.Fprintln(cmd.writer)
 
 	for _, filename := range matches {
@@ -48,7 +50,7 @@ func (cmd *ClassifyCommand) Execute(filePattern string, classifierName string) e
 			return errors.New(fmt.Sprintf("Error classifying file %s: %s", filename, err.Error()))
 		} else {
 			base := filepath.Base(filename)
-			fmt.Fprintf(cmd.writer, "%-40.40s  %s  %s", base, result.DocumentType, result.IsConfident)
+			fmt.Fprintf(cmd.writer, ClassifyOutputFormat, base, result.DocumentType, result.IsConfident)
 		}
 		fmt.Fprintln(cmd.writer)
 	}
