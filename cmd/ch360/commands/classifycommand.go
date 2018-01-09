@@ -26,7 +26,7 @@ func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterCla
 	}
 }
 
-var ClassifyOutputFormat = "%-44.44s %-24.24s %v\n"
+var ClassifyOutputFormat = "%-36.36s %-32.32s %v\n"
 
 type job struct {
 	filename       string
