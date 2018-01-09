@@ -10,7 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+	"sync"
 )
 
 type ClassifyCommand struct {
@@ -27,6 +27,17 @@ func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterCla
 
 var ClassifyOutputFormat = "%-44.44s %-24.24s %v\n"
 
+type job struct {
+	filename       string
+	classifierName string
+}
+
+type jobResult struct {
+	err    error
+	result *types.ClassificationResult
+	job    *job
+}
+
 func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, classifierName string) error {
 	matches, err := zglob.Glob(filePattern)
 	if err != nil {
@@ -38,24 +49,70 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 		}
 	}
 
-	if len(matches) == 0 {
+	fileCount := len(matches)
+	if fileCount == 0 {
 		return errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'ch360 -h' for glob pattern examples.", filePattern))
 	}
 
+	// Set up jobs channel
+	jobsChan := make(chan job, 0)
+	go func() {
+		for _, filename := range matches {
+			select {
+			case <-ctx.Done():
+				break
+			default:
+				jobsChan <- job{
+					classifierName: classifierName,
+					filename:       filename,
+				}
+			}
+		}
+		close(jobsChan)
+	}()
+
+	// Set up results channels
+	resultsChan := make(chan jobResult, 0)
+
+	// Start processing in background
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(i int) {
+			for job := range jobsChan {
+				result, err := cmd.processFile(ctx, job.filename, job.classifierName)
+				resultsChan <- jobResult{
+					err:    err,
+					result: result,
+					job:    &job,
+				}
+			}
+			wg.Done()
+		}(i)
+	}
+
+	go func() {
+		// Wait for all workers to complete, then close the results channel
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Print results
 	fmt.Fprintf(cmd.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
 
-	for _, filename := range matches {
-		result, err := cmd.processFile(ctx, filename, classifierName)
-		if err != nil {
-			return errors.New(fmt.Sprintf("Error classifying file %s: %s", filename, err.Error()))
-		} else if result != nil {
-			base := filepath.Base(filename)
-			fmt.Fprintf(cmd.writer, ClassifyOutputFormat, base, result.DocumentType, result.IsConfident)
+	for jr := range resultsChan {
+		err, result := jr.err, jr.result
+
+		if err == context.Canceled {
+			continue
 		}
 
-		if ctx.Err() == context.Canceled {
-			return nil
+		if err != nil {
+			fmt.Fprintf(cmd.writer, "Error classifying file %s: %s\n", jr.job.filename, err.Error())
+		} else {
+			fmt.Fprintf(cmd.writer, ClassifyOutputFormat, jr.job.filename, result.DocumentType, result.IsConfident)
 		}
+
 	}
 	return nil
 }
@@ -84,8 +141,10 @@ func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, cl
 	var classifyErr error
 	var deleteErr error
 
+	var cancelled = false
 	select {
 	case <-ctx.Done():
+		cancelled = true
 	case classifyErr = <-errChan:
 	}
 
@@ -101,6 +160,10 @@ func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, cl
 
 	if deleteErr != nil {
 		return nil, deleteErr
+	}
+
+	if cancelled {
+		return nil, ctx.Err()
 	}
 
 	return result, nil
