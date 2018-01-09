@@ -159,7 +159,6 @@ func handleInterrupt(canceller context.CancelFunc) {
 	signal.Notify(interruptChan, os.Interrupt)
 
 	<-interruptChan // ctrl-c received
-	fmt.Fprintln(os.Stderr, "Caught Ctrl-C...")
 	canceller()
 }
 
