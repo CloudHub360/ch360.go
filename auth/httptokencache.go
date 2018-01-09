@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"strconv"
 	"time"
 )
 
@@ -58,10 +60,28 @@ func tokenIsFresh(token *jwt.Token) bool {
 	}
 
 	var expired = false
-	if claims, ok := token.Claims.(*jwt.MapClaims); ok {
-		deadline := time.Now().Add(-1 * time.Minute)
-		expired = claims.VerifyExpiresAt(int64(deadline.Unix()), true)
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		deadline := time.Now().Add(-1 * time.Minute).Unix()
+		expiry := getExpiry(claims)
+		expired = deadline > expiry
 	}
 
 	return !expired
+}
+
+func getExpiry(claims jwt.MapClaims) int64 {
+	switch exp := claims["exp"].(type) {
+	case float64:
+		return int64(exp)
+	case json.Number:
+		v, _ := exp.Int64()
+		return v
+	}
+
+	exp, err := strconv.Atoi(claims["exp"].(string))
+	if err != nil {
+		return int64(exp)
+	}
+
+	return 0
 }
