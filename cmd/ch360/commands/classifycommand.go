@@ -78,9 +78,7 @@ func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, cl
 	go func() {
 		result, err = cmd.client.ClassifyDocument(ctx, documentId, classifierName)
 
-		if err != nil {
-			errChan <- err
-		}
+		errChan <- err
 	}()
 
 	var classifyErr error
