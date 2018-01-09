@@ -36,7 +36,7 @@ type job struct {
 type jobResult struct {
 	err    error
 	result *types.ClassificationResult
-	job    *job
+	job    job
 }
 
 func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, classifierName string) error {
@@ -79,17 +79,18 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
-		go func(i int) {
+		go func() {
 			for job := range jobsChan {
 				result, err := cmd.processFile(ctx, job.filename, job.classifierName)
+
 				resultsChan <- jobResult{
 					err:    err,
 					result: result,
-					job:    &job,
+					job:    job,
 				}
 			}
 			wg.Done()
-		}(i)
+		}()
 	}
 
 	go func() {
@@ -102,16 +103,14 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 	fmt.Fprintf(cmd.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
 
 	for jr := range resultsChan {
-		err, result := jr.err, jr.result
-
 		if err == context.Canceled {
 			continue
 		}
 
 		if err != nil {
 			fmt.Fprintf(cmd.writer, "Error classifying file %s: %s\n", jr.job.filename, err.Error())
-		} else {
-			fmt.Fprintf(cmd.writer, ClassifyOutputFormat, filepath.Base(jr.job.filename), result.DocumentType, result.IsConfident)
+		} else if jr.result != nil {
+			fmt.Fprintf(cmd.writer, ClassifyOutputFormat, filepath.Base(jr.job.filename), jr.result.DocumentType, jr.result.IsConfident)
 		}
 
 	}
@@ -131,23 +130,12 @@ func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, cl
 		return nil, err
 	}
 
-	errChan := make(chan error, 1)
-	var result *types.ClassificationResult
-	go func() {
-		result, err = cmd.client.ClassifyDocument(ctx, documentId, classifierName)
-
-		errChan <- err
-	}()
+	result, err := cmd.client.ClassifyDocument(ctx, documentId, classifierName)
 
 	var classifyErr error
 	var deleteErr error
 
-	var cancelled = false
-	select {
-	case <-ctx.Done():
-		cancelled = true
-	case classifyErr = <-errChan:
-	}
+	var cancelled = (err == context.Canceled)
 
 	if documentId != "" {
 		// Always delete the document, even if ClassifyDocument returned an error.
