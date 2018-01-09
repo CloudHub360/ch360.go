@@ -6,12 +6,10 @@ import (
 	"testing"
 )
 
-const EXPIRED_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIi" +
-	"wiYWRtaW4iOnRydWUsImV4cCI6IjE1MTU0MTE5ODIifQ.efsGk6oZDo3PK5euKvuoa-KDHcXY5gQUGdoeN-OO9LA"
+const EXPIRED_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6IjE1MTU0MTE5ODIifQ.efsGk6oZDo3PK5euKvuoa-KDHcXY5gQUGdoeN-OO9LA"
 
 // Expires 9 Jan 2118
-const VALID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiw" +
-	"iYWRtaW4iOnRydWUsImV4cCI6IjQ2NzExNzE5ODIifQ.vsp4YkbzAwwogc9qCjwjICSXqVARjVKL6neEm7iHnYY"
+const VALID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6IjQ2NzExNzE5ODIifQ.vsp4YkbzAwwogc9qCjwjICSXqVARjVKL6neEm7iHnYY"
 
 var tokenRetriever = new(mocks.TokenRetriever)
 var sut = newHttpTokenCache(tokenRetriever)
@@ -28,5 +26,13 @@ func Test_RetrieveToken_Uses_Cached_Token_If_It_Has_Not_Expired(t *testing.T) {
 }
 
 func Test_RetrieveToken_Requests_New_Token_If_It_Has_Expired(t *testing.T) {
+	tokenRetriever.On("RetrieveToken").Return(EXPIRED_TOKEN, nil)
+	sut.RetrieveToken()
+	tokenRetriever.On("RetrieveToken").Return(VALID_TOKEN, nil)
 
+	token, err := sut.RetrieveToken()
+
+	assert.Nil(t, err)
+	assert.Equal(t, VALID_TOKEN, token)
+	tokenRetriever.AssertNumberOfCalls(t, "RetrieveToken", 2)
 }
