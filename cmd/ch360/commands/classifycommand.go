@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sync"
 )
 
@@ -110,7 +111,7 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 		if err != nil {
 			fmt.Fprintf(cmd.writer, "Error classifying file %s: %s\n", jr.job.filename, err.Error())
 		} else {
-			fmt.Fprintf(cmd.writer, ClassifyOutputFormat, jr.job.filename, result.DocumentType, result.IsConfident)
+			fmt.Fprintf(cmd.writer, ClassifyOutputFormat, filepath.Base(jr.job.filename), result.DocumentType, result.IsConfident)
 		}
 
 	}
