@@ -47,7 +47,7 @@ func (suite *ClassifySuite) SetupTest() {
 	suite.client.On("DeleteDocument", mock.Anything, mock.Anything).Return(nil)
 
 	suite.output = &bytes.Buffer{}
-	suite.ctx = context.Background()
+	suite.ctx, _ = context.WithCancel(context.Background())
 	suite.sut = commands.NewClassifyCommand(suite.output, suite.client)
 }
 
@@ -62,21 +62,42 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_Create_Document_With_
 	err = suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
-	suite.client.AssertCalled(suite.T(), "CreateDocument", suite.ctx, expectedContents)
+	suite.client.AssertCalled(suite.T(), "CreateDocument", mock.Anything, expectedContents)
+}
+
+func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_Create_Document_With_Background_Context() {
+	err := suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
+
+	assert.Nil(suite.T(), err)
+	suite.client.AssertCalled(suite.T(), "CreateDocument", context.Background(), mock.Anything)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_Classify_With_DocumentId_And_ClassifierName() {
 	err := suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
-	suite.client.AssertCalled(suite.T(), "ClassifyDocument", suite.ctx, suite.documentId, suite.classifierName)
+	suite.client.AssertCalled(suite.T(), "ClassifyDocument", mock.Anything, suite.documentId, suite.classifierName)
+}
+
+func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_Classify_With_Specified_Context() {
+	err := suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
+
+	assert.Nil(suite.T(), err)
+	suite.client.AssertCalled(suite.T(), "ClassifyDocument", suite.ctx, mock.Anything, mock.Anything)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_Delete_With_DocumentId() {
 	err := suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
-	suite.client.AssertCalled(suite.T(), "DeleteDocument", suite.ctx, suite.documentId)
+	suite.client.AssertCalled(suite.T(), "DeleteDocument", mock.Anything, suite.documentId)
+}
+
+func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_Delete_With_Background_Context() {
+	err := suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
+
+	assert.Nil(suite.T(), err)
+	suite.client.AssertCalled(suite.T(), "DeleteDocument", context.Background(), mock.Anything)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Processes_All_Files_Matched_By_Pattern() {
@@ -90,7 +111,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Writes_DocumentType_To_StdO
 
 	header := fmt.Sprintf(commands.ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
 	results := fmt.Sprintf(commands.ClassifyOutputFormat, filepath.Base(suite.testFilePath), suite.classificationResult.DocumentType, suite.classificationResult.IsConfident)
-	assert.Equal(suite.T(), header+"\n"+results+"\n", suite.output.String())
+	assert.Equal(suite.T(), header+results, suite.output.String())
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Return_Nil_On_Success() {
@@ -148,5 +169,5 @@ func (suite *ClassifySuite) TestClassifyDoer_Deletes_Document_If_ClassifyDocumen
 
 	suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
-	suite.client.AssertCalled(suite.T(), "DeleteDocument", suite.ctx, suite.documentId)
+	suite.client.AssertCalled(suite.T(), "DeleteDocument", mock.Anything, suite.documentId)
 }
