@@ -10,9 +10,8 @@ import (
 
 type tokenCache struct {
 	retriever TokenRetriever
+	token     *jwt.Token
 }
-
-var cachedToken *jwt.Token
 
 func newHttpTokenCache(tokenRetriever TokenRetriever) TokenRetriever {
 	return &tokenCache{
@@ -21,8 +20,8 @@ func newHttpTokenCache(tokenRetriever TokenRetriever) TokenRetriever {
 }
 
 func (cache *tokenCache) RetrieveToken() (string, error) {
-	if tokenIsFresh(cachedToken) {
-		return cachedToken.Raw, nil
+	if tokenIsFresh(cache.token) {
+		return cache.token.Raw, nil
 	}
 
 	tokenString, err := cache.retriever.RetrieveToken()
@@ -35,8 +34,8 @@ func (cache *tokenCache) RetrieveToken() (string, error) {
 		return "", err
 	}
 
-	cachedToken = token
-	return cachedToken.Raw, nil
+	cache.token = token
+	return cache.token.Raw, nil
 }
 
 func parseToken(token string) (*jwt.Token, error) {
