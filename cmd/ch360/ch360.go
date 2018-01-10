@@ -9,10 +9,11 @@ import (
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/response"
 	"github.com/docopt/docopt-go"
+	"github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
 	"net/http"
 	"os"
 	"os/signal"
-	"os/user"
 	"path/filepath"
 	"time"
 )
@@ -61,12 +62,13 @@ Filename and glob pattern examples:
 	clientId := argAsString(args, "--client-id")
 	clientSecret := argAsString(args, "--client-secret")
 
-	user, err := user.Current()
+	homedir, err := homedir.Dir()
 	if err != nil {
-		fmt.Println(os.Stderr, err.Error())
+		fmt.Println(errors.New(fmt.Sprintf("Could not determine home directory. Details: %s", err.Error())))
 		os.Exit(1)
 	}
-	appDirectory := config.NewAppDirectory(user.HomeDir)
+
+	appDirectory := config.NewAppDirectory(homedir)
 
 	ctx, canceller := context.WithCancel(context.Background())
 
