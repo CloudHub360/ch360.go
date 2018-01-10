@@ -76,11 +76,9 @@ func getExpiry(claims jwt.MapClaims) int64 {
 	case json.Number:
 		v, _ := exp.Int64()
 		return v
-	}
-
-	exp, err := strconv.Atoi(claims["exp"].(string))
-	if err != nil {
-		return int64(exp)
+	case string:
+		v, _ := strconv.Atoi(exp)
+		return int64(v)
 	}
 
 	return 0
