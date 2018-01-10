@@ -11,10 +11,10 @@ const EXPIRED_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3
 // Expires 9 Jan 2118
 const VALID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6IjQ2NzExNzE5ODIifQ.vsp4YkbzAwwogc9qCjwjICSXqVARjVKL6neEm7iHnYY"
 
-var tokenRetriever = new(mocks.TokenRetriever)
-var sut = newHttpTokenCache(tokenRetriever)
-
 func Test_RetrieveToken_Uses_Cached_Token_If_It_Has_Not_Expired(t *testing.T) {
+	var tokenRetriever = new(mocks.TokenRetriever)
+	var sut = newHttpTokenCache(tokenRetriever)
+
 	tokenRetriever.On("RetrieveToken").Return(VALID_TOKEN, nil)
 	sut.RetrieveToken()
 
@@ -26,8 +26,12 @@ func Test_RetrieveToken_Uses_Cached_Token_If_It_Has_Not_Expired(t *testing.T) {
 }
 
 func Test_RetrieveToken_Requests_New_Token_If_It_Has_Expired(t *testing.T) {
+	var tokenRetriever = new(mocks.TokenRetriever)
+	var sut = newHttpTokenCache(tokenRetriever)
+
 	tokenRetriever.On("RetrieveToken").Return(EXPIRED_TOKEN, nil)
 	sut.RetrieveToken()
+	tokenRetriever.ExpectedCalls = nil
 	tokenRetriever.On("RetrieveToken").Return(VALID_TOKEN, nil)
 
 	token, err := sut.RetrieveToken()
