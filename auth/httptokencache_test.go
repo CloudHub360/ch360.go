@@ -22,8 +22,6 @@ type tokenCacheSuite struct {
 func (suite *tokenCacheSuite) SetupTest() {
 	suite.tokenRetriever = new(mocks.TokenRetriever)
 	suite.sut = newHttpTokenCache(suite.tokenRetriever)
-
-	suite.tokenRetriever.On("RetrieveToken").Return(VALID_TOKEN, nil)
 }
 
 func TestTokenCacheSuiteRunner(t *testing.T) {
@@ -31,7 +29,7 @@ func TestTokenCacheSuiteRunner(t *testing.T) {
 }
 
 func (suite *tokenCacheSuite) Test_RetrieveToken_Uses_Cached_Token_If_It_Has_Not_Expired() {
-	suite.sut.RetrieveToken()
+	suite.populateCache(VALID_TOKEN)
 
 	token, err := suite.sut.RetrieveToken()
 
@@ -41,8 +39,7 @@ func (suite *tokenCacheSuite) Test_RetrieveToken_Uses_Cached_Token_If_It_Has_Not
 }
 
 func (suite *tokenCacheSuite) Test_RetrieveToken_Requests_New_Token_If_It_Has_Expired() {
-	suite.reStub("RetrieveToken").Return(EXPIRED_TOKEN, nil)
-	suite.sut.RetrieveToken()
+	suite.populateCache(EXPIRED_TOKEN)
 	suite.reStub("RetrieveToken").Return(VALID_TOKEN, nil)
 
 	token, err := suite.sut.RetrieveToken()
@@ -50,6 +47,11 @@ func (suite *tokenCacheSuite) Test_RetrieveToken_Requests_New_Token_If_It_Has_Ex
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), VALID_TOKEN, token)
 	suite.tokenRetriever.AssertNumberOfCalls(suite.T(), "RetrieveToken", 2)
+}
+
+func (suite *tokenCacheSuite) populateCache(token string) {
+	suite.reStub("RetrieveToken").Return(token, nil)
+	suite.sut.RetrieveToken()
 }
 
 func (suite *tokenCacheSuite) reStub(methodName string, returnArguments ...interface{}) *mock.Call {
