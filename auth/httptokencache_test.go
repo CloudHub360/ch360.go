@@ -3,6 +3,8 @@ package auth
 import (
 	"github.com/CloudHub360/ch360.go/auth/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
@@ -11,32 +13,46 @@ const EXPIRED_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3
 // Expires 9 Jan 2118
 const VALID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6IjQ2NzExNzE5ODIifQ.vsp4YkbzAwwogc9qCjwjICSXqVARjVKL6neEm7iHnYY"
 
-func Test_RetrieveToken_Uses_Cached_Token_If_It_Has_Not_Expired(t *testing.T) {
-	var tokenRetriever = new(mocks.TokenRetriever)
-	var sut = newHttpTokenCache(tokenRetriever)
-
-	tokenRetriever.On("RetrieveToken").Return(VALID_TOKEN, nil)
-	sut.RetrieveToken()
-
-	token, err := sut.RetrieveToken()
-
-	assert.Nil(t, err)
-	assert.Equal(t, VALID_TOKEN, token)
-	tokenRetriever.AssertNumberOfCalls(t, "RetrieveToken", 1)
+type tokenCacheSuite struct {
+	suite.Suite
+	tokenRetriever *mocks.TokenRetriever
+	sut            TokenRetriever
 }
 
-func Test_RetrieveToken_Requests_New_Token_If_It_Has_Expired(t *testing.T) {
-	var tokenRetriever = new(mocks.TokenRetriever)
-	var sut = newHttpTokenCache(tokenRetriever)
+func (suite *tokenCacheSuite) SetupTest() {
+	suite.tokenRetriever = new(mocks.TokenRetriever)
+	suite.sut = newHttpTokenCache(suite.tokenRetriever)
 
-	tokenRetriever.On("RetrieveToken").Return(EXPIRED_TOKEN, nil)
-	sut.RetrieveToken()
-	tokenRetriever.ExpectedCalls = nil
-	tokenRetriever.On("RetrieveToken").Return(VALID_TOKEN, nil)
+	suite.tokenRetriever.On("RetrieveToken").Return(VALID_TOKEN, nil)
+}
 
-	token, err := sut.RetrieveToken()
+func TestTokenCacheSuiteRunner(t *testing.T) {
+	suite.Run(t, new(tokenCacheSuite))
+}
 
-	assert.Nil(t, err)
-	assert.Equal(t, VALID_TOKEN, token)
-	tokenRetriever.AssertNumberOfCalls(t, "RetrieveToken", 2)
+func (suite *tokenCacheSuite) Test_RetrieveToken_Uses_Cached_Token_If_It_Has_Not_Expired() {
+	suite.sut.RetrieveToken()
+
+	token, err := suite.sut.RetrieveToken()
+
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), VALID_TOKEN, token)
+	suite.tokenRetriever.AssertNumberOfCalls(suite.T(), "RetrieveToken", 1)
+}
+
+func (suite *tokenCacheSuite) Test_RetrieveToken_Requests_New_Token_If_It_Has_Expired() {
+	suite.reStub("RetrieveToken").Return(EXPIRED_TOKEN, nil)
+	suite.sut.RetrieveToken()
+	suite.reStub("RetrieveToken").Return(VALID_TOKEN, nil)
+
+	token, err := suite.sut.RetrieveToken()
+
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), VALID_TOKEN, token)
+	suite.tokenRetriever.AssertNumberOfCalls(suite.T(), "RetrieveToken", 2)
+}
+
+func (suite *tokenCacheSuite) reStub(methodName string, returnArguments ...interface{}) *mock.Call {
+	suite.tokenRetriever.ExpectedCalls = nil
+	return suite.tokenRetriever.On(methodName)
 }
