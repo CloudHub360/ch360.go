@@ -27,7 +27,11 @@ type FormPoster interface {
 	PostForm(url string, values url.Values) (*http.Response, error)
 }
 
-func NewHttpTokenRetriever(clientId string, clientSecret string, formPoster FormPoster, apiUrl string, responseChecker response.Checker) *HttpTokenRetriever {
+func NewHttpTokenRetriever(clientId string, clientSecret string, formPoster FormPoster, apiUrl string, responseChecker response.Checker) TokenRetriever {
+	return newHttpTokenCache(newHttpTokenRetriever(clientId, clientSecret, formPoster, apiUrl, responseChecker))
+}
+
+func newHttpTokenRetriever(clientId string, clientSecret string, formPoster FormPoster, apiUrl string, responseChecker response.Checker) *HttpTokenRetriever {
 	return &HttpTokenRetriever{
 		clientId:        clientId,
 		formPoster:      formPoster,
