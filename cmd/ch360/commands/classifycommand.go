@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/mattn/go-zglob"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sync"
 )
 
 type ClassifyCommand struct {
@@ -55,69 +55,53 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 		return errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'ch360 -h' for glob pattern examples.", filePattern))
 	}
 
-	// Set up jobs channel
-	jobsChan := make(chan job, 0)
-	go func() {
-		for _, filename := range matches {
-			select {
-			case <-ctx.Done():
-				break
-			default:
-				jobsChan <- job{
-					classifierName: classifierName,
-					filename:       filename,
+	var jobs []pool.Job
+	for _, filename := range matches {
+		// The memory of the 'filename' var is reused here, see:
+		// https://golang.org/doc/faq#closures_and_goroutines
+		// The workaround is to copy it:
+		filename := filename // <- copy
+
+		job := pool.NewJob(
+			// Performing the work
+			func() pool.JobResult {
+				result, err := cmd.processFile(ctx, filename, classifierName)
+
+				return pool.JobResult{
+					Err:   err,
+					Value: result,
 				}
-			}
-		}
-		close(jobsChan)
-	}()
-
-	// Set up results channels
-	resultsChan := make(chan jobResult, 0)
-
-	// Start processing in background
-	wg := sync.WaitGroup{}
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			for job := range jobsChan {
-				result, err := cmd.processFile(ctx, job.filename, job.classifierName)
-
-				resultsChan <- jobResult{
-					err:    err,
-					result: result,
-					job:    job,
+			},
+			// Handling the result
+			func(jr pool.JobResult) {
+				if jr.Err != nil {
+					fmt.Fprintf(cmd.writer, "Error classifying file %s: %v\n", filename, jr.Err)
 				}
-			}
-			wg.Done()
-		}()
+
+				classificationResult := jr.Value.(*types.ClassificationResult)
+
+				if classificationResult != nil {
+					fmt.Fprintf(cmd.writer,
+						ClassifyOutputFormat,
+						filepath.Base(filename),
+						classificationResult.DocumentType,
+						classificationResult.IsConfident)
+				}
+			})
+
+		jobs = append(jobs, job)
 	}
 
-	go func() {
-		// Wait for all workers to complete, then close the results channel
-		wg.Wait()
-		close(resultsChan)
-	}()
+	workPool := pool.NewPool(jobs, 10)
 
 	// Print results
 	fmt.Fprintf(cmd.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
+	workPool.Run(ctx)
 
-	for jr := range resultsChan {
-		if err == context.Canceled {
-			continue
-		}
-
-		if err != nil {
-			fmt.Fprintf(cmd.writer, "Error classifying file %s: %s\n", jr.job.filename, err.Error())
-		} else if jr.result != nil {
-			fmt.Fprintf(cmd.writer, ClassifyOutputFormat, filepath.Base(jr.job.filename), jr.result.DocumentType, jr.result.IsConfident)
-		}
-
-	}
 	return nil
 }
 
-func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, classifierName string) (*types.ClassificationResult, error) {
+func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, classifierName string) (result *types.ClassificationResult, err error) {
 	fileContents, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
@@ -130,30 +114,13 @@ func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, cl
 		return nil, err
 	}
 
-	result, err := cmd.client.ClassifyDocument(ctx, documentId, classifierName)
-
-	var classifyErr error
-	var deleteErr error
-
-	var cancelled = (err == context.Canceled)
+	result, err = cmd.client.ClassifyDocument(ctx, documentId, classifierName)
 
 	if documentId != "" {
 		// Always delete the document, even if ClassifyDocument returned an error.
 		// Don't cancel on ctrl-c.
-		deleteErr = cmd.client.DeleteDocument(context.Background(), documentId)
+		err = cmd.client.DeleteDocument(context.Background(), documentId)
 	}
 
-	if classifyErr != nil {
-		return nil, classifyErr
-	}
-
-	if deleteErr != nil {
-		return nil, deleteErr
-	}
-
-	if cancelled {
-		return nil, ctx.Err()
-	}
-
-	return result, nil
+	return // named return params
 }
