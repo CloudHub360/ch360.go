@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/CloudHub360/ch360.go/auth"
 	authmocks "github.com/CloudHub360/ch360.go/auth/mocks"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/config"
@@ -31,7 +32,7 @@ func (suite *LoginSuite) SetupTest() {
 	suite.configWriter.On("WriteConfiguration", mock.Anything).Return(nil)
 
 	suite.tokenRetriever = new(authmocks.TokenRetriever)
-	suite.tokenRetriever.On("RetrieveToken").Return("", nil)
+	suite.tokenRetriever.On("RetrieveToken").Return(&auth.AccessToken{}, nil)
 
 	suite.sut = commands.NewLogin(suite.configWriter, suite.tokenRetriever)
 }
@@ -59,7 +60,7 @@ func (suite *LoginSuite) TestLogin_Execute_Returns_Err_From_Token_Retriever() {
 	suite.tokenRetriever.ExpectedCalls = nil
 
 	expectedErr := errors.New("An error")
-	suite.tokenRetriever.On("RetrieveToken").Return("", expectedErr)
+	suite.tokenRetriever.On("RetrieveToken").Return(nil, expectedErr)
 
 	// Act
 	err := suite.sut.Execute(suite.clientId, suite.clientSecret)

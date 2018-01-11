@@ -7,12 +7,18 @@ import (
 	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 //go:generate mockery -name "TokenRetriever|FormPoster"
 
 type TokenRetriever interface {
-	RetrieveToken() (string, error)
+	RetrieveToken() (*AccessToken, error)
+}
+
+type AccessToken struct {
+	TokenString string
+	ExpiresAt   time.Time
 }
 
 type HttpTokenRetriever struct {
@@ -27,11 +33,7 @@ type FormPoster interface {
 	PostForm(url string, values url.Values) (*http.Response, error)
 }
 
-func NewHttpTokenRetriever(clientId string, clientSecret string, formPoster FormPoster, apiUrl string, responseChecker response.Checker) TokenRetriever {
-	return newHttpTokenCache(newHttpTokenRetriever(clientId, clientSecret, formPoster, apiUrl, responseChecker))
-}
-
-func newHttpTokenRetriever(clientId string, clientSecret string, formPoster FormPoster, apiUrl string, responseChecker response.Checker) *HttpTokenRetriever {
+func NewHttpTokenRetriever(clientId string, clientSecret string, formPoster FormPoster, apiUrl string, responseChecker response.Checker) *HttpTokenRetriever {
 	return &HttpTokenRetriever{
 		clientId:        clientId,
 		formPoster:      formPoster,
@@ -41,9 +43,10 @@ func newHttpTokenRetriever(clientId string, clientSecret string, formPoster Form
 	}
 }
 
-func (retriever *HttpTokenRetriever) RetrieveToken() (string, error) {
+func (retriever *HttpTokenRetriever) RetrieveToken() (*AccessToken, error) {
 	type tokenResponse struct {
 		AccessToken string `json:"access_token"`
+		ExpiresIn   int    `json:"expires_in"`
 	}
 
 	form := url.Values{
@@ -55,14 +58,14 @@ func (retriever *HttpTokenRetriever) RetrieveToken() (string, error) {
 	resp, err := retriever.formPoster.PostForm(retriever.apiUrl+"/oauth/token", form)
 	if err != nil {
 		// No response received
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	err = retriever.responseChecker.CheckForErrors(resp)
 
 	if err != nil {
-		return "", errors.Wrap(err, "An error occurred when requesting an authentication token")
+		return nil, errors.Wrap(err, "An error occurred when requesting an authentication token")
 	}
 
 	buf := bytes.Buffer{}
@@ -72,11 +75,14 @@ func (retriever *HttpTokenRetriever) RetrieveToken() (string, error) {
 	err = json.Unmarshal(buf.Bytes(), &accessToken)
 
 	if err != nil {
-		return "", errors.New("Failed to parse authentication token response")
+		return nil, errors.New("Failed to parse authentication token response")
 	}
 
 	if accessToken.AccessToken == "" {
-		return "", errors.New("Received empty authentication token")
+		return nil, errors.New("Received empty authentication token")
 	}
-	return accessToken.AccessToken, nil
+	return &AccessToken{
+		accessToken.AccessToken,
+		time.Now().Add(time.Duration(accessToken.ExpiresIn) * time.Minute),
+	}, nil
 }

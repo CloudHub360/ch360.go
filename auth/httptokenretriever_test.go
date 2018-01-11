@@ -1,8 +1,9 @@
-package auth
+package auth_test
 
 import (
 	"bytes"
 	"errors"
+	"github.com/CloudHub360/ch360.go/auth"
 	mockauth "github.com/CloudHub360/ch360.go/auth/mocks"
 	"github.com/CloudHub360/ch360.go/response"
 	mockresponse "github.com/CloudHub360/ch360.go/response/mocks"
@@ -27,7 +28,7 @@ func AnHttpResponse(body []byte) *http.Response {
 
 type HttpTokenRetrieverSuite struct {
 	suite.Suite
-	sut                 *HttpTokenRetriever
+	sut                 *auth.HttpTokenRetriever
 	mockHttpClient      *mockauth.FormPoster
 	mockResponseChecker *mockresponse.Checker
 	validTokenValue     string
@@ -38,9 +39,13 @@ type HttpTokenRetrieverSuite struct {
 func (suite *HttpTokenRetrieverSuite) SetupTest() {
 	suite.mockHttpClient = new(mockauth.FormPoster)
 	suite.mockResponseChecker = new(mockresponse.Checker)
-	suite.sut = newHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
+	suite.sut = auth.NewHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
+
 	suite.validTokenValue = `tokenvalue`
-	suite.validTokenBody = `{"access_token": "` + suite.validTokenValue + `"}`
+	suite.validTokenBody = `{
+		"access_token": "` + suite.validTokenValue + `",
+		"expires_in": 86400
+	}`
 	suite.validTokenResponse = AnHttpResponse([]byte(suite.validTokenBody))
 }
 
@@ -63,7 +68,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Sends_Client_Id_An
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error() {
 	// Arrange
-	tokenGetter := newHttpTokenRetriever(fakeClientId, fakeClientSecret, &http.Client{}, "http://invalid-url:-1", &response.ErrorChecker{})
+	tokenGetter := auth.NewHttpTokenRetriever(fakeClientId, fakeClientSecret, &http.Client{}, "http://invalid-url:-1", &response.ErrorChecker{})
 
 	// Act
 	_, err := tokenGetter.RetrieveToken()
@@ -109,7 +114,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Parses_Token_Respo
 
 	// Assert
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), suite.validTokenValue, token)
+	assert.Equal(suite.T(), suite.validTokenValue, token.TokenString)
 }
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Invalid_Json() {
