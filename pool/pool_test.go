@@ -69,10 +69,12 @@ func (suite *PoolSuite) Test_Pool_Performs_All_Jobs() {
 
 func (suite *PoolSuite) Test_Pool_Calls_Handler_With_JobResults() {
 	// Arrange
-	expectedResult := generators.String("pool")
-	expectedError := errors.New("err")
-	var receivedResult string
-	var receivedErr error
+	var (
+		expectedResult = generators.String("pool")
+		expectedError  = errors.New("err")
+		receivedResult string
+		receivedErr    error
+	)
 
 	jobs := pool.MakeJobs(1,
 		func() pool.JobResult {
@@ -96,5 +98,90 @@ func (suite *PoolSuite) Test_Pool_Calls_Handler_With_JobResults() {
 }
 
 // test context cancellation prevents more jobs from being run
+func (suite *PoolSuite) Test_Pool_Does_Not_Process_Jobs_After_Context_Cancel() {
+	// Arrange
+	var (
+		jobsRun          int32
+		jobsCount        = int(10)
+		allowedJobsCount = 2
+		ctx, cancel      = context.WithCancel(context.Background())
+		jobCompleteSig   = make(chan bool, 0)
+	)
+	jobs := pool.MakeJobs(jobsCount,
+		func() pool.JobResult {
+			jobCompleteSig <- true
+
+			time.Sleep(time.Millisecond)
+			atomic.AddInt32(&jobsRun, 1)
+
+			return pool.JobResult{}
+		},
+		func(result pool.JobResult) {})
+
+	// Act
+	go func() {
+		// Cancel the context after 2 jobs
+		for _ = range jobCompleteSig {
+			if jobsCount >= allowedJobsCount {
+				cancel()
+			}
+		}
+	}()
+
+	p := pool.NewPool(jobs, 1)
+	p.Run(ctx)
+	close(jobCompleteSig)
+
+	// Assert
+	assert.Equal(suite.T(), int32(allowedJobsCount), jobsRun)
+}
 
 // test context cancellation prevents results handlers from being called
+func (suite *PoolSuite) Test_Pool_Does_Not_Process_Handler_After_Context_Cancel() {
+	// Arrange
+	var (
+		jobsCount   = 10
+		handlersRun int
+		ctx, cancel = context.WithCancel(context.Background())
+	)
+	jobs := pool.MakeJobs(jobsCount,
+		func() pool.JobResult {
+			cancel()
+
+			return pool.JobResult{}
+		},
+		func(result pool.JobResult) {
+			handlersRun++
+		})
+
+	// Act
+	p := pool.NewPool(jobs, 1)
+	p.Run(ctx)
+
+	// Assert
+	assert.True(suite.T(), handlersRun < jobsCount)
+}
+
+func (suite *PoolSuite) Test_Pool_Does_Not_Process_Handler_After_Job_Returns_Context_Cancelled_Error() {
+	// Arrange
+	var (
+		jobsCount   = 10
+		handlersRun int
+	)
+	jobs := pool.MakeJobs(jobsCount,
+		func() pool.JobResult {
+			return pool.JobResult{
+				Err: context.Canceled,
+			}
+		},
+		func(result pool.JobResult) {
+			handlersRun++
+		})
+
+	// Act
+	p := pool.NewPool(jobs, 1)
+	p.Run(context.Background())
+
+	// Assert
+	assert.Equal(suite.T(), 0, handlersRun)
+}
