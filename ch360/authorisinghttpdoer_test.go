@@ -2,13 +2,14 @@ package ch360
 
 import (
 	"errors"
+	"github.com/CloudHub360/ch360.go/auth"
+	mockauth "github.com/CloudHub360/ch360.go/auth/mocks"
+	mockch360 "github.com/CloudHub360/ch360.go/ch360/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"net/http"
 	"testing"
-	mockch360 "github.com/CloudHub360/ch360.go/ch360/mocks"
-	mockauth "github.com/CloudHub360/ch360.go/auth/mocks"
 )
 
 type AuthorisingHttpDoerSuite struct {
@@ -34,7 +35,7 @@ func TestAuthorisingDoerSuiteRunner(t *testing.T) {
 func (suite *AuthorisingHttpDoerSuite) Test_AuthorisingDoer_Calls_TokenRetriever() {
 	// Arrange
 	suite.underlying.On("Do", mock.Anything).Return(nil, nil)
-	suite.retriever.On("RetrieveToken").Return("token", nil)
+	suite.retriever.On("RetrieveToken").Return(&auth.AccessToken{}, nil)
 
 	// Act
 	request := http.Request{}
@@ -48,7 +49,7 @@ func (suite *AuthorisingHttpDoerSuite) Test_AuthorisingDoer_Returns_Error_From_T
 	// Arrange
 	expectedErr := errors.New("retriever error")
 	suite.underlying.On("Do", mock.Anything).Return(nil, nil)
-	suite.retriever.On("RetrieveToken").Return("", expectedErr)
+	suite.retriever.On("RetrieveToken").Return(nil, expectedErr)
 
 	// Act
 	_, receivedErr := suite.sut.Do(&http.Request{})
@@ -61,7 +62,7 @@ func (suite *AuthorisingHttpDoerSuite) Test_AuthorisingDoer_Returns_Error_From_U
 	// Arrange
 	expectedErr := errors.New("underlying error")
 	suite.underlying.On("Do", mock.Anything).Return(nil, expectedErr)
-	suite.retriever.On("RetrieveToken", mock.Anything).Return("token", nil)
+	suite.retriever.On("RetrieveToken", mock.Anything).Return(&auth.AccessToken{}, nil)
 
 	// Act
 	_, receivedErr := suite.sut.Do(&http.Request{})
@@ -72,7 +73,7 @@ func (suite *AuthorisingHttpDoerSuite) Test_AuthorisingDoer_Returns_Error_From_U
 
 func (suite *AuthorisingHttpDoerSuite) Test_AuthorisingDoer_Calls_Underlying_With_Token() {
 	// Arrange
-	token := "auth_token"
+	token := &auth.AccessToken{}
 	suite.underlying.On("Do", mock.Anything).Return(nil, nil)
 	suite.retriever.On("RetrieveToken", mock.Anything).Return(token, nil)
 
@@ -81,7 +82,7 @@ func (suite *AuthorisingHttpDoerSuite) Test_AuthorisingDoer_Calls_Underlying_Wit
 	suite.sut.Do(&request)
 
 	// Assert
-	assert.Equal(suite.T(), "Bearer "+token, request.Header.Get("Authorization"))
+	assert.Equal(suite.T(), "Bearer "+token.TokenString, request.Header.Get("Authorization"))
 	suite.underlying.AssertNumberOfCalls(suite.T(), "Do", 1)
 	suite.underlying.AssertCalled(suite.T(), "Do", &request)
 }

@@ -21,7 +21,7 @@ func (sender *authorisingDoer) Do(request *http.Request) (*http.Response, error)
 		request.Header = make(http.Header)
 	}
 
-	request.Header.Add("Authorization", "Bearer "+token)
+	request.Header.Add("Authorization", "Bearer "+token.TokenString)
 
 	return sender.wrappedSender.Do(request)
 }
