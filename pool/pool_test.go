@@ -2,7 +2,9 @@ package pool_test
 
 import (
 	"context"
+	"errors"
 	"github.com/CloudHub360/ch360.go/pool"
+	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"sync/atomic"
@@ -45,7 +47,6 @@ func (suite *PoolSuite) Test_Pool_Performs_Work_In_Parallel() {
 	assert.True(suite.T(), timeTaken < time.Duration(workerCount*sleepMs)*time.Millisecond)
 }
 
-// test all jobs are performed
 func (suite *PoolSuite) Test_Pool_Performs_All_Jobs() {
 	// Arrange
 	workerCount := 10
@@ -66,7 +67,33 @@ func (suite *PoolSuite) Test_Pool_Performs_All_Jobs() {
 	assert.Equal(suite.T(), int32(workerCount), jobsCompletedFlag)
 }
 
-// test results handlers are called with results
+func (suite *PoolSuite) Test_Pool_Calls_Handler_With_JobResults() {
+	// Arrange
+	expectedResult := generators.String("pool")
+	expectedError := errors.New("err")
+	var receivedResult string
+	var receivedErr error
+
+	jobs := pool.MakeJobs(1,
+		func() pool.JobResult {
+			return pool.JobResult{
+				Value: expectedResult,
+				Err:   expectedError,
+			}
+		},
+		func(result pool.JobResult) {
+			receivedResult = result.Value.(string)
+			receivedErr = result.Err
+		})
+
+	// Act
+	p := pool.NewPool(jobs, 1)
+	p.Run(context.Background())
+
+	// Assert
+	assert.Equal(suite.T(), expectedResult, receivedResult)
+	assert.Equal(suite.T(), expectedError, receivedErr)
+}
 
 // test context cancellation prevents more jobs from being run
 
