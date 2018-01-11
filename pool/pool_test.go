@@ -5,6 +5,7 @@ import (
 	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -24,7 +25,6 @@ func TestPoolSuiteRunner(t *testing.T) {
 
 func (suite *PoolSuite) Test_Pool_Performs_Work_In_Parallel() {
 	// Arrange
-
 	workerCount := 10
 	sleepMs := 5
 	jobs := pool.MakeJobs(workerCount,
@@ -46,6 +46,25 @@ func (suite *PoolSuite) Test_Pool_Performs_Work_In_Parallel() {
 }
 
 // test all jobs are performed
+func (suite *PoolSuite) Test_Pool_Performs_All_Jobs() {
+	// Arrange
+	workerCount := 10
+	var jobsCompletedFlag int32 = 0
+	jobs := pool.MakeJobs(workerCount,
+		func() pool.JobResult {
+			// Executed in parallel
+			atomic.AddInt32(&jobsCompletedFlag, 1)
+			return pool.JobResult{}
+		},
+		func(result pool.JobResult) {})
+
+	// Act
+	p := pool.NewPool(jobs, workerCount)
+	p.Run(context.Background())
+
+	// Assert
+	assert.Equal(suite.T(), int32(workerCount), jobsCompletedFlag)
+}
 
 // test results handlers are called with results
 
