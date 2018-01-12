@@ -28,11 +28,11 @@ func TestPoolSuiteRunner(t *testing.T) {
 func (suite *PoolSuite) Test_Pool_Performs_Work_In_Parallel() {
 	// Arrange
 	workerCount := 10
-	sleepMs := 5
+	sleepMs := 5 * time.Millisecond
 	jobs := pool.MakeJobs(workerCount,
 		func() pool.JobResult {
 			// Each worker will sleep for 5ms, but in parallel
-			time.Sleep(time.Millisecond * time.Duration(sleepMs))
+			time.Sleep(sleepMs)
 			return pool.JobResult{}
 		},
 		func(result pool.JobResult) {})
@@ -44,7 +44,7 @@ func (suite *PoolSuite) Test_Pool_Performs_Work_In_Parallel() {
 	timeTaken := time.Since(start)
 
 	// Assert
-	assert.True(suite.T(), timeTaken < time.Duration(workerCount*sleepMs)*time.Millisecond)
+	assert.True(suite.T(), timeTaken < time.Duration(workerCount)*sleepMs)
 }
 
 func (suite *PoolSuite) Test_Pool_Performs_All_Jobs() {
@@ -101,39 +101,30 @@ func (suite *PoolSuite) Test_Pool_Calls_Handler_With_JobResults() {
 func (suite *PoolSuite) Test_Pool_Does_Not_Process_Jobs_After_Context_Cancel() {
 	// Arrange
 	var (
-		jobsRun          int32
-		jobsCount        = int(10)
+		jobsRun          int
+		jobsCount        = 10
 		allowedJobsCount = 2
 		ctx, cancel      = context.WithCancel(context.Background())
-		jobCompleteSig   = make(chan bool, 0)
 	)
 	jobs := pool.MakeJobs(jobsCount,
 		func() pool.JobResult {
-			jobCompleteSig <- true
-
-			time.Sleep(time.Millisecond)
-			atomic.AddInt32(&jobsRun, 1)
+			jobsRun++
+			if jobsRun == allowedJobsCount {
+				cancel()
+			}
 
 			return pool.JobResult{}
 		},
 		func(result pool.JobResult) {})
 
 	// Act
-	go func() {
-		// Cancel the context after 2 jobs
-		for _ = range jobCompleteSig {
-			if jobsCount >= allowedJobsCount {
-				cancel()
-			}
-		}
-	}()
-
 	p := pool.NewPool(jobs, 1)
 	p.Run(ctx)
-	close(jobCompleteSig)
 
 	// Assert
-	assert.Equal(suite.T(), int32(allowedJobsCount), jobsRun)
+	// may be another job queued, so we allow an extra to be processed
+	// after cancel
+	assert.True(suite.T(), jobsRun <= allowedJobsCount+1)
 }
 
 // test context cancellation prevents results handlers from being called

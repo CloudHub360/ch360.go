@@ -55,21 +55,22 @@ func MakeJobs(n int, do func() JobResult, handle func(JobResult)) []Job {
 
 func (p *Pool) Run(ctx context.Context) {
 	// Set up jobs channel
-	jobsChan := make(chan Job, 0)
+	jobsChan := make(chan Job)
 	go func() {
+		defer close(jobsChan)
+
 		for _, job := range p.jobs {
 			select {
 			case <-ctx.Done():
-				break
+				return
 			default:
 				jobsChan <- job
 			}
 		}
-		close(jobsChan)
 	}()
 
-	// Set up results channels
-	resultsChan := make(chan jobAndResult, 0)
+	// Set up results channel
+	resultsChan := make(chan jobAndResult)
 
 	// Start processing in background
 	wg := sync.WaitGroup{}
