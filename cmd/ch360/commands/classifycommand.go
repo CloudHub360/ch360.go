@@ -28,17 +28,6 @@ func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterCla
 
 var ClassifyOutputFormat = "%-36.36s %-32.32s %v\n"
 
-type job struct {
-	filename       string
-	classifierName string
-}
-
-type jobResult struct {
-	err    error
-	result *types.ClassificationResult
-	job    job
-}
-
 func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, classifierName string) error {
 	matches, err := zglob.Glob(filePattern)
 	if err != nil {
