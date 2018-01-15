@@ -98,12 +98,17 @@ func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, cl
 		return nil, err
 	}
 
-	result, err = cmd.client.ClassifyDocument(ctx, documentId, classifierName)
+	result, classifyErr := cmd.client.ClassifyDocument(ctx, documentId, classifierName)
 
 	if documentId != "" {
 		// Always delete the document, even if ClassifyDocument returned an error.
 		// Don't cancel on ctrl-c.
 		err = cmd.client.DeleteDocument(context.Background(), documentId)
+	}
+
+	// Return the classify err if we have one
+	if classifyErr != nil {
+		err = classifyErr
 	}
 
 	return // named return params
