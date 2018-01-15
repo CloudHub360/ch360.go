@@ -47,9 +47,7 @@ func (cache *TokenCache) RetrieveToken() (*AccessToken, error) {
 	})
 
 	// Make a request to the monitoring goroutine to get a new token
-	go func() {
-		cache.reqChan <- true
-	}()
+	cache.reqChan <- true
 
 	// Wait for a response
 	res := <-cache.respChan
