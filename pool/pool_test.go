@@ -49,12 +49,14 @@ func (suite *PoolSuite) Test_Pool_Performs_Work_In_Parallel() {
 
 func (suite *PoolSuite) Test_Pool_Performs_All_Jobs() {
 	// Arrange
-	workerCount := 10
-	var jobsCompletedFlag int32 = 0
+	var (
+		workerCount              = 10
+		jobsCompletedCount int32 = 0
+	)
 	jobs := pool.MakeJobs(workerCount,
 		func() (interface{}, error) {
 			// Executed in parallel
-			atomic.AddInt32(&jobsCompletedFlag, 1)
+			atomic.AddInt32(&jobsCompletedCount, 1)
 			return nil, nil
 		},
 		func(interface{}, error) {})
@@ -64,7 +66,7 @@ func (suite *PoolSuite) Test_Pool_Performs_All_Jobs() {
 	p.Run(context.Background())
 
 	// Assert
-	assert.Equal(suite.T(), int32(workerCount), jobsCompletedFlag)
+	assert.Equal(suite.T(), int32(workerCount), jobsCompletedCount)
 }
 
 func (suite *PoolSuite) Test_Pool_Calls_Handler_With_JobResults() {
@@ -94,7 +96,6 @@ func (suite *PoolSuite) Test_Pool_Calls_Handler_With_JobResults() {
 	assert.Equal(suite.T(), expectedError, receivedErr)
 }
 
-// test context cancellation prevents more jobs from being run
 func (suite *PoolSuite) Test_Pool_Does_Not_Process_Jobs_After_Context_Cancel() {
 	// Arrange
 	var (
@@ -124,7 +125,6 @@ func (suite *PoolSuite) Test_Pool_Does_Not_Process_Jobs_After_Context_Cancel() {
 	assert.True(suite.T(), jobsRun <= allowedJobsCount+1)
 }
 
-// test context cancellation prevents results handlers from being called
 func (suite *PoolSuite) Test_Pool_Does_Not_Process_Handler_After_Context_Cancel() {
 	// Arrange
 	var (
