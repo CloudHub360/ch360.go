@@ -2,6 +2,7 @@ package commands
 
 import (
 	"encoding/csv"
+	"github.com/CloudHub360/ch360.go/ch360/types"
 	"io"
 )
 
@@ -20,8 +21,8 @@ func (writer *CSVClassifyResultsWriter) StartWriting() {
 	writer.csvWriter = csv.NewWriter(writer.underlyingWriter)
 }
 
-func (writer *CSVClassifyResultsWriter) WriteDocumentResults(result *classifyResultsWriterInput) error {
-	record := []string{result.filename, result.documentType, boolToString(result.isConfident)}
+func (writer *CSVClassifyResultsWriter) WriteDocumentResults(filename string, result *types.ClassificationResult) error {
+	record := []string{filename, result.DocumentType, boolToString(result.IsConfident)}
 
 	if err := writer.csvWriter.Write(record); err != nil {
 		return err

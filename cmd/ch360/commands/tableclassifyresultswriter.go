@@ -2,20 +2,15 @@ package commands
 
 import (
 	"fmt"
+	"github.com/CloudHub360/ch360.go/ch360/types"
 	"io"
 	"path/filepath"
 )
 
 type ClassifyResultsWriter interface {
 	StartWriting()
-	WriteDocumentResults(result *classifyResultsWriterInput) error
+	WriteDocumentResults(filename string, result *types.ClassificationResult) error
 	FinishWriting()
-}
-
-type classifyResultsWriterInput struct {
-	filename     string //Filename with full path
-	documentType string
-	isConfident  bool
 }
 
 type TableClassifyResultsWriter struct {
@@ -34,9 +29,9 @@ func (writer *TableClassifyResultsWriter) StartWriting() {
 	fmt.Fprintf(writer.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
 }
 
-func (writer *TableClassifyResultsWriter) WriteDocumentResults(result *classifyResultsWriterInput) error {
-	base := filepath.Base(result.filename)
-	fmt.Fprintf(writer.writer, ClassifyOutputFormat, base, result.documentType, result.isConfident)
+func (writer *TableClassifyResultsWriter) WriteDocumentResults(filename string, result *types.ClassificationResult) error {
+	base := filepath.Base(filename)
+	fmt.Fprintf(writer.writer, ClassifyOutputFormat, base, result.DocumentType, result.IsConfident)
 
 	return nil
 }

@@ -44,12 +44,11 @@ func (cmd *ClassifyCommand) handlerFor(cancel context.CancelFunc, filename strin
 		} else {
 			classificationResult := value.(*types.ClassificationResult)
 
-			//TODO: Check error here
-			cmd.resultsWriter.WriteDocumentResults(&classifyResultsWriterInput{
-				filename:     filename,
-				documentType: classificationResult.DocumentType,
-				isConfident:  classificationResult.IsConfident,
-			})
+			if err = cmd.resultsWriter.WriteDocumentResults(filename, classificationResult); err != nil {
+				*errs = append(*errs, err)
+				fmt.Fprintln(cmd.errorWriter, err.Error())
+			}
+			cancel()
 		}
 	}
 }
