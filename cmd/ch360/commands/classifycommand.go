@@ -30,6 +30,27 @@ func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterCla
 
 var ClassifyOutputFormat = "%-36.36s %-32.32s %v\n"
 
+func (cmd *ClassifyCommand) handlerFor(cancel context.CancelFunc, filename string, errs *[]error) pool.HandlerFunc {
+	return func(value interface{}, err error) {
+		if err != nil {
+			errMsg := fmt.Sprintf("Error classifying file %s: %v", filename, err)
+			*errs = append(*errs, errors.New(errMsg))
+			fmt.Fprintln(cmd.writer, errMsg)
+
+			// Don't process any more if there's an error
+			cancel()
+		} else {
+			classificationResult := value.(*types.ClassificationResult)
+
+			fmt.Fprintf(cmd.writer,
+				ClassifyOutputFormat,
+				filepath.Base(filename),
+				classificationResult.DocumentType,
+				classificationResult.IsConfident)
+		}
+	}
+}
+
 func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, classifierName string) error {
 	matches, err := zglob.Glob(filePattern)
 	if err != nil {
@@ -46,7 +67,12 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 		return errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'ch360 -h' for glob pattern examples.", filePattern))
 	}
 
-	var processFileJobs []pool.Job
+	ctx, cancel := context.WithCancel(ctx)
+
+	var (
+		processFileJobs []pool.Job
+		errs            []error
+	)
 	for _, filename := range matches {
 		// The memory of the 'filename' var is reused here, see:
 		// https://golang.org/doc/faq#closures_and_goroutines
@@ -54,24 +80,10 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 		filename := filename // <- copy
 
 		processFileJob := pool.NewJob(
-			// Performing the work
 			func() (interface{}, error) {
 				return cmd.processFile(ctx, filename, classifierName)
 			},
-			// Handling the result
-			func(value interface{}, err error) {
-				if err != nil {
-					fmt.Fprintf(cmd.writer, "Error classifying file %s: %v\n", filename, err)
-				} else {
-					classificationResult := value.(*types.ClassificationResult)
-
-					fmt.Fprintf(cmd.writer,
-						ClassifyOutputFormat,
-						filepath.Base(filename),
-						classificationResult.DocumentType,
-						classificationResult.IsConfident)
-				}
-			})
+			cmd.handlerFor(cancel, filename, &errs))
 
 		processFileJobs = append(processFileJobs, processFileJob)
 	}
@@ -81,6 +93,11 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 	// Print results
 	fmt.Fprintf(cmd.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
 	workPool.Run(ctx)
+
+	// Just return the first error.
+	if len(errs) > 0 {
+		return errs[0]
+	}
 
 	return nil
 }
