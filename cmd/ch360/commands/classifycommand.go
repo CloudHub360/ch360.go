@@ -8,21 +8,19 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/mattn/go-zglob"
-	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 )
 
 type ClassifyCommand struct {
-	writer          io.Writer
+	resultsWriter   ClassifyResultsWriter
 	client          ch360.DocumentCreatorDeleterClassifier
 	parallelWorkers int
 }
 
-func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterClassifier, parallelism int) *ClassifyCommand {
+func NewClassifyCommand(writer ClassifyResultsWriter, client ch360.DocumentCreatorDeleterClassifier, parallelism int) *ClassifyCommand {
 	return &ClassifyCommand{
-		writer:          writer,
+		resultsWriter:   writer,
 		client:          client,
 		parallelWorkers: parallelism,
 	}
@@ -35,18 +33,21 @@ func (cmd *ClassifyCommand) handlerFor(cancel context.CancelFunc, filename strin
 		if err != nil {
 			errMsg := fmt.Sprintf("Error classifying file %s: %v", filename, err)
 			*errs = append(*errs, errors.New(errMsg))
-			fmt.Fprintln(cmd.writer, errMsg)
+
+			// TODO Reinstate this
+			// fmt.Fprintln(cmd.writer, errMsg)
 
 			// Don't process any more if there's an error
 			cancel()
 		} else {
 			classificationResult := value.(*types.ClassificationResult)
 
-			fmt.Fprintf(cmd.writer,
-				ClassifyOutputFormat,
-				filepath.Base(filename),
-				classificationResult.DocumentType,
-				classificationResult.IsConfident)
+			//TODO: Check error here
+			cmd.resultsWriter.WriteDocumentResults(&classifyResultsWriterInput{
+				filename:     filename,
+				documentType: classificationResult.DocumentType,
+				isConfident:  classificationResult.IsConfident,
+			})
 		}
 	}
 }
@@ -91,7 +92,8 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 	workPool := pool.NewPool(processFileJobs, cmd.parallelWorkers)
 
 	// Print results
-	fmt.Fprintf(cmd.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
+	cmd.resultsWriter.StartWriting()
+	defer cmd.resultsWriter.FinishWriting()
 	workPool.Run(ctx)
 
 	// Just return the first error.
