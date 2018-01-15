@@ -133,8 +133,8 @@ The file '$samples' could not be found.
 
         $document = (Join-Path $PSScriptRoot "documents/document1.pdf")
         Invoke-Classifier $document $classifierName | Format-MultilineOutput | Should -Be @"
-FILE                                         DOCUMENT TYPE            CONFIDENT
-document1.pdf                                Notice of Lien           true
+FILE                                 DOCUMENT TYPE                    CONFIDENT
+document1.pdf                        Notice of Lien                   true
 "@
 
         # Teardown
