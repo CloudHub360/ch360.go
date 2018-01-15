@@ -14,6 +14,13 @@ type ClassifiersClient struct {
 	requestSender HttpDoer
 }
 
+func NewClassifiersClient(baseUrl string, requestSender HttpDoer) *ClassifiersClient {
+	return &ClassifiersClient{
+		baseUrl:       baseUrl,
+		requestSender: requestSender,
+	}
+}
+
 type Classifier struct {
 	Name string
 }

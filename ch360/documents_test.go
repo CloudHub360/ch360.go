@@ -1,9 +1,10 @@
-package ch360
+package ch360_test
 
 import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/ch360/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,7 @@ import (
 
 type DocumentsClientSuite struct {
 	suite.Suite
-	sut            *DocumentsClient
+	sut            *ch360.DocumentsClient
 	httpClient     *mocks.HttpDoer
 	fileContents   []byte
 	documentId     string
@@ -27,10 +28,7 @@ func (suite *DocumentsClientSuite) SetupTest() {
 	suite.httpClient = new(mocks.HttpDoer)
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleCreateDocumentResponse)), nil)
 
-	suite.sut = &DocumentsClient{
-		requestSender: suite.httpClient,
-		baseUrl:       apiUrl,
-	}
+	suite.sut = ch360.NewDocumentsClient(apiUrl, suite.httpClient)
 
 	suite.fileContents = generators.Bytes()
 	suite.documentId = generators.String("documentId")
@@ -68,14 +66,14 @@ func (suite *DocumentsClientSuite) ClearExpectedCalls() {
 }
 
 func (suite *DocumentsClientSuite) Test_CreateDocument_Issues_Create_Document_Request_With_File_Contents() {
-	suite.sut.CreateDocument(context.Background(), suite.fileContents)
+	suite.sut.Create(context.Background(), suite.fileContents)
 
 	suite.AssertRequestIssued("POST", apiUrl+"/documents")
 	suite.AssertRequestHasBody(suite.fileContents)
 }
 
 func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_DocumentId() {
-	documentId, err := suite.sut.CreateDocument(context.Background(), suite.fileContents)
+	documentId, err := suite.sut.Create(context.Background(), suite.fileContents)
 
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), "exampleDocumentId", documentId)
@@ -86,7 +84,7 @@ func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_Error_From_Sender
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(nil, expectedErr)
 
-	documentId, err := suite.sut.CreateDocument(context.Background(), suite.fileContents)
+	documentId, err := suite.sut.Create(context.Background(), suite.fileContents)
 	assert.Equal(suite.T(), "", documentId)
 	assert.Equal(suite.T(), expectedErr, err)
 }
@@ -96,13 +94,13 @@ func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_Error_If_Document
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte("")), nil)
 
-	documentId, err := suite.sut.CreateDocument(context.Background(), suite.fileContents)
+	documentId, err := suite.sut.Create(context.Background(), suite.fileContents)
 	assert.Equal(suite.T(), "", documentId)
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
 func (suite *DocumentsClientSuite) Test_DeleteDocument_Issues_Delete_Document_Request() {
-	suite.sut.DeleteDocument(context.Background(), suite.documentId)
+	suite.sut.Delete(context.Background(), suite.documentId)
 
 	suite.AssertRequestIssued("DELETE", apiUrl+"/documents/"+suite.documentId)
 }
@@ -112,12 +110,12 @@ func (suite *DocumentsClientSuite) Test_DeleteDocument_Returns_Error_From_Sender
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(nil, expectedErr)
 
-	err := suite.sut.DeleteDocument(context.Background(), suite.documentId)
+	err := suite.sut.Delete(context.Background(), suite.documentId)
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Issues_Classify_Document_Request() {
-	suite.sut.ClassifyDocument(context.Background(), suite.documentId, suite.classifierName)
+	suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
 
 	suite.AssertRequestIssued("POST", apiUrl+"/documents/"+suite.documentId+"/classify/"+suite.classifierName)
 }
@@ -127,7 +125,7 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_From_Send
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(nil, expectedErr)
 
-	classificationResult, err := suite.sut.ClassifyDocument(context.Background(), suite.documentId, suite.classifierName)
+	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
 	assert.Nil(suite.T(), classificationResult)
 	assert.Equal(suite.T(), expectedErr, err)
 }
@@ -136,7 +134,7 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Document_Type()
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
 
-	classificationResult, err := suite.sut.ClassifyDocument(context.Background(), suite.documentId, suite.classifierName)
+	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), "Assignment of Deed of Trust", classificationResult.DocumentType)
@@ -146,7 +144,7 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Confident_Statu
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
 
-	classificationResult, err := suite.sut.ClassifyDocument(context.Background(), suite.documentId, suite.classifierName)
+	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), true, classificationResult.IsConfident)
@@ -163,11 +161,11 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_RelativeConfide
 }
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_If_DocumentType_Cannot_Be_Parsed_From_Response() {
-	expectedErr := errors.New("Could not retrieve document type from ClassifyDocument response")
+	expectedErr := errors.New("Could not retrieve document type from Classify response")
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte("")), nil)
 
-	classificationResult, err := suite.sut.ClassifyDocument(context.Background(), suite.documentId, suite.classifierName)
+	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
 
 	assert.Nil(suite.T(), classificationResult)
 	assert.Equal(suite.T(), expectedErr, err)

@@ -5,12 +5,19 @@ import (
 	"net/http"
 )
 
-type authorisingDoer struct {
+type AuthorisingDoer struct {
 	tokenRetriever auth.TokenRetriever
 	wrappedSender  HttpDoer
 }
 
-func (sender *authorisingDoer) Do(request *http.Request) (*http.Response, error) {
+func NewAuthorisingDoer(retriever auth.TokenRetriever, httpDoer HttpDoer) *AuthorisingDoer {
+	return &AuthorisingDoer{
+		tokenRetriever: retriever,
+		wrappedSender:  httpDoer,
+	}
+}
+
+func (sender *AuthorisingDoer) Do(request *http.Request) (*http.Response, error) {
 	token, err := sender.tokenRetriever.RetrieveToken()
 
 	if err != nil {

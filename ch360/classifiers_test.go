@@ -1,8 +1,9 @@
-package ch360
+package ch360_test
 
 import (
 	"bytes"
 	"errors"
+	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/ch360/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -15,7 +16,7 @@ import (
 
 type ClassifiersClientSuite struct {
 	suite.Suite
-	sut            *ClassifiersClient
+	sut            *ch360.ClassifiersClient
 	httpClient     *mocks.HttpDoer
 	classifierName string
 }
@@ -26,10 +27,7 @@ func (suite *ClassifiersClientSuite) SetupTest() {
 	suite.httpClient = new(mocks.HttpDoer)
 	suite.httpClient.On("Do", mock.Anything).Return(nil, nil)
 
-	suite.sut = &ClassifiersClient{
-		requestSender: suite.httpClient,
-		baseUrl:       apiUrl,
-	}
+	suite.sut = ch360.NewClassifiersClient(apiUrl, suite.httpClient)
 	suite.classifierName = "classifier-name"
 }
 
@@ -122,11 +120,11 @@ func (suite *ClassifiersClientSuite) Test_Train_Returns_An_Error_If_The_Sample_P
 	assert.Equal(suite.T(), errors.New("The file '"+samplesPath+"' could not be found."), err)
 }
 
-func AListOfClassifiers(names ...string) ClassifierList {
-	expected := make(ClassifierList, len(names))
+func AListOfClassifiers(names ...string) ch360.ClassifierList {
+	expected := make(ch360.ClassifierList, len(names))
 
 	for index, name := range names {
-		expected[index] = Classifier{name}
+		expected[index] = ch360.Classifier{name}
 	}
 
 	return expected
