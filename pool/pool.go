@@ -53,43 +53,58 @@ func MakeJobs(n int, process ProcessorFunc, handle HandlerFunc) []Job {
 	return jobs
 }
 
+func (p *Pool) sourceJobs(ctx context.Context, jobsChan chan Job) {
+	defer close(jobsChan)
+
+	for _, job := range p.jobs {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			jobsChan <- job
+		}
+	}
+}
+
+func (p *Pool) processJob(ctx context.Context, jobsChan chan Job, resultsChan chan jobAndResult, wg *sync.WaitGroup) {
+	for job := range jobsChan {
+		result, err := job.process()
+
+		resultsChan <- jobAndResult{
+			result: jobResult{
+				Err:   err,
+				Value: result,
+			},
+			job: job,
+		}
+	}
+	wg.Done()
+}
+
+func (p *Pool) handleResult(jobRes *jobAndResult) {
+	job, result := jobRes.job, jobRes.result
+
+	if result.Err == context.Canceled {
+		return
+	}
+
+	job.handle(result.Value, result.Err)
+}
+
 func (p *Pool) Run(ctx context.Context) {
 	// Set up jobs channel
 	jobsChan := make(chan Job)
-	go func() {
-		defer close(jobsChan)
 
-		for _, job := range p.jobs {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				jobsChan <- job
-			}
-		}
-	}()
+	// Begin adding jobs
+	go p.sourceJobs(ctx, jobsChan)
 
-	// Set up results channel
 	resultsChan := make(chan jobAndResult)
 
-	// Start processing in background
+	// Start processing in parallel
 	wg := sync.WaitGroup{}
 	for i := 0; i < p.workers; i++ {
 		wg.Add(1)
-		go func() {
-			for job := range jobsChan {
-				result, err := job.process()
-
-				resultsChan <- jobAndResult{
-					result: jobResult{
-						Err:   err,
-						Value: result,
-					},
-					job: job,
-				}
-			}
-			wg.Done()
-		}()
+		go p.processJob(ctx, jobsChan, resultsChan, &wg)
 	}
 
 	go func() {
@@ -100,12 +115,6 @@ func (p *Pool) Run(ctx context.Context) {
 
 	// Handle results in calling goroutine
 	for jobRes := range resultsChan {
-		job, result := jobRes.job, jobRes.result
-
-		if result.Err == context.Canceled {
-			continue
-		}
-
-		job.handle(result.Value, result.Err)
+		p.handleResult(&jobRes)
 	}
 }
