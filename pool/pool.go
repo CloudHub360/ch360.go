@@ -11,8 +11,8 @@ type Pool struct {
 }
 
 type Job struct {
-	do     ProcessorFunc
-	handle HandlerFunc
+	process ProcessorFunc
+	handle  HandlerFunc
 }
 
 type ProcessorFunc func() (interface{}, error)
@@ -35,18 +35,18 @@ func NewPool(jobs []Job, workers int) Pool {
 	}
 }
 
-func NewJob(worker ProcessorFunc, handler HandlerFunc) Job {
+func NewJob(process ProcessorFunc, handler HandlerFunc) Job {
 	return Job{
-		do:     worker,
-		handle: handler,
+		process: process,
+		handle:  handler,
 	}
 }
 
-func MakeJobs(n int, do ProcessorFunc, handle HandlerFunc) []Job {
+func MakeJobs(n int, process ProcessorFunc, handle HandlerFunc) []Job {
 	var jobs []Job
 
 	for i := 0; i < n; i++ {
-		job := NewJob(do, handle)
+		job := NewJob(process, handle)
 		jobs = append(jobs, job)
 	}
 
@@ -78,7 +78,7 @@ func (p *Pool) Run(ctx context.Context) {
 		wg.Add(1)
 		go func() {
 			for job := range jobsChan {
-				result, err := job.do()
+				result, err := job.process()
 
 				resultsChan <- jobAndResult{
 					result: jobResult{
