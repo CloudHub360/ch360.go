@@ -48,7 +48,11 @@ func (suite *ClassifySuite) SetupTest() {
 
 	suite.output = &bytes.Buffer{}
 	suite.ctx, _ = context.WithCancel(context.Background())
-	suite.sut = commands.NewClassifyCommand(suite.output, suite.client, 10)
+
+	suite.sut = commands.NewClassifyCommand(
+		commands.NewTableClassifyResultsWriter(suite.output),
+		suite.client,
+		10)
 }
 
 func TestClassifySuiteRunner(t *testing.T) {
