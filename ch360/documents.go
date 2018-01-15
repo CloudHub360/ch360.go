@@ -9,24 +9,47 @@ import (
 	"net/http"
 )
 
-//go:generate mockery -name "DocumentCreatorDeleterClassifier"
-type DocumentCreatorDeleterClassifier interface {
-	CreateDocument(ctx context.Context, fileContents []byte) (string, error)
-	DeleteDocument(ctx context.Context, documentId string) error
-	ClassifyDocument(ctx context.Context, documentId string, classifierName string) (*types.ClassificationResult, error)
+//go:generate mockery -name "DocumentCreator|DocumentDeleter|DocumentClassifier|DocumentGetter"
+type DocumentCreator interface {
+	Create(ctx context.Context, fileContents []byte) (string, error)
 }
+
+type DocumentDeleter interface {
+	Delete(ctx context.Context, documentId string) error
+}
+
+type DocumentClassifier interface {
+	Classify(ctx context.Context, documentId string, classifierName string) (*types.ClassificationResult, error)
+}
+
+type DocumentGetter interface {
+	GetAll(ctx context.Context) (*GetAllDocumentsResponse, error)
+}
+
+type GetAllDocumentsResponse struct {
+	Documents []GetDocumentResponse `json:"documents"`
+}
+
+type GetDocumentResponse struct {
+	Id string `json:"id"`
+}
+
+type createDocumentResponse GetDocumentResponse
 
 type DocumentsClient struct {
 	baseUrl       string
 	requestSender HttpDoer
 }
 
-type CreateDocumentRequest struct {
-	FileContents []byte
+func NewDocumentsClient(baseUrl string, httpDoer HttpDoer) *DocumentsClient {
+	return &DocumentsClient{
+		baseUrl:       baseUrl,
+		requestSender: httpDoer,
+	}
 }
 
-type createDocumentResponse struct {
-	Id string `json:"id"`
+type CreateDocumentRequest struct {
+	FileContents []byte
 }
 
 type classifyDocumentResponse struct {
@@ -40,7 +63,7 @@ type classifyDocumentResultsResponse struct {
 	RelativeConfidence float64 `json:"relative_confidence"`
 }
 
-func (client *DocumentsClient) CreateDocument(ctx context.Context, fileContents []byte) (string, error) {
+func (client *DocumentsClient) Create(ctx context.Context, fileContents []byte) (string, error) {
 	request, err := http.NewRequest("POST",
 		client.baseUrl+"/documents",
 		bytes.NewBuffer(fileContents))
@@ -71,7 +94,7 @@ func (client *DocumentsClient) CreateDocument(ctx context.Context, fileContents 
 	return documentResponse.Id, nil
 }
 
-func (client *DocumentsClient) DeleteDocument(ctx context.Context, documentId string) error {
+func (client *DocumentsClient) Delete(ctx context.Context, documentId string) error {
 	request, err := http.NewRequest("DELETE",
 		client.baseUrl+"/documents/"+documentId,
 		nil)
@@ -89,7 +112,7 @@ func (client *DocumentsClient) DeleteDocument(ctx context.Context, documentId st
 	return nil
 }
 
-func (client *DocumentsClient) ClassifyDocument(ctx context.Context, documentId string, classifierName string) (*types.ClassificationResult, error) {
+func (client *DocumentsClient) Classify(ctx context.Context, documentId string, classifierName string) (*types.ClassificationResult, error) {
 	request, err := http.NewRequest("POST",
 		client.baseUrl+"/documents/"+documentId+"/classify/"+classifierName,
 		nil)
@@ -114,7 +137,7 @@ func (client *DocumentsClient) ClassifyDocument(ctx context.Context, documentId 
 	classifyDocumentResponse := classifyDocumentResponse{}
 	err = json.Unmarshal(buf.Bytes(), &classifyDocumentResponse)
 	if err != nil {
-		return nil, errors.New("Could not retrieve document type from ClassifyDocument response")
+		return nil, errors.New("Could not retrieve document type from Classify response")
 	}
 
 	return &types.ClassificationResult{

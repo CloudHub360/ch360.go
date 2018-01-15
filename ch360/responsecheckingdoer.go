@@ -5,12 +5,19 @@ import (
 	"net/http"
 )
 
-type responseCheckingDoer struct {
+type ResponseCheckingDoer struct {
 	responseChecker response.Checker
 	wrappedSender   HttpDoer
 }
 
-func (requestSender *responseCheckingDoer) Do(request *http.Request) (*http.Response, error) {
+func NewResponseCheckingdoer(checker response.Checker, wrappedSender HttpDoer) *ResponseCheckingDoer {
+	return &ResponseCheckingDoer{
+		wrappedSender:   wrappedSender,
+		responseChecker: checker,
+	}
+}
+
+func (requestSender *ResponseCheckingDoer) Do(request *http.Request) (*http.Response, error) {
 	response, err := requestSender.wrappedSender.Do(request)
 
 	if err != nil {

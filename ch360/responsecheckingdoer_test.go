@@ -1,19 +1,20 @@
-package ch360
+package ch360_test
 
 import (
+	"github.com/CloudHub360/ch360.go/ch360"
+	mockch360 "github.com/CloudHub360/ch360.go/ch360/mocks"
+	mockresponse "github.com/CloudHub360/ch360.go/response/mocks"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"net/http"
 	"testing"
-	mockch360 "github.com/CloudHub360/ch360.go/ch360/mocks"
-	mockresponse "github.com/CloudHub360/ch360.go/response/mocks"
 )
 
 type ResponseCheckingDoerSuite struct {
 	suite.Suite
-	sut        *responseCheckingDoer
+	sut        *ch360.ResponseCheckingDoer
 	underlying *mockch360.HttpDoer
 	checker    *mockresponse.Checker
 }
@@ -21,10 +22,7 @@ type ResponseCheckingDoerSuite struct {
 func (suite *ResponseCheckingDoerSuite) SetupTest() {
 	suite.underlying = &mockch360.HttpDoer{}
 	suite.checker = &mockresponse.Checker{}
-	suite.sut = &responseCheckingDoer{
-		responseChecker: suite.checker,
-		wrappedSender:   suite.underlying,
-	}
+	suite.sut = ch360.NewResponseCheckingdoer(suite.checker, suite.underlying)
 }
 
 func TestResponseCheckingDoerSuiteRunner(t *testing.T) {

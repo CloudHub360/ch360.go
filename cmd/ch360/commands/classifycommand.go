@@ -14,18 +14,27 @@ import (
 )
 
 type ClassifyCommand struct {
-	resultsWriter   ClassifyResultsWriter
-	errorWriter     io.Writer
-	client          ch360.DocumentCreatorDeleterClassifier
-	parallelWorkers int
+	documentClassifier ch360.DocumentClassifier
+	documentCreator    ch360.DocumentCreator
+	documentDeleter    ch360.DocumentDeleter
+	parallelWorkers    int
+	resultsWriter      ClassifyResultsWriter
+	errorWriter        io.Writer
 }
 
-func NewClassifyCommand(resultsWriter ClassifyResultsWriter, errorWriter io.Writer, client ch360.DocumentCreatorDeleterClassifier, parallelism int) *ClassifyCommand {
+func NewClassifyCommand(resultsWriter ClassifyResultsWriter,
+	errorWriter io.Writer,
+	docClassifier ch360.DocumentClassifier,
+	docCreator ch360.DocumentCreator,
+	docDeleter ch360.DocumentDeleter,
+	parallelism int) *ClassifyCommand {
 	return &ClassifyCommand{
-		resultsWriter:   resultsWriter,
-		errorWriter:     errorWriter,
-		client:          client,
-		parallelWorkers: parallelism,
+		resultsWriter:      resultsWriter,
+		errorWriter:        errorWriter,
+		documentClassifier: docClassifier,
+		documentCreator:    docCreator,
+		documentDeleter:    docDeleter,
+		parallelWorkers:    parallelism,
 	}
 }
 
@@ -114,17 +123,17 @@ func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, cl
 
 	// Use a different context here so we don't cancel this req on ctrl-c. We need
 	// the docId result to perform cleanup
-	documentId, err := cmd.client.CreateDocument(context.Background(), fileContents)
+	documentId, err := cmd.documentCreator.Create(context.Background(), fileContents)
 	if err != nil {
 		return nil, err
 	}
 
-	result, classifyErr := cmd.client.ClassifyDocument(ctx, documentId, classifierName)
+	result, classifyErr := cmd.documentClassifier.Classify(ctx, documentId, classifierName)
 
 	if documentId != "" {
-		// Always delete the document, even if ClassifyDocument returned an error.
+		// Always delete the document, even if Classify returned an error.
 		// Don't cancel on ctrl-c.
-		err = cmd.client.DeleteDocument(context.Background(), documentId)
+		err = cmd.documentDeleter.Delete(context.Background(), documentId)
 	}
 
 	// Return the classify err if we have one
