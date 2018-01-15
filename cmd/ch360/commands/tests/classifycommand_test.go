@@ -51,6 +51,7 @@ func (suite *ClassifySuite) SetupTest() {
 
 	suite.sut = commands.NewClassifyCommand(
 		commands.NewTableClassifyResultsWriter(suite.output),
+		suite.output,
 		suite.client,
 		10)
 }

@@ -163,7 +163,7 @@ Filename and glob pattern examples:
 			os.Exit(1)
 		}
 
-		err = commands.NewClassifyCommand(writer, apiClient.Documents, 10).Execute(ctx, filePattern, classifierName)
+		err = commands.NewClassifyCommand(writer, os.Stdout, apiClient.Documents, 10).Execute(ctx, filePattern, classifierName)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)

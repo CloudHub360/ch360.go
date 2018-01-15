@@ -8,19 +8,22 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/mattn/go-zglob"
+	"io"
 	"io/ioutil"
 	"os"
 )
 
 type ClassifyCommand struct {
 	resultsWriter   ClassifyResultsWriter
+	errorWriter     io.Writer
 	client          ch360.DocumentCreatorDeleterClassifier
 	parallelWorkers int
 }
 
-func NewClassifyCommand(writer ClassifyResultsWriter, client ch360.DocumentCreatorDeleterClassifier, parallelism int) *ClassifyCommand {
+func NewClassifyCommand(resultsWriter ClassifyResultsWriter, errorWriter io.Writer, client ch360.DocumentCreatorDeleterClassifier, parallelism int) *ClassifyCommand {
 	return &ClassifyCommand{
-		resultsWriter:   writer,
+		resultsWriter:   resultsWriter,
+		errorWriter:     errorWriter,
 		client:          client,
 		parallelWorkers: parallelism,
 	}
@@ -34,8 +37,7 @@ func (cmd *ClassifyCommand) handlerFor(cancel context.CancelFunc, filename strin
 			errMsg := fmt.Sprintf("Error classifying file %s: %v", filename, err)
 			*errs = append(*errs, errors.New(errMsg))
 
-			// TODO Reinstate this
-			// fmt.Fprintln(cmd.writer, errMsg)
+			fmt.Fprintln(cmd.errorWriter, errMsg)
 
 			// Don't process any more if there's an error
 			cancel()
