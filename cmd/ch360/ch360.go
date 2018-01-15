@@ -149,7 +149,7 @@ Filename and glob pattern examples:
 		filePattern := args["<file>"].(string)
 		classifierName := args["<classifier>"].(string)
 
-		err = commands.NewClassifyCommand(os.Stdout, apiClient.Documents).Execute(ctx, filePattern, classifierName)
+		err = commands.NewClassifyCommand(os.Stdout, apiClient.Documents, 10).Execute(ctx, filePattern, classifierName)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
