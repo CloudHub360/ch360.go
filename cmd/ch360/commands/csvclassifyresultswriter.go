@@ -20,11 +20,20 @@ func (writer *CSVClassifyResultsWriter) StartWriting() {
 	writer.csvWriter = csv.NewWriter(writer.underlyingWriter)
 }
 
-func (writer *CSVClassifyResultsWriter) WriteDocumentResults(result *classifyResultsWriterInput) {
+func (writer *CSVClassifyResultsWriter) WriteDocumentResults(result *classifyResultsWriterInput) error {
 	record := []string{result.filename, result.documentType, boolToString(result.isConfident)}
 
-	writer.csvWriter.Write(record) //TODO check error
+	if err := writer.csvWriter.Write(record); err != nil {
+		return err
+	}
+
 	writer.csvWriter.Flush()
+
+	if err := writer.csvWriter.Error(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (writer *CSVClassifyResultsWriter) FinishWriting() {}

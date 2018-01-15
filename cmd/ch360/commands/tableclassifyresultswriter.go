@@ -8,7 +8,7 @@ import (
 
 type ClassifyResultsWriter interface {
 	StartWriting()
-	WriteDocumentResults(result *classifyResultsWriterInput)
+	WriteDocumentResults(result *classifyResultsWriterInput) error
 	FinishWriting()
 }
 
@@ -34,9 +34,11 @@ func (writer *TableClassifyResultsWriter) StartWriting() {
 	fmt.Fprintf(writer.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
 }
 
-func (writer *TableClassifyResultsWriter) WriteDocumentResults(result *classifyResultsWriterInput) {
+func (writer *TableClassifyResultsWriter) WriteDocumentResults(result *classifyResultsWriterInput) error {
 	base := filepath.Base(result.filename)
 	fmt.Fprintf(writer.writer, ClassifyOutputFormat, base, result.documentType, result.isConfident)
+
+	return nil
 }
 
 func (writer *TableClassifyResultsWriter) FinishWriting() {}
