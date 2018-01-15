@@ -30,12 +30,12 @@ func (suite *PoolSuite) Test_Pool_Performs_Work_In_Parallel() {
 	workerCount := 10
 	sleepMs := 5 * time.Millisecond
 	jobs := pool.MakeJobs(workerCount,
-		func() pool.JobResult {
+		func() (interface{}, error) {
 			// Each worker will sleep for 5ms, but in parallel
 			time.Sleep(sleepMs)
-			return pool.JobResult{}
+			return nil, nil
 		},
-		func(result pool.JobResult) {})
+		func(interface{}, error) {})
 
 	// Act
 	p := pool.NewPool(jobs, workerCount)
@@ -52,12 +52,12 @@ func (suite *PoolSuite) Test_Pool_Performs_All_Jobs() {
 	workerCount := 10
 	var jobsCompletedFlag int32 = 0
 	jobs := pool.MakeJobs(workerCount,
-		func() pool.JobResult {
+		func() (interface{}, error) {
 			// Executed in parallel
 			atomic.AddInt32(&jobsCompletedFlag, 1)
-			return pool.JobResult{}
+			return nil, nil
 		},
-		func(result pool.JobResult) {})
+		func(interface{}, error) {})
 
 	// Act
 	p := pool.NewPool(jobs, workerCount)
@@ -77,15 +77,12 @@ func (suite *PoolSuite) Test_Pool_Calls_Handler_With_JobResults() {
 	)
 
 	jobs := pool.MakeJobs(1,
-		func() pool.JobResult {
-			return pool.JobResult{
-				Value: expectedResult,
-				Err:   expectedError,
-			}
+		func() (interface{}, error) {
+			return expectedResult, expectedError
 		},
-		func(result pool.JobResult) {
-			receivedResult = result.Value.(string)
-			receivedErr = result.Err
+		func(result interface{}, err error) {
+			receivedResult = result.(string)
+			receivedErr = err
 		})
 
 	// Act
@@ -107,15 +104,15 @@ func (suite *PoolSuite) Test_Pool_Does_Not_Process_Jobs_After_Context_Cancel() {
 		ctx, cancel      = context.WithCancel(context.Background())
 	)
 	jobs := pool.MakeJobs(jobsCount,
-		func() pool.JobResult {
+		func() (interface{}, error) {
 			jobsRun++
 			if jobsRun == allowedJobsCount {
 				cancel()
 			}
 
-			return pool.JobResult{}
+			return nil, nil
 		},
-		func(result pool.JobResult) {})
+		func(interface{}, error) {})
 
 	// Act
 	p := pool.NewPool(jobs, 1)
@@ -136,12 +133,12 @@ func (suite *PoolSuite) Test_Pool_Does_Not_Process_Handler_After_Context_Cancel(
 		ctx, cancel = context.WithCancel(context.Background())
 	)
 	jobs := pool.MakeJobs(jobsCount,
-		func() pool.JobResult {
+		func() (interface{}, error) {
 			cancel()
 
-			return pool.JobResult{}
+			return nil, nil
 		},
-		func(result pool.JobResult) {
+		func(interface{}, error) {
 			handlersRun++
 		})
 
@@ -160,12 +157,10 @@ func (suite *PoolSuite) Test_Pool_Does_Not_Process_Handler_After_Job_Returns_Con
 		handlersRun int
 	)
 	jobs := pool.MakeJobs(jobsCount,
-		func() pool.JobResult {
-			return pool.JobResult{
-				Err: context.Canceled,
-			}
+		func() (interface{}, error) {
+			return nil, context.Canceled
 		},
-		func(result pool.JobResult) {
+		func(interface{}, error) {
 			handlersRun++
 		})
 

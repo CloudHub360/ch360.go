@@ -53,29 +53,22 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 
 		job := pool.NewJob(
 			// Performing the work
-			func() pool.JobResult {
-				result, err := cmd.processFile(ctx, filename, classifierName)
-
-				return pool.JobResult{
-					Err:   err,
-					Value: result,
-				}
+			func() (interface{}, error) {
+				return cmd.processFile(ctx, filename, classifierName)
 			},
 			// Handling the result
-			func(jr pool.JobResult) {
-				if jr.Err != nil {
-					fmt.Fprintf(cmd.writer, "Error classifying file %s: %v\n", filename, jr.Err)
+			func(value interface{}, err error) {
+				if err != nil {
+					fmt.Fprintf(cmd.writer, "Error classifying file %s: %v\n", filename, err)
 				}
 
-				classificationResult := jr.Value.(*types.ClassificationResult)
+				classificationResult := value.(*types.ClassificationResult)
 
-				if classificationResult != nil {
-					fmt.Fprintf(cmd.writer,
-						ClassifyOutputFormat,
-						filepath.Base(filename),
-						classificationResult.DocumentType,
-						classificationResult.IsConfident)
-				}
+				fmt.Fprintf(cmd.writer,
+					ClassifyOutputFormat,
+					filepath.Base(filename),
+					classificationResult.DocumentType,
+					classificationResult.IsConfident)
 			})
 
 		jobs = append(jobs, job)
