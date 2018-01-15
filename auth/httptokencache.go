@@ -1,30 +1,60 @@
 package auth
 
 import (
+	"sync"
 	"time"
 )
 
 type TokenCache struct {
 	retriever TokenRetriever
 	token     *AccessToken
+	once      sync.Once
+	reqChan   chan bool
+	respChan  chan tokenAndErr
+}
+
+type tokenAndErr struct {
+	token *AccessToken
+	err   error
+}
+
+func (cache *TokenCache) monitorRequestsForToken(reqChan chan bool, respChan chan tokenAndErr) {
+	for range reqChan {
+		if tokenIsFresh(cache.token) {
+			respChan <- tokenAndErr{
+				token: cache.token,
+				err:   nil,
+			}
+			continue
+		}
+
+		token, err := cache.retriever.RetrieveToken()
+
+		if err == nil {
+			cache.token = token
+		}
+
+		respChan <- tokenAndErr{
+			token: token,
+			err:   err,
+		}
+	}
 }
 
 func (cache *TokenCache) RetrieveToken() (*AccessToken, error) {
-	if tokenIsFresh(cache.token) {
-		return cache.token, nil
-	}
+	cache.once.Do(func() {
+		go cache.monitorRequestsForToken(cache.reqChan, cache.respChan)
+	})
 
-	token, err := cache.retriever.RetrieveToken()
-	if err != nil {
-		return nil, err
-	}
+	// Make a request to the monitoring goroutine to get a new token
+	go func() {
+		cache.reqChan <- true
+	}()
 
-	if err != nil {
-		return nil, err
-	}
+	// Wait for a response
+	res := <-cache.respChan
 
-	cache.token = token
-	return cache.token, nil
+	return res.token, res.err
 }
 
 func tokenIsFresh(token *AccessToken) bool {
@@ -33,14 +63,17 @@ func tokenIsFresh(token *AccessToken) bool {
 	}
 
 	var expired = false
-	deadline := time.Now().Add(-1 * time.Minute)
-	expired = deadline.Before(token.ExpiresAt)
+	deadline := time.Now().Add(time.Minute)
+	expired = deadline.After(token.ExpiresAt)
 
 	return !expired
 }
 
 func NewHttpTokenCache(tokenRetriever TokenRetriever) *TokenCache {
+
 	return &TokenCache{
 		retriever: tokenRetriever,
+		reqChan:   make(chan bool),
+		respChan:  make(chan tokenAndErr),
 	}
 }
