@@ -15,14 +15,16 @@ import (
 )
 
 type ClassifyCommand struct {
-	writer io.Writer
-	client ch360.DocumentCreatorDeleterClassifier
+	writer          io.Writer
+	client          ch360.DocumentCreatorDeleterClassifier
+	parallelWorkers int
 }
 
-func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterClassifier) *ClassifyCommand {
+func NewClassifyCommand(writer io.Writer, client ch360.DocumentCreatorDeleterClassifier, parallelism int) *ClassifyCommand {
 	return &ClassifyCommand{
-		writer: writer,
-		client: client,
+		writer:          writer,
+		client:          client,
+		parallelWorkers: parallelism,
 	}
 }
 
@@ -44,14 +46,14 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 		return errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'ch360 -h' for glob pattern examples.", filePattern))
 	}
 
-	var jobs []pool.Job
+	var processFileJobs []pool.Job
 	for _, filename := range matches {
 		// The memory of the 'filename' var is reused here, see:
 		// https://golang.org/doc/faq#closures_and_goroutines
 		// The workaround is to copy it:
 		filename := filename // <- copy
 
-		job := pool.NewJob(
+		processFileJob := pool.NewJob(
 			// Performing the work
 			func() (interface{}, error) {
 				return cmd.processFile(ctx, filename, classifierName)
@@ -60,21 +62,21 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 			func(value interface{}, err error) {
 				if err != nil {
 					fmt.Fprintf(cmd.writer, "Error classifying file %s: %v\n", filename, err)
+				} else {
+					classificationResult := value.(*types.ClassificationResult)
+
+					fmt.Fprintf(cmd.writer,
+						ClassifyOutputFormat,
+						filepath.Base(filename),
+						classificationResult.DocumentType,
+						classificationResult.IsConfident)
 				}
-
-				classificationResult := value.(*types.ClassificationResult)
-
-				fmt.Fprintf(cmd.writer,
-					ClassifyOutputFormat,
-					filepath.Base(filename),
-					classificationResult.DocumentType,
-					classificationResult.IsConfident)
 			})
 
-		jobs = append(jobs, job)
+		processFileJobs = append(processFileJobs, processFileJob)
 	}
 
-	workPool := pool.NewPool(jobs, 10)
+	workPool := pool.NewPool(processFileJobs, cmd.parallelWorkers)
 
 	// Print results
 	fmt.Fprintf(cmd.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
