@@ -31,10 +31,11 @@ Usage:
   ch360 -v | --version
 
 Options:
-  -h, --help                                   Show this help message
-  -v, --version                                Show application version
-  --client-id <id>                             Client ID
-  --client-secret <secret>                     Client secret
+  -h, --help                       Show this help message
+  -v, --version                    Show application version
+  --client-id <id>                 Client ID
+  --client-secret <secret>         Client secret
+  -f, --output-format <format>     Output format for classification results. Allowed values: table, csv [default: table]
 `
 
 	filenameExamples := `
@@ -149,7 +150,20 @@ Filename and glob pattern examples:
 		filePattern := args["<file>"].(string)
 		classifierName := args["<classifier>"].(string)
 
-		err = commands.NewClassifyCommand(os.Stdout, apiClient.Documents, 10).Execute(ctx, filePattern, classifierName)
+		outputFormat := argAsString(args, "--output-format")
+		var writer commands.ClassifyResultsWriter
+		switch outputFormat {
+		case "table":
+			writer = commands.NewTableClassifyResultsWriter(os.Stdout)
+		case "csv":
+			writer = commands.NewCSVClassifyResultsWriter(os.Stdout)
+		default:
+			// DocOpt doesn't do validation of these values for us, so we need to catch invalid values here
+			fmt.Println(fmt.Sprintf("Unknown output format '%s'. Allowed values are: csv, table.", outputFormat))
+			os.Exit(1)
+		}
+
+		err = commands.NewClassifyCommand(writer, apiClient.Documents, 10).Execute(ctx, filePattern, classifierName)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
