@@ -52,9 +52,9 @@ func (suite *ClassifySuite) SetupTest() {
 	suite.ctx, _ = context.WithCancel(context.Background())
 
 	suite.resultsWriter = new(cmdmocks.ClassifyResultsWriter)
-	suite.resultsWriter.On("StartWriting")
-	suite.resultsWriter.On("WriteDocumentResults", mock.Anything, mock.Anything).Return(nil)
-	suite.resultsWriter.On("FinishWriting")
+	suite.resultsWriter.On("Start")
+	suite.resultsWriter.On("WriteResult", mock.Anything, mock.Anything).Return(nil)
+	suite.resultsWriter.On("Finish")
 
 	suite.sut = commands.NewClassifyCommand(
 		suite.resultsWriter,
@@ -115,21 +115,21 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Start()
 	suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
 	require.True(suite.T(), len(suite.resultsWriter.Calls) > 0)
-	assert.Equal(suite.T(), "StartWriting", suite.resultsWriter.Calls[0].Method)
+	assert.Equal(suite.T(), "Start", suite.resultsWriter.Calls[0].Method)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Write_For_Each_File() {
 	suite.sut.Execute(suite.ctx, suite.testFilesPattern, suite.classifierName)
 
 	// There are 5 files identified by suite.testFilesPattern
-	suite.resultsWriter.AssertNumberOfCalls(suite.T(), "WriteDocumentResults", 5)
+	suite.resultsWriter.AssertNumberOfCalls(suite.T(), "WriteResult", 5)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Write_With_Correct_Parameters() {
 	suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
 	resultsCall := suite.resultsWriter.Calls[1]
-	assert.Equal(suite.T(), "WriteDocumentResults", resultsCall.Method)
+	assert.Equal(suite.T(), "WriteResult", resultsCall.Method)
 	suite.AssertWriteResultsCallHasCorrectParameters(resultsCall)
 }
 
@@ -137,7 +137,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Finish(
 	suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
 	require.Equal(suite.T(), 3, len(suite.resultsWriter.Calls))
-	assert.Equal(suite.T(), "FinishWriting", suite.resultsWriter.Calls[2].Method)
+	assert.Equal(suite.T(), "Finish", suite.resultsWriter.Calls[2].Method)
 }
 
 func (suite *ClassifySuite) AssertWriteResultsCallHasCorrectParameters(call mock.Call) {

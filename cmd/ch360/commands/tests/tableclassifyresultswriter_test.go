@@ -38,7 +38,7 @@ func TestTableResultsWriterRunner(t *testing.T) {
 }
 
 func (suite *TableResultsWriterSuite) TestStart_Writes_Table_Header() {
-	suite.sut.StartWriting()
+	suite.sut.Start()
 
 	header := fmt.Sprintf(commands.ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
 	assert.Equal(suite.T(), header, suite.output.String())
@@ -52,21 +52,21 @@ func (suite *TableResultsWriterSuite) TestWrites_ResultWithCorrectFormat() {
 		IsConfident:  true,
 	}
 
-	err := suite.sut.WriteDocumentResults(filename, result)
+	err := suite.sut.WriteResult(filename, result)
 
 	require.Nil(suite.T(), err)
 	assert.Equal(suite.T(), expectedOutput, suite.output.String())
 }
 
 func (suite *TableResultsWriterSuite) TestWrites_Filename() {
-	err := suite.sut.WriteDocumentResults(suite.filename, suite.result)
+	err := suite.sut.WriteResult(suite.filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.filename))
 }
 
 func (suite *TableResultsWriterSuite) TestWrites_DocumentType() {
-	err := suite.sut.WriteDocumentResults(suite.filename, suite.result)
+	err := suite.sut.WriteResult(suite.filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.result.DocumentType))
@@ -75,7 +75,7 @@ func (suite *TableResultsWriterSuite) TestWrites_DocumentType() {
 func (suite *TableResultsWriterSuite) TestWrites_False_For_Not_IsConfident() {
 	suite.result.IsConfident = false
 
-	err := suite.sut.WriteDocumentResults(suite.filename, suite.result)
+	err := suite.sut.WriteResult(suite.filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), "false"))
@@ -91,7 +91,7 @@ func (suite *TableResultsWriterSuite) TestWrites_Filename_Only_When_It_Has_Path(
 
 	expectedFilename := `document1.tif`
 
-	err := suite.sut.WriteDocumentResults(filename, suite.result)
+	err := suite.sut.WriteResult(filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	assert.Equal(suite.T(), expectedFilename, suite.output.String()[:len(expectedFilename)])
