@@ -45,10 +45,11 @@ func (cmd *ClassifyCommand) handlerFor(cancel context.CancelFunc, filename strin
 			classificationResult := value.(*types.ClassificationResult)
 
 			if err = cmd.resultsWriter.WriteDocumentResults(filename, classificationResult); err != nil {
+				fmt.Println("WriteDocumentResults error")
 				*errs = append(*errs, err)
-				fmt.Fprintln(cmd.errorWriter, err.Error())
+
+				cancel()
 			}
-			cancel()
 		}
 	}
 }
