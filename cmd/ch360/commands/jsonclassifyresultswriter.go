@@ -68,7 +68,7 @@ func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *ty
 		},
 	}
 
-	bytes, err := json.Marshal(output)
+	bytes, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
 		return err
 	}
