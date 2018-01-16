@@ -47,6 +47,7 @@ func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *ty
 	}
 
 	if writer.writingStarted {
+		fmt.Fprint(writer.underlyingWriter, ",")
 		fmt.Fprintln(writer.underlyingWriter, "")
 	} else {
 		fmt.Fprint(writer.underlyingWriter, "[")
