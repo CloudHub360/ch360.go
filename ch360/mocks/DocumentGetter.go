@@ -11,15 +11,15 @@ type DocumentGetter struct {
 }
 
 // GetAll provides a mock function with given fields: ctx
-func (_m *DocumentGetter) GetAll(ctx context.Context) (*ch360.GetAllDocumentsResponse, error) {
+func (_m *DocumentGetter) GetAll(ctx context.Context) ([]ch360.Document, error) {
 	ret := _m.Called(ctx)
 
-	var r0 *ch360.GetAllDocumentsResponse
-	if rf, ok := ret.Get(0).(func(context.Context) *ch360.GetAllDocumentsResponse); ok {
+	var r0 []ch360.Document
+	if rf, ok := ret.Get(0).(func(context.Context) []ch360.Document); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ch360.GetAllDocumentsResponse)
+			r0 = ret.Get(0).([]ch360.Document)
 		}
 	}
 

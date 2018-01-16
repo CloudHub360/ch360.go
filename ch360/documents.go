@@ -23,14 +23,18 @@ type DocumentClassifier interface {
 }
 
 type DocumentGetter interface {
-	GetAll(ctx context.Context) (*GetAllDocumentsResponse, error)
+	GetAll(ctx context.Context) ([]Document, error)
 }
 
-type GetAllDocumentsResponse struct {
-	Documents []GetDocumentResponse `json:"documents"`
+type Document struct {
+	Id string
 }
 
-type GetDocumentResponse struct {
+type getAllDocumentsResponse struct {
+	Documents []getDocumentResponse `json:"documents"`
+}
+
+type getDocumentResponse struct {
 	Id string `json:"id"`
 }
 
@@ -147,4 +151,39 @@ func (client *DocumentsClient) Classify(ctx context.Context, documentId string, 
 		IsConfident:        classifyDocumentResponse.Results.IsConfident,
 		RelativeConfidence: classifyDocumentResponse.Results.RelativeConfidence,
 	}, nil
+}
+
+func (client *DocumentsClient) GetAll(ctx context.Context) ([]Document, error) {
+	request, err := http.NewRequest("GET",
+		client.baseUrl+"/documents", nil)
+	request = request.WithContext(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.requestSender.Do(request)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := bytes.Buffer{}
+	_, err = buf.ReadFrom(response.Body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var allDocsResponse getAllDocumentsResponse
+	err = json.Unmarshal(buf.Bytes(), &allDocsResponse)
+	if err != nil {
+		return nil, errors.New("Could not parse response")
+	}
+
+	var docs []Document
+	for _, doc := range allDocsResponse.Documents {
+		docs = append(docs, Document{Id: doc.Id})
+	}
+
+	return docs, nil
 }

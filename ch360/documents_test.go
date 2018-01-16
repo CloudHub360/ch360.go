@@ -26,10 +26,12 @@ type DocumentsClientSuite struct {
 
 var exampleCreateDocHttpResponse *http.Response
 var exampleClassifyDocHttpResponse *http.Response
+var exampleGetAllDocsHttpResponse *http.Response
 
 func (suite *DocumentsClientSuite) SetupTest() {
 	exampleCreateDocHttpResponse = AnHttpResponse([]byte(exampleCreateDocumentResponse))
 	exampleClassifyDocHttpResponse = AnHttpResponse([]byte(exampleClassifyDocumentResponse))
+	exampleGetAllDocsHttpResponse = AnHttpResponse([]byte(exampleGetAllDocumentsResponse))
 
 	suite.httpClient = new(mocks.HttpDoer)
 
@@ -142,7 +144,7 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_From_Send
 }
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Document_Type() {
-	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
+	suite.httpClient.On("Do", mock.Anything).Return(exampleClassifyDocHttpResponse, nil)
 
 	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
 
@@ -150,8 +152,8 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Document_Type()
 	assert.Equal(suite.T(), "Assignment of Deed of Trust", classificationResult.DocumentType)
 }
 
-func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Confident_Status() {
-	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
+func (suite *DocumentsClientSuite) Test_ClassifyDocument_Indicates_Confidence_Of_Result() {
+	suite.httpClient.On("Do", mock.Anything).Return(exampleClassifyDocHttpResponse, nil)
 
 	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
 
@@ -179,11 +181,44 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_If_Docume
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
-var exampleCreateDocumentResponse = `
-{
-	"id": "exampleDocumentId"
+func (suite *DocumentsClientSuite) Test_GetAll_Issues_Get_All_Documents_Request() {
+	suite.httpClient.On("Do", mock.Anything).Return(exampleGetAllDocsHttpResponse, nil)
+
+	suite.sut.GetAll(context.Background())
+
+	suite.AssertRequestIssued("GET", apiUrl+"/documents")
 }
-`
+
+func (suite *DocumentsClientSuite) Test_GetAll_Documents_Returns_List_Of_Documents() {
+	suite.httpClient.On("Do", mock.Anything).Return(exampleGetAllDocsHttpResponse, nil)
+
+	docs, _ := suite.sut.GetAll(context.Background())
+
+	assert.Equal(suite.T(), 2, len(docs))
+	assert.Equal(suite.T(), "yOq34IxGWk-_kAfQUdlcbw", docs[0].Id)
+}
+
+func (suite *DocumentsClientSuite) Test_GetAll_Documents_Returns_Error_From_Http_Client() {
+	expectedErr := errors.New("expected")
+	suite.httpClient.On("Do", mock.Anything).Return(nil, expectedErr)
+
+	_, receivedErr := suite.sut.GetAll(context.Background())
+
+	assert.Equal(suite.T(), expectedErr, receivedErr)
+}
+
+func (suite *DocumentsClientSuite) Test_GetAll_Documents_Returns_Error_If_Response_Cannot_Be_Parsed() {
+	expectedErr := errors.New("Could not parse response")
+	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte("<invalid-json>")), nil)
+
+	_, receivedErr := suite.sut.GetAll(context.Background())
+
+	assert.Equal(suite.T(), expectedErr, receivedErr)
+}
+
+var exampleCreateDocumentResponse = `{
+	"id": "exampleDocumentId"
+}`
 
 var exampleClassifyDocumentResponse = `
 {
@@ -217,3 +252,52 @@ var exampleClassifyDocumentResponse = `
 	}
 }
 `
+
+var exampleGetAllDocumentsResponse = `{
+	"documents": [
+		{
+			"id": "yOq34IxGWk-_kAfQUdlcbw",
+			"_links": {
+				"document:classify": {
+					"href": "/documents/yOq34IxGWk-_kAfQUdlcbw/classify/{classifier_name}",
+					"templated": true
+				},
+				"self": {
+					"href": "/documents/yOq34IxGWk-_kAfQUdlcbw"
+				}
+			},
+			"_embedded": {
+				"files": [
+					{
+						"id": "mDIr2ixUs0O5n3wEcMOB5g",
+						"file_type": "PDF:PDFMisc",
+						"size": 112449,
+						"sha256": "dffe7ff587dfbd7c1dca771529c802994d5dad432986e1aaeae189b9acd40753"
+					}
+				]
+			}
+		},
+		{
+			"id": "7rRf0hWbHUaGua7oDszMpQ",
+			"_links": {
+				"document:classify": {
+					"href": "/documents/7rRf0hWbHUaGua7oDszMpQ/classify/{classifier_name}",
+					"templated": true
+				},
+				"self": {
+					"href": "/documents/7rRf0hWbHUaGua7oDszMpQ"
+				}
+			},
+			"_embedded": {
+				"files": [
+					{
+						"id": "_QKD9ONwoU-5KueLxvcKrQ",
+						"file_type": "PDF:PDFMisc",
+						"size": 112449,
+						"sha256": "dffe7ff587dfbd7c1dca771529c802994d5dad432986e1aaeae189b9acd40753"
+					}
+				]
+			}
+		}
+	]
+}`
