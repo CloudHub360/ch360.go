@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/ch360/mocks"
+	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -171,6 +172,17 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_RelativeConfide
 	assert.Equal(suite.T(), 1.234567, classificationResult.RelativeConfidence)
 }
 
+func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_DocumentTypeScores() {
+	suite.ClearExpectedCalls()
+	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
+
+	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
+
+	assert.Nil(suite.T(), err)
+	require.Equal(suite.T(), 5, len(classificationResult.DocumentTypeScores))
+	assert.Equal(suite.T(), exampleDocumentTypeScores, classificationResult.DocumentTypeScores)
+}
+
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_If_DocumentType_Cannot_Be_Parsed_From_Response() {
 	expectedErr := errors.New("Could not retrieve document type from Classify response")
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte("")), nil)
@@ -253,6 +265,29 @@ var exampleClassifyDocumentResponse = `
 	}
 }
 `
+
+var exampleDocumentTypeScores = []types.DocumentTypeScore{ //Correspond to scores in the example response above
+	types.DocumentTypeScore{
+		DocumentType: "Assignment of Deed of Trust",
+		Score:        61.4187,
+	},
+	types.DocumentTypeScore{
+		DocumentType: "Notice of Default",
+		Score:        32.94312,
+	},
+	types.DocumentTypeScore{
+		DocumentType: "Correspondence",
+		Score:        28.2860489,
+	},
+	types.DocumentTypeScore{
+		DocumentType: "Deed of Trust",
+		Score:        28.0011711,
+	},
+	types.DocumentTypeScore{
+		DocumentType: "Notice of Lien",
+		Score:        27.9561481,
+	},
+}
 
 var exampleGetAllDocumentsResponse = `{
 	"documents": [

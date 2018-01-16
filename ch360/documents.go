@@ -66,9 +66,15 @@ type classifyDocumentResponse struct {
 }
 
 type classifyDocumentResultsResponse struct {
-	DocumentType       string  `json:"document_type"`
-	IsConfident        bool    `json:"is_confident"`
-	RelativeConfidence float64 `json:"relative_confidence"`
+	DocumentType       string                                              `json:"document_type"`
+	IsConfident        bool                                                `json:"is_confident"`
+	RelativeConfidence float64                                             `json:"relative_confidence"`
+	DocumentTypeScores []classifyDocumentResultsDocumentTypeScoresResponse `json:"document_type_scores"`
+}
+
+type classifyDocumentResultsDocumentTypeScoresResponse struct {
+	DocumentType string  `json:"document_type"`
+	Score        float64 `json:"score"`
 }
 
 func (client *DocumentsClient) Create(ctx context.Context, fileContents []byte) (string, error) {
@@ -148,10 +154,16 @@ func (client *DocumentsClient) Classify(ctx context.Context, documentId string, 
 		return nil, errors.New("Could not retrieve document type from Classify response")
 	}
 
+	var scores []types.DocumentTypeScore
+	for _, score := range classifyDocumentResponse.Results.DocumentTypeScores {
+		scores = append(scores, types.DocumentTypeScore{DocumentType: score.DocumentType, Score: score.Score})
+	}
+
 	return &types.ClassificationResult{
 		DocumentType:       classifyDocumentResponse.Results.DocumentType,
 		IsConfident:        classifyDocumentResponse.Results.IsConfident,
 		RelativeConfidence: classifyDocumentResponse.Results.RelativeConfidence,
+		DocumentTypeScores: scores,
 	}, nil
 }
 
