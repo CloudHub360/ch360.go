@@ -2,6 +2,7 @@ package commands
 
 import (
 	"encoding/csv"
+	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/pkg/errors"
 	"io"
@@ -29,7 +30,7 @@ func (writer *CSVClassifyResultsWriter) WriteDocumentResults(filename string, re
 		return errors.New("StartWriting() must be called before WriteDocumentResults()")
 	}
 
-	record := []string{filename, result.DocumentType, boolToString(result.IsConfident)}
+	record := []string{filename, result.DocumentType, boolToString(result.IsConfident), fmt.Sprintf("%.3f", result.RelativeConfidence)}
 
 	if err := writer.csvWriter.Write(record); err != nil {
 		return err
