@@ -20,14 +20,14 @@ func NewCSVClassifyResultsWriter(writer io.Writer) *CSVClassifyResultsWriter {
 	}
 }
 
-func (writer *CSVClassifyResultsWriter) StartWriting() {
+func (writer *CSVClassifyResultsWriter) Start() {
 	writer.csvWriter = csv.NewWriter(writer.underlyingWriter)
 	writer.startCalled = true
 }
 
-func (writer *CSVClassifyResultsWriter) WriteDocumentResults(filename string, result *types.ClassificationResult) error {
+func (writer *CSVClassifyResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
 	if !writer.startCalled {
-		return errors.New("StartWriting() must be called before WriteDocumentResults()")
+		return errors.New("Start() must be called before WriteResult()")
 	}
 
 	record := []string{filename, result.DocumentType, boolToString(result.IsConfident), fmt.Sprintf("%.3f", result.RelativeConfidence)}
@@ -45,7 +45,7 @@ func (writer *CSVClassifyResultsWriter) WriteDocumentResults(filename string, re
 	return nil
 }
 
-func (writer *CSVClassifyResultsWriter) FinishWriting() {}
+func (writer *CSVClassifyResultsWriter) Finish() {}
 
 func boolToString(val bool) string {
 	if val {

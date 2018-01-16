@@ -9,9 +9,9 @@ import (
 
 //go:generate mockery -name "ClassifyResultsWriter"
 type ClassifyResultsWriter interface {
-	StartWriting()
-	WriteDocumentResults(filename string, result *types.ClassificationResult) error
-	FinishWriting()
+	Start()
+	WriteResult(filename string, result *types.ClassificationResult) error
+	Finish()
 }
 
 type TableClassifyResultsWriter struct {
@@ -26,15 +26,15 @@ func NewTableClassifyResultsWriter(writer io.Writer) *TableClassifyResultsWriter
 
 var classifyTableOutputFormat = "%-44.44s %-24.24s %v\n"
 
-func (writer *TableClassifyResultsWriter) StartWriting() {
+func (writer *TableClassifyResultsWriter) Start() {
 	fmt.Fprintf(writer.writer, ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
 }
 
-func (writer *TableClassifyResultsWriter) WriteDocumentResults(filename string, result *types.ClassificationResult) error {
+func (writer *TableClassifyResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
 	base := filepath.Base(filename)
 	fmt.Fprintf(writer.writer, ClassifyOutputFormat, base, result.DocumentType, result.IsConfident)
 
 	return nil
 }
 
-func (writer *TableClassifyResultsWriter) FinishWriting() {}
+func (writer *TableClassifyResultsWriter) Finish() {}

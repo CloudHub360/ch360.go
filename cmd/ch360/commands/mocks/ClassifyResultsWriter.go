@@ -9,18 +9,18 @@ type ClassifyResultsWriter struct {
 	mock.Mock
 }
 
-// FinishWriting provides a mock function with given fields:
-func (_m *ClassifyResultsWriter) FinishWriting() {
+// Finish provides a mock function with given fields:
+func (_m *ClassifyResultsWriter) Finish() {
 	_m.Called()
 }
 
-// StartWriting provides a mock function with given fields:
-func (_m *ClassifyResultsWriter) StartWriting() {
+// Start provides a mock function with given fields:
+func (_m *ClassifyResultsWriter) Start() {
 	_m.Called()
 }
 
-// WriteDocumentResults provides a mock function with given fields: filename, result
-func (_m *ClassifyResultsWriter) WriteDocumentResults(filename string, result *types.ClassificationResult) error {
+// WriteResult provides a mock function with given fields: filename, result
+func (_m *ClassifyResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
 	ret := _m.Called(filename, result)
 
 	var r0 error

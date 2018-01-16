@@ -44,8 +44,8 @@ func (cmd *ClassifyCommand) handlerFor(cancel context.CancelFunc, filename strin
 		} else {
 			classificationResult := value.(*types.ClassificationResult)
 
-			if err = cmd.resultsWriter.WriteDocumentResults(filename, classificationResult); err != nil {
-				fmt.Println("WriteDocumentResults error")
+			if err = cmd.resultsWriter.WriteResult(filename, classificationResult); err != nil {
+				fmt.Println("WriteResult error")
 				*errs = append(*errs, err)
 
 				cancel()
@@ -94,8 +94,8 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 	workPool := pool.NewPool(processFileJobs, cmd.parallelWorkers)
 
 	// Print results
-	cmd.resultsWriter.StartWriting()
-	defer cmd.resultsWriter.FinishWriting()
+	cmd.resultsWriter.Start()
+	defer cmd.resultsWriter.Finish()
 	workPool.Run(ctx)
 
 	// Just return the first error.
