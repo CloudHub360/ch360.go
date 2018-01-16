@@ -17,6 +17,7 @@ type ClassifyCommand struct {
 	documentClassifier ch360.DocumentClassifier
 	documentCreator    ch360.DocumentCreator
 	documentDeleter    ch360.DocumentDeleter
+	documentGetter     ch360.DocumentGetter
 	parallelWorkers    int
 	resultsWriter      ClassifyResultsWriter
 	errorWriter        io.Writer
@@ -27,6 +28,7 @@ func NewClassifyCommand(resultsWriter ClassifyResultsWriter,
 	docClassifier ch360.DocumentClassifier,
 	docCreator ch360.DocumentCreator,
 	docDeleter ch360.DocumentDeleter,
+	docGetter ch360.DocumentGetter,
 	parallelism int) *ClassifyCommand {
 	return &ClassifyCommand{
 		resultsWriter:      resultsWriter,
@@ -34,8 +36,16 @@ func NewClassifyCommand(resultsWriter ClassifyResultsWriter,
 		documentClassifier: docClassifier,
 		documentCreator:    docCreator,
 		documentDeleter:    docDeleter,
+		documentGetter:     docGetter,
 		parallelWorkers:    parallelism,
 	}
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
 }
 
 var ClassifyOutputFormat = "%-36.36s %-32.32s %v\n"
@@ -73,6 +83,14 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 			return err
 		}
 	}
+
+	// Get the current number of documents, so we know how many slots are available
+	docs, err := cmd.documentGetter.GetAll(ctx)
+	if err != nil {
+		return err
+	}
+	// Limit the number of workers to the number of available doc slots
+	cmd.parallelWorkers = min(cmd.parallelWorkers, ch360.TotalDocumentSlots-len(docs))
 
 	fileCount := len(matches)
 	if fileCount == 0 {
