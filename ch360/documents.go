@@ -35,8 +35,9 @@ type classifyDocumentResponse struct {
 }
 
 type classifyDocumentResultsResponse struct {
-	DocumentType string `json:"document_type"`
-	IsConfident  bool   `json:"is_confident"`
+	DocumentType       string  `json:"document_type"`
+	IsConfident        bool    `json:"is_confident"`
+	RelativeConfidence float64 `json:"relative_confidence"`
 }
 
 func (client *DocumentsClient) CreateDocument(ctx context.Context, fileContents []byte) (string, error) {
@@ -117,7 +118,8 @@ func (client *DocumentsClient) ClassifyDocument(ctx context.Context, documentId 
 	}
 
 	return &types.ClassificationResult{
-		DocumentType: classifyDocumentResponse.Results.DocumentType,
-		IsConfident:  classifyDocumentResponse.Results.IsConfident,
+		DocumentType:       classifyDocumentResponse.Results.DocumentType,
+		IsConfident:        classifyDocumentResponse.Results.IsConfident,
+		RelativeConfidence: classifyDocumentResponse.Results.RelativeConfidence,
 	}, nil
 }
