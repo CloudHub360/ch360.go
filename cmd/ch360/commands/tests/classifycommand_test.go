@@ -25,6 +25,7 @@ type ClassifySuite struct {
 	documentCreator      *mocks.DocumentCreator
 	documentDeleter      *mocks.DocumentDeleter
 	documentClassifier   *mocks.DocumentClassifier
+	documentGetter       *mocks.DocumentGetter
 	classifierName       string
 	documentId           string
 	classificationResult *types.ClassificationResult
@@ -48,9 +49,11 @@ func (suite *ClassifySuite) SetupTest() {
 	suite.documentCreator = new(mocks.DocumentCreator)
 	suite.documentClassifier = new(mocks.DocumentClassifier)
 	suite.documentDeleter = new(mocks.DocumentDeleter)
+	suite.documentGetter = new(mocks.DocumentGetter)
 	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return(suite.documentId, nil)
 	suite.documentClassifier.On("Classify", mock.Anything, mock.Anything, mock.Anything).Return(suite.classificationResult, nil)
 	suite.documentDeleter.On("Delete", mock.Anything, mock.Anything).Return(nil)
+	suite.documentGetter.On("GetAll", mock.Anything).Return(nil, nil)
 
 	suite.output = &bytes.Buffer{}
 	suite.ctx, _ = context.WithCancel(context.Background())
@@ -66,6 +69,7 @@ func (suite *ClassifySuite) SetupTest() {
 		suite.documentClassifier,
 		suite.documentCreator,
 		suite.documentDeleter,
+		suite.documentGetter,
 		10)
 }
 
@@ -186,12 +190,10 @@ func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_CreateDocument_Fai
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_ClassifyDocument_Fails() {
-	suite.documentCreator.ExpectedCalls = nil
+	suite.documentClassifier.ExpectedCalls = nil
 	classifyErr := errors.New("simulated error")
 	expectedErr := errors.New(fmt.Sprintf("Error classifying file %s: %s", suite.testFilePath, classifyErr.Error()))
-	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return(suite.documentId, nil)
 	suite.documentClassifier.On("Classify", mock.Anything, mock.Anything, mock.Anything).Return(nil, classifyErr)
-	suite.documentDeleter.On("Delete", mock.Anything, mock.Anything).Return(nil)
 
 	err := suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
@@ -199,13 +201,11 @@ func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_ClassifyDocument_F
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Deletes_Document_If_ClassifyDocument_Fails() {
-	suite.documentCreator.ExpectedCalls = nil
 	expectedErr := errors.New("simulated error")
-	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return(suite.documentId, nil)
+	suite.documentClassifier.ExpectedCalls = nil
 	suite.documentClassifier.On("Classify", mock.Anything, mock.Anything, mock.Anything).Return(nil, expectedErr)
-	suite.documentDeleter.On("Delete", mock.Anything, mock.Anything).Return(nil)
 
 	suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
-	suite.documentCreator.AssertCalled(suite.T(), "Delete", mock.Anything, suite.documentId)
+	suite.documentDeleter.AssertCalled(suite.T(), "Delete", mock.Anything, suite.documentId)
 }

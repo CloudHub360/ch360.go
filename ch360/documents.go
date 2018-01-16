@@ -9,6 +9,8 @@ import (
 	"net/http"
 )
 
+const TotalDocumentSlots = 10
+
 //go:generate mockery -name "DocumentCreator|DocumentDeleter|DocumentClassifier|DocumentGetter"
 type DocumentCreator interface {
 	Create(ctx context.Context, fileContents []byte) (string, error)
