@@ -24,9 +24,14 @@ type DocumentsClientSuite struct {
 	classifierName string
 }
 
+var exampleCreateDocHttpResponse *http.Response
+var exampleClassifyDocHttpResponse *http.Response
+
 func (suite *DocumentsClientSuite) SetupTest() {
+	exampleCreateDocHttpResponse = AnHttpResponse([]byte(exampleCreateDocumentResponse))
+	exampleClassifyDocHttpResponse = AnHttpResponse([]byte(exampleClassifyDocumentResponse))
+
 	suite.httpClient = new(mocks.HttpDoer)
-	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleCreateDocumentResponse)), nil)
 
 	suite.sut = ch360.NewDocumentsClient(apiUrl, suite.httpClient)
 
@@ -66,6 +71,8 @@ func (suite *DocumentsClientSuite) ClearExpectedCalls() {
 }
 
 func (suite *DocumentsClientSuite) Test_CreateDocument_Issues_Create_Document_Request_With_File_Contents() {
+	suite.httpClient.On("Do", mock.Anything).Return(exampleCreateDocHttpResponse, nil)
+
 	suite.sut.Create(context.Background(), suite.fileContents)
 
 	suite.AssertRequestIssued("POST", apiUrl+"/documents")
@@ -73,6 +80,8 @@ func (suite *DocumentsClientSuite) Test_CreateDocument_Issues_Create_Document_Re
 }
 
 func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_DocumentId() {
+	suite.httpClient.On("Do", mock.Anything).Return(exampleCreateDocHttpResponse, nil)
+
 	documentId, err := suite.sut.Create(context.Background(), suite.fileContents)
 
 	assert.Nil(suite.T(), err)
@@ -81,7 +90,7 @@ func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_DocumentId() {
 
 func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_Error_From_Sender() {
 	expectedErr := errors.New("simulated error")
-	suite.ClearExpectedCalls()
+
 	suite.httpClient.On("Do", mock.Anything).Return(nil, expectedErr)
 
 	documentId, err := suite.sut.Create(context.Background(), suite.fileContents)
@@ -91,7 +100,6 @@ func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_Error_From_Sender
 
 func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_Error_If_DocumentId_Cannot_Be_Parsed_From_Response() {
 	expectedErr := errors.New("Could not retrieve document ID from Create Document response")
-	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte("")), nil)
 
 	documentId, err := suite.sut.Create(context.Background(), suite.fileContents)
@@ -100,6 +108,8 @@ func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_Error_If_Document
 }
 
 func (suite *DocumentsClientSuite) Test_DeleteDocument_Issues_Delete_Document_Request() {
+	suite.httpClient.On("Do", mock.Anything).Return(nil, nil)
+
 	suite.sut.Delete(context.Background(), suite.documentId)
 
 	suite.AssertRequestIssued("DELETE", apiUrl+"/documents/"+suite.documentId)
@@ -107,7 +117,7 @@ func (suite *DocumentsClientSuite) Test_DeleteDocument_Issues_Delete_Document_Re
 
 func (suite *DocumentsClientSuite) Test_DeleteDocument_Returns_Error_From_Sender() {
 	expectedErr := errors.New("simulated error")
-	suite.ClearExpectedCalls()
+
 	suite.httpClient.On("Do", mock.Anything).Return(nil, expectedErr)
 
 	err := suite.sut.Delete(context.Background(), suite.documentId)
@@ -115,6 +125,8 @@ func (suite *DocumentsClientSuite) Test_DeleteDocument_Returns_Error_From_Sender
 }
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Issues_Classify_Document_Request() {
+	suite.httpClient.On("Do", mock.Anything).Return(exampleClassifyDocHttpResponse, nil)
+
 	suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
 
 	suite.AssertRequestIssued("POST", apiUrl+"/documents/"+suite.documentId+"/classify/"+suite.classifierName)
@@ -122,7 +134,6 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Issues_Classify_Documen
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_From_Sender() {
 	expectedErr := errors.New("simulated error")
-	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(nil, expectedErr)
 
 	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
@@ -131,7 +142,6 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_From_Send
 }
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Document_Type() {
-	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
 
 	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
@@ -141,7 +151,6 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Document_Type()
 }
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Confident_Status() {
-	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
 
 	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
@@ -162,7 +171,6 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_RelativeConfide
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_Error_If_DocumentType_Cannot_Be_Parsed_From_Response() {
 	expectedErr := errors.New("Could not retrieve document type from Classify response")
-	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte("")), nil)
 
 	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)

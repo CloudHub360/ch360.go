@@ -34,7 +34,9 @@ type GetDocumentResponse struct {
 	Id string `json:"id"`
 }
 
-type createDocumentResponse GetDocumentResponse
+type createDocumentResponse struct {
+	Id string `json:"id"`
+}
 
 type DocumentsClient struct {
 	baseUrl       string
