@@ -35,7 +35,7 @@ Options:
   -v, --version                    : Show application version
   -i, --client-id <id>             : Client ID
   -s, --client-secret <secret>     : Client secret
-  -f, --output-format <format>     : Output format for classification results. Allowed values: table, csv [default: table]
+  -f, --output-format <format>     : Output format for classification results. Allowed values: table, csv, json [default: table]
 `
 
 	filenameExamples := `
@@ -160,7 +160,7 @@ Filename and glob pattern examples:
 			writer = commands.NewCSVClassifyResultsWriter(os.Stdout)
 		default:
 			// DocOpt doesn't do validation of these values for us, so we need to catch invalid values here
-			fmt.Println(fmt.Sprintf("Unknown output format '%s'. Allowed values are: csv, table.", outputFormat))
+			fmt.Println(fmt.Sprintf("Unknown output format '%s'. Allowed values are: csv, table, json.", outputFormat))
 			os.Exit(1)
 		}
 
