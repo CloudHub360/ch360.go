@@ -83,7 +83,7 @@ func (suite *TableResultsWriterSuite) TestWrites_False_For_Not_IsConfident() {
 
 func (suite *TableResultsWriterSuite) TestWrites_Filename_Only_When_It_Has_Path() {
 	var filename string
-	if runtime.GOOS != "windows" { //So tests can run on both Windows & Linux
+	if runtime.GOOS == "windows" { //So tests can run on both Windows & Linux
 		filename = `C:\folder\document1.tif`
 	} else {
 		filename = `/var/something/document1.tif`
