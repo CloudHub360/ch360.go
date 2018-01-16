@@ -50,10 +50,11 @@ func (suite *CSVResultsWriterSuite) TestWrite_Returns_Error_If_Start_Not_Called(
 func (suite *CSVResultsWriterSuite) TestWrites_ResultWithCorrectFormat() {
 	filename := "document1.tif"
 	result := &types.ClassificationResult{
-		DocumentType: "documenttype",
-		IsConfident:  true,
+		DocumentType:       "documenttype",
+		IsConfident:        true,
+		RelativeConfidence: 1.234567,
 	}
-	expectedOutput := "document1.tif,documenttype,true\n"
+	expectedOutput := "document1.tif,documenttype,true,1.235\n"
 
 	suite.sut.StartWriting()
 	err := suite.sut.WriteDocumentResults(filename, result)
