@@ -6,6 +6,7 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/pkg/errors"
 	"io"
+	"path/filepath"
 )
 
 type JsonClassifyResultsWriter struct {
@@ -60,7 +61,7 @@ func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *ty
 	}
 
 	output := &classifyDocumentOutput{
-		Filename: filename,
+		Filename: filepath.FromSlash(filename),
 		Results: classifyDocumentResultOutput{
 			DocumentType:       result.DocumentType,
 			IsConfident:        result.IsConfident,
@@ -79,5 +80,5 @@ func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *ty
 }
 
 func (writer *JsonClassifyResultsWriter) Finish() {
-	fmt.Fprintln(writer.underlyingWriter, "]")
+	fmt.Fprint(writer.underlyingWriter, "]")
 }
