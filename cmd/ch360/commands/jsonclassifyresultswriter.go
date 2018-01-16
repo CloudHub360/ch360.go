@@ -20,9 +20,15 @@ type classifyDocumentOutput struct {
 }
 
 type classifyDocumentResultOutput struct {
-	DocumentType       string  `json:"document_type"`
-	IsConfident        bool    `json:"is_confident"`
-	RelativeConfidence float64 `json:"relative_confidence"`
+	DocumentType       string                                    `json:"document_type"`
+	IsConfident        bool                                      `json:"is_confident"`
+	RelativeConfidence float64                                   `json:"relative_confidence"`
+	Scores             []classifyDocumentResultDocumentTypeScore `json:"document_type_scores"`
+}
+
+type classifyDocumentResultDocumentTypeScore struct {
+	DocumentType string  `json:"document_type"`
+	Score        float64 `json:"score"`
 }
 
 func NewJsonClassifyResultsWriter(writer io.Writer) *JsonClassifyResultsWriter {
@@ -47,12 +53,18 @@ func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *ty
 		writer.writingStarted = true
 	}
 
+	var scores []classifyDocumentResultDocumentTypeScore
+	for _, score := range result.DocumentTypeScores {
+		scores = append(scores, classifyDocumentResultDocumentTypeScore{DocumentType: score.DocumentType, Score: score.Score})
+	}
+
 	output := &classifyDocumentOutput{
 		Filename: filename,
 		Results: classifyDocumentResultOutput{
 			DocumentType:       result.DocumentType,
 			IsConfident:        result.IsConfident,
 			RelativeConfidence: result.RelativeConfidence,
+			Scores:             scores,
 		},
 	}
 
