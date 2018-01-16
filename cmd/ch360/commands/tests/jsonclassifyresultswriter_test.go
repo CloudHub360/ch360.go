@@ -2,12 +2,14 @@ package tests
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -77,14 +79,28 @@ func (suite *JsonResultsWriterSuite) TestWrites_False_For_Not_IsConfident() {
 }
 
 func (suite *JsonResultsWriterSuite) TestWrites_Filename_With_Path_When_It_Has_Path() {
-	filename := `C:/folder/document1.tif`
-	expectedFilename := `C:\\folder\\document1.tif` //Json pretty-printing escapes slashes
+	var filename string
+	var expectedFilename string
+
+	if runtime.GOOS == "windows" {
+		filename = `C:/folder/document1.tif`
+		expectedFilename = `C:\\folder\\document1.tif` //Json pretty-printing escapes slashes
+	} else {
+		filename = `\var\folder\document1.tif`
+		expectedFilename = `\\var\\folder\\document1.tif`
+	}
 
 	suite.sut.Start()
 	err := suite.sut.WriteResult(filename, suite.result)
 
 	require.Nil(suite.T(), err)
-	assert.True(suite.T(), strings.Contains(suite.output.String(), expectedFilename))
+	containsFilenameWithPath := strings.Contains(suite.output.String(), expectedFilename)
+
+	assert.True(suite.T(), containsFilenameWithPath)
+	if !containsFilenameWithPath { // To aid debugging if test fails
+		fmt.Println(suite.output.String())
+		fmt.Printf("Output does not contain %s", expectedFilename)
+	}
 }
 
 var exampleFilename = "document1.tif"
