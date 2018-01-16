@@ -23,3 +23,12 @@ func String(root string) string {
 	}
 	return root + "-" + string(b)
 }
+
+func Bool() bool {
+	rand.Seed(time.Now().UTC().UnixNano())
+	if i := rand.Intn(100); i > 50 {
+		return true
+	} else {
+		return false
+	}
+}
