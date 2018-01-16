@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 )
 
+//go:generate mockery -name "ClassifyResultsWriter"
 type ClassifyResultsWriter interface {
 	StartWriting()
 	WriteDocumentResults(filename string, result *types.ClassificationResult) error
