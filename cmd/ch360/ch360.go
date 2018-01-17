@@ -77,12 +77,17 @@ Filename and glob pattern examples:
 
 	if args["login"].(bool) {
 		if clientId == "" {
-			fmt.Println("Please specify your API Client Id with the --client-id parameter")
-			os.Exit(1)
+			fmt.Print("Client Id: ")
+			clientId, err = readSecretFromConsole()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
 		}
 
 		if clientSecret == "" {
-			clientSecret, err = readSecret()
+			fmt.Print("Client Secret: ")
+			clientSecret, err = readSecretFromConsole()
 			if err != nil {
 				fmt.Println(err.Error())
 				os.Exit(1)
@@ -188,8 +193,7 @@ func argAsString(args map[string]interface{}, name string) string {
 	return result
 }
 
-func readSecret() (string, error) {
-	fmt.Print("API Client Secret: ")
+func readSecretFromConsole() (string, error) {
 	secret, err := (&commands.ConsoleSecretReader{}).Read()
 	if err != nil {
 		fmt.Println(err.Error())
