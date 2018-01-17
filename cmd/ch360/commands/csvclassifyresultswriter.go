@@ -21,9 +21,10 @@ func NewCSVClassifyResultsWriter(writer io.Writer) *CSVClassifyResultsWriter {
 	}
 }
 
-func (writer *CSVClassifyResultsWriter) Start() {
+func (writer *CSVClassifyResultsWriter) Start() error {
 	writer.csvWriter = csv.NewWriter(writer.underlyingWriter)
 	writer.startCalled = true
+	return nil
 }
 
 func (writer *CSVClassifyResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
@@ -46,7 +47,9 @@ func (writer *CSVClassifyResultsWriter) WriteResult(filename string, result *typ
 	return nil
 }
 
-func (writer *CSVClassifyResultsWriter) Finish() {}
+func (writer *CSVClassifyResultsWriter) Finish() error {
+	return nil
+}
 
 func boolToString(val bool) string {
 	if val {
