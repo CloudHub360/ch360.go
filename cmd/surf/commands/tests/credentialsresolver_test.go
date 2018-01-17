@@ -2,7 +2,7 @@ package tests
 
 import (
 	"errors"
-	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
+	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/config/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"

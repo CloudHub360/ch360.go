@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/mocks"
 	"github.com/CloudHub360/ch360.go/ch360/types"
-	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
+	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	rwmocks "github.com/CloudHub360/ch360.go/output/resultsWriters/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
