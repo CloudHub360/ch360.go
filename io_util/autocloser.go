@@ -2,6 +2,11 @@ package io_util
 
 import "io"
 
+//go:generate mockery -name WriteCloser
+type WriteCloser interface {
+	io.WriteCloser
+}
+
 // AutoCloser wraps an io.WriteCloser and calls Close() after any call to Write().
 type AutoCloser struct {
 	Underlying io.WriteCloser
