@@ -80,7 +80,6 @@ Filename and glob pattern examples:
 			fmt.Print("Client Id: ")
 			clientId, err = readSecretFromConsole()
 			if err != nil {
-				fmt.Println(err.Error())
 				os.Exit(1)
 			}
 		}
@@ -89,7 +88,6 @@ Filename and glob pattern examples:
 			fmt.Print("Client Secret: ")
 			clientSecret, err = readSecretFromConsole()
 			if err != nil {
-				fmt.Println(err.Error())
 				os.Exit(1)
 			}
 		}
@@ -196,7 +194,9 @@ func argAsString(args map[string]interface{}, name string) string {
 func readSecretFromConsole() (string, error) {
 	secret, err := (&commands.ConsoleSecretReader{}).Read()
 	if err != nil {
-		fmt.Println(err.Error())
+		if err != commands.ConsoleSecretReaderErrCancelled {
+			fmt.Println(err.Error())
+		}
 		return "", err
 	}
 	return secret, nil
