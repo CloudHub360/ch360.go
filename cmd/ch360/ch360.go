@@ -78,16 +78,14 @@ Filename and glob pattern examples:
 	if args["login"].(bool) {
 		if clientId == "" {
 			fmt.Print("Client Id: ")
-			clientId, err = readSecretFromConsole()
-			if err != nil {
+			if clientId, err = readSecretFromConsole(); err != nil {
 				os.Exit(1)
 			}
 		}
 
 		if clientSecret == "" {
 			fmt.Print("Client Secret: ")
-			clientSecret, err = readSecretFromConsole()
-			if err != nil {
+			if clientSecret, err = readSecretFromConsole(); err != nil {
 				os.Exit(1)
 			}
 		}
