@@ -7,6 +7,7 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/CloudHub360/ch360.go/io_util"
 	"github.com/CloudHub360/ch360.go/response"
 	"github.com/docopt/docopt-go"
 	"github.com/mitchellh/go-homedir"
@@ -36,6 +37,8 @@ Options:
   -i, --client-id <id>             : Client ID
   -s, --client-secret <secret>     : Client secret
   -f, --output-format <format>     : Output format for classification results. Allowed values: table, csv, json [default: table]
+  -m, --multiple-files             : Write results output to multiple files with the same
+                                   : basename as the input
 `
 
 	filenameExamples := `
@@ -155,7 +158,17 @@ Filename and glob pattern examples:
 		var writer commands.ClassifyResultsWriter
 		switch outputFormat {
 		case "table":
-			writer = commands.NewTableClassifyResultsWriter(os.Stdout)
+			var writeCloserProvider commands.WriteCloserProvider
+			multifile := true
+			if multifile {
+				fileProvider := &io_util.AdjacentFileProvider{
+					Extension: ".txt",
+				}
+				writeCloserProvider = commands.AutoClosingWriteCloserProvider(fileProvider.Provide)
+			} else {
+				writeCloserProvider = commands.DummyWriteCloserProvider(os.Stdout)
+			}
+			writer = commands.NewTableClassifyResultsWriter(writeCloserProvider)
 		case "csv":
 			writer = commands.NewCSVClassifyResultsWriter(os.Stdout)
 		case "json":
