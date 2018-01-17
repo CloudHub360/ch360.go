@@ -11,7 +11,7 @@ $configFilePath = Join-Path -Path $applicationFolderPath -ChildPath "config.yaml
 function Invoke-App {
     $ErrorActionPreference = "Continue"
     try {
-        & ch360 $args
+        & surf $args
     } catch [System.Management.Automation.RemoteException] {
         # Catch exceptions for messages redirected from stderr and
         # write out the messages to stdout
@@ -105,12 +105,12 @@ Describe "classifiers" {
     BeforeAll {
         Backup-ApplicationFolder
 
-        ch360 login --client-id="$ClientId" --client-secret="$ClientSecret" | Should -Be "Logging in... [OK]"
+        surf login --client-id="$ClientId" --client-secret="$ClientSecret" | Should -Be "Logging in... [OK]"
         $LASTEXITCODE | Should -Be 0
 
         Get-Content -Path $configFilePath | Format-MultilineOutput | Should -BeLike "*clientId: $ClientId*"
         Get-Content -Path $configFilePath | Format-MultilineOutput | Should -BeLike "*clientSecret: $ClientSecret*"
-        Write-Host "Ran ch360 login"
+        Write-Host "Ran surf login"
     }
 
     BeforeEach {
