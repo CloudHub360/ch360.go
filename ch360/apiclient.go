@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-const ApiAddress = "https://api.cloudhub360.com"
+const ApiAddress = "https://api.waives.io"
 
 type ApiClient struct {
 	Classifiers *ClassifiersClient
