@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/auth"
 	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
+	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/CloudHub360/ch360.go/response"
@@ -23,13 +23,13 @@ func main() {
 	usage := `CloudHub360 command-line tool.
 
 Usage:
-  ch360 login [options]
-  ch360 create classifier <name> <samples-zip> [options]
-  ch360 delete classifier <name> [options]
-  ch360 list classifiers [options]
-  ch360 classify <file> <classifier> [options]
-  ch360 -h | --help
-  ch360 -v | --version
+  surf login [options]
+  surf create classifier <name> <samples-zip> [options]
+  surf delete classifier <name> [options]
+  surf list classifiers [options]
+  surf classify <file> <classifier> [options]
+  surf -h | --help
+  surf -v | --version
 
 Options:
   -h, --help                       : Show this help message
