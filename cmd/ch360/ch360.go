@@ -31,20 +31,20 @@ Usage:
   ch360 -v | --version
 
 Options:
-  -h, --help                       Show this help message
-  -v, --version                    Show application version
-  --client-id <id>                 Client ID
-  --client-secret <secret>         Client secret
-  -f, --output-format <format>     Output format for classification results. Allowed values: table, csv [default: table]
+  -h, --help                       : Show this help message
+  -v, --version                    : Show application version
+  -i, --client-id <id>             : Client ID
+  -s, --client-secret <secret>     : Client secret
+  -f, --output-format <format>     : Output format for classification results. Allowed values: table, csv [default: table]
 `
 
 	filenameExamples := `
 Filename and glob pattern examples:
-  file1.pdf        Specific file
-  *.*              All files in the current folder
-  *.pdf            All PDFs in the current folder
-  foo/*.tif        All TIFs in folder foo
-  bar/**/*.*       All files in subfolders of folder bar`
+  file1.pdf        : Specific file
+  *.*              : All files in the current folder
+  *.pdf            : All PDFs in the current folder
+  foo/*.tif        : All TIFs in folder foo
+  bar/**/*.*       : All files in subfolders of folder bar`
 
 	// Replace slashes with OS-specific path separators
 	usage = usage + filepath.FromSlash(filenameExamples)
