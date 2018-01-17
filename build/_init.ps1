@@ -120,7 +120,7 @@ function global:release() {
       -ReleaseNotes $ReleaseNotes
 }
 
-Write-Host "This is the CloudHub360 Platform repo. And here are the available commands:" -Fore Magenta
+Write-Host "This is the Waives CLI repo. And here are the available commands:" -Fore Magenta
 Write-Host "`t build" -Fore Green
 Write-Host "`t release" -Fore Green
 Write-Host "For more information about the commands, use Get-Help <command-name>" -Fore Magenta
