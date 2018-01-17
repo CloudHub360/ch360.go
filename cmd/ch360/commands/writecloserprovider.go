@@ -7,13 +7,16 @@ import (
 
 type WriteCloserProvider func(fullPath string) (io.WriteCloser, error)
 
-var DummyWriteCloserProvider = func(dest io.WriteCloser) WriteCloserProvider {
+// DummyWriteCloserProvider just returns the provided io.WriteCloser in any call to the
+func NewDummyWriteCloserProvider(dest io.WriteCloser) WriteCloserProvider {
 	return func(fullPath string) (io.WriteCloser, error) {
 		return dest, nil
 	}
 }
 
-var AutoClosingWriteCloserProvider = func(underlying WriteCloserProvider) WriteCloserProvider {
+// NewAutoClosingWriteCloserProvider wraps any io.WriteClosers returned by its underlying WriteCloserProvider in an
+// io_util.AutoCloser.
+func NewAutoClosingWriteCloserProvider(underlying WriteCloserProvider) WriteCloserProvider {
 	return func(fullPath string) (io.WriteCloser, error) {
 		if fullPath == "" {
 			return nil, nil
