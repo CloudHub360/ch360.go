@@ -10,13 +10,31 @@ type ClassifyResultsWriter struct {
 }
 
 // Finish provides a mock function with given fields:
-func (_m *ClassifyResultsWriter) Finish() {
-	_m.Called()
+func (_m *ClassifyResultsWriter) Finish() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // Start provides a mock function with given fields:
-func (_m *ClassifyResultsWriter) Start() {
-	_m.Called()
+func (_m *ClassifyResultsWriter) Start() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // WriteResult provides a mock function with given fields: filename, result
