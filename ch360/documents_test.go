@@ -165,7 +165,7 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_RelativeConfide
 	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
 
-	classificationResult, err := suite.sut.ClassifyDocument(context.Background(), suite.documentId, suite.classifierName)
+	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 1.234567, classificationResult.RelativeConfidence)
