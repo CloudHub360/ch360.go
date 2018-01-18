@@ -75,7 +75,11 @@ func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *ty
 		return err
 	}
 
-	writer.underlyingWriter.Write(bytes)
+	_, err = writer.underlyingWriter.Write(bytes)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
