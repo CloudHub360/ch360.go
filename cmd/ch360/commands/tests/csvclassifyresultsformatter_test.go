@@ -2,7 +2,6 @@ package tests
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
@@ -11,25 +10,24 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"runtime"
 	"strings"
 	"testing"
 )
 
-type TableResultsWriterSuite struct {
+type CSVResultsFormatterSuite struct {
 	suite.Suite
 	output             *bytes.Buffer
-	sut                *commands.TableClassifyResultsWriter
+	sut                *commands.CSVClassifyResultsFormatter
 	filename           string
 	result             *types.ClassificationResult
 	mockWriterProvider *mocks.WriterProvider
 }
 
-func (suite *TableResultsWriterSuite) SetupTest() {
+func (suite *CSVResultsFormatterSuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
 	suite.mockWriterProvider = &mocks.WriterProvider{}
 	suite.mockWriterProvider.On("Provide", mock.Anything).Return(suite.output, nil)
-	suite.sut = commands.NewTableClassifyResultsWriter(suite.mockWriterProvider)
+	suite.sut = commands.NewCSVClassifyResultsFormatter(suite.mockWriterProvider)
 
 	suite.filename = generators.String("filename")
 	suite.result = &types.ClassificationResult{
@@ -38,66 +36,64 @@ func (suite *TableResultsWriterSuite) SetupTest() {
 	}
 }
 
-func TestTableResultsWriterRunner(t *testing.T) {
-	suite.Run(t, new(TableResultsWriterSuite))
+func TestCSVResultsWriterRunner(t *testing.T) {
+	suite.Run(t, new(CSVResultsFormatterSuite))
 }
 
-func (suite *TableResultsWriterSuite) TestStart_Writes_Table_Header() {
+func (suite *CSVResultsFormatterSuite) TestStart_Does_Not_Write_Anything() {
 	suite.sut.Start()
 
-	header := fmt.Sprintf(commands.ClassifyOutputFormat, "FILE", "DOCUMENT TYPE", "CONFIDENT")
-	assert.Equal(suite.T(), header, suite.output.String())
+	assert.Equal(suite.T(), "", suite.output.String())
 }
 
-func (suite *TableResultsWriterSuite) TestWrites_ResultWithCorrectFormat() {
-	expectedOutput := "document1.tif                        documenttype                     true\n"
+func (suite *CSVResultsFormatterSuite) TestWrites_ResultWithCorrectFormat() {
 	filename := "document1.tif"
 	result := &types.ClassificationResult{
-		DocumentType: "documenttype",
-		IsConfident:  true,
+		DocumentType:       "documenttype",
+		IsConfident:        true,
+		RelativeConfidence: 1.234567,
 	}
+	expectedOutput := "document1.tif,documenttype,true,1.235\n"
 
+	suite.sut.Start()
 	err := suite.sut.WriteResult(filename, result)
 
 	require.Nil(suite.T(), err)
 	assert.Equal(suite.T(), expectedOutput, suite.output.String())
 }
 
-func (suite *TableResultsWriterSuite) TestWrites_Filename() {
+func (suite *CSVResultsFormatterSuite) TestWrites_Filename() {
+	suite.sut.Start()
 	err := suite.sut.WriteResult(suite.filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.filename))
 }
 
-func (suite *TableResultsWriterSuite) TestWrites_DocumentType() {
+func (suite *CSVResultsFormatterSuite) TestWrites_DocumentType() {
+	suite.sut.Start()
 	err := suite.sut.WriteResult(suite.filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.result.DocumentType))
 }
 
-func (suite *TableResultsWriterSuite) TestWrites_False_For_Not_IsConfident() {
+func (suite *CSVResultsFormatterSuite) TestWrites_False_For_Not_IsConfident() {
 	suite.result.IsConfident = false
 
+	suite.sut.Start()
 	err := suite.sut.WriteResult(suite.filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), "false"))
 }
 
-func (suite *TableResultsWriterSuite) TestWrites_Filename_Only_When_It_Has_Path() {
-	var filename string
-	if runtime.GOOS == "windows" { //So tests can run on both Windows & Linux
-		filename = `C:\folder\document1.tif`
-	} else {
-		filename = `/var/something/document1.tif`
-	}
+func (suite *CSVResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Has_Path() {
+	filename := `C:\folder\document1.tif`
 
-	expectedFilename := `document1.tif`
-
+	suite.sut.Start()
 	err := suite.sut.WriteResult(filename, suite.result)
 
 	require.Nil(suite.T(), err)
-	assert.Equal(suite.T(), expectedFilename, suite.output.String()[:len(expectedFilename)])
+	assert.Equal(suite.T(), filename, suite.output.String()[:len(filename)])
 }

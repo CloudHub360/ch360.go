@@ -16,21 +16,21 @@ import (
 	"testing"
 )
 
-type JsonResultsWriterSuite struct {
+type JsonResultsFormatterSuite struct {
 	suite.Suite
 	output             *bytes.Buffer
-	sut                *commands.JsonClassifyResultsWriter
+	sut                *commands.JsonClassifyResultsFormatter
 	filename           string
 	result             *types.ClassificationResult
 	mockWriterProvider *mocks.WriterProvider
 }
 
-func (suite *JsonResultsWriterSuite) SetupTest() {
+func (suite *JsonResultsFormatterSuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
 	suite.output = &bytes.Buffer{}
 	suite.mockWriterProvider = &mocks.WriterProvider{}
 	suite.mockWriterProvider.On("Provide", mock.Anything).Return(suite.output, nil)
-	suite.sut = commands.NewJsonClassifyResultsWriter(suite.mockWriterProvider)
+	suite.sut = commands.NewJsonClassifyResultsFormatter(suite.mockWriterProvider)
 
 	suite.filename = generators.String("filename")
 	suite.result = &types.ClassificationResult{
@@ -40,16 +40,16 @@ func (suite *JsonResultsWriterSuite) SetupTest() {
 }
 
 func TestJsonTableResultsWriterRunner(t *testing.T) {
-	suite.Run(t, new(JsonResultsWriterSuite))
+	suite.Run(t, new(JsonResultsFormatterSuite))
 }
 
-func (suite *JsonResultsWriterSuite) TestStart_Does_Not_Write_Anything() {
+func (suite *JsonResultsFormatterSuite) TestStart_Does_Not_Write_Anything() {
 	suite.sut.Start()
 
 	assert.Equal(suite.T(), "", suite.output.String())
 }
 
-func (suite *JsonResultsWriterSuite) TestWrites_ResultWithCorrectFormat() {
+func (suite *JsonResultsFormatterSuite) TestWrites_ResultWithCorrectFormat() {
 	suite.sut.Start()
 	err := suite.sut.WriteResult(exampleFilename, exampleResult)
 	suite.sut.Finish()
@@ -58,7 +58,7 @@ func (suite *JsonResultsWriterSuite) TestWrites_ResultWithCorrectFormat() {
 	assert.Equal(suite.T(), exampleOutput, suite.output.String())
 }
 
-func (suite *JsonResultsWriterSuite) TestWrites_Filename() {
+func (suite *JsonResultsFormatterSuite) TestWrites_Filename() {
 	suite.sut.Start()
 	err := suite.sut.WriteResult(suite.filename, suite.result)
 
@@ -66,7 +66,7 @@ func (suite *JsonResultsWriterSuite) TestWrites_Filename() {
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.filename))
 }
 
-func (suite *JsonResultsWriterSuite) TestWrites_DocumentType() {
+func (suite *JsonResultsFormatterSuite) TestWrites_DocumentType() {
 	suite.sut.Start()
 	err := suite.sut.WriteResult(suite.filename, suite.result)
 
@@ -74,7 +74,7 @@ func (suite *JsonResultsWriterSuite) TestWrites_DocumentType() {
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.result.DocumentType))
 }
 
-func (suite *JsonResultsWriterSuite) TestWrites_False_For_Not_IsConfident() {
+func (suite *JsonResultsFormatterSuite) TestWrites_False_For_Not_IsConfident() {
 	suite.result.IsConfident = false
 
 	suite.sut.Start()
@@ -84,7 +84,7 @@ func (suite *JsonResultsWriterSuite) TestWrites_False_For_Not_IsConfident() {
 	assert.True(suite.T(), strings.Contains(suite.output.String(), "false"))
 }
 
-func (suite *JsonResultsWriterSuite) TestWrites_Filename_With_Path_When_It_Has_Path() {
+func (suite *JsonResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Has_Path() {
 	var filename string
 	var expectedFilename string
 
