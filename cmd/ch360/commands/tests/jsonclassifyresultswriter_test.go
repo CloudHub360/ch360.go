@@ -86,8 +86,8 @@ func (suite *JsonResultsWriterSuite) TestWrites_Filename_With_Path_When_It_Has_P
 		filename = `C:/folder/document1.tif`
 		expectedFilename = `C:\\folder\\document1.tif` //Json pretty-printing escapes slashes
 	} else {
-		filename = `\var\folder\document1.tif`
-		expectedFilename = `\\var\\folder\\document1.tif`
+		filename = `/var/folder/document1.tif`
+		expectedFilename = `//var//folder//document1.tif`
 	}
 
 	suite.sut.Start()
