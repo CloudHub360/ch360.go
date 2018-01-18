@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"bytes"
 	"github.com/CloudHub360/ch360.go/auth"
 	authmocks "github.com/CloudHub360/ch360.go/auth/mocks"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
@@ -22,6 +23,7 @@ type LoginSuite struct {
 	tokenRetriever *authmocks.TokenRetriever
 	clientId       string
 	clientSecret   string
+	output         *bytes.Buffer
 }
 
 func (suite *LoginSuite) SetupTest() {
@@ -34,7 +36,8 @@ func (suite *LoginSuite) SetupTest() {
 	suite.tokenRetriever = new(authmocks.TokenRetriever)
 	suite.tokenRetriever.On("RetrieveToken").Return(&auth.AccessToken{}, nil)
 
-	suite.sut = commands.NewLogin(suite.configWriter, suite.tokenRetriever)
+	suite.output = &bytes.Buffer{}
+	suite.sut = commands.NewLogin(suite.output, suite.configWriter, suite.tokenRetriever)
 }
 
 func TestLoginSuiteRunner(t *testing.T) {

@@ -92,7 +92,7 @@ Filename and glob pattern examples:
 
 		responseChecker := &response.ErrorChecker{}
 		tokenRetriever := auth.NewHttpTokenRetriever(clientId, clientSecret, httpClient, ch360.ApiAddress, responseChecker)
-		err = commands.NewLogin(appDirectory, tokenRetriever).Execute(clientId, clientSecret)
+		err = commands.NewLogin(os.Stdout, appDirectory, tokenRetriever).Execute(clientId, clientSecret)
 		if err != nil {
 			os.Exit(1)
 		}
@@ -116,7 +116,7 @@ Filename and glob pattern examples:
 		err = commands.NewCreateClassifier(
 			os.Stdout,
 			apiClient.Classifiers,
-			commands.NewDeleteClassifier(apiClient.Classifiers),
+			commands.NewDeleteClassifier(os.Stdout, apiClient.Classifiers),
 		).Execute(classifierName, samplesPath)
 		if err != nil {
 			os.Exit(1)
@@ -125,7 +125,7 @@ Filename and glob pattern examples:
 		classifierName := args["<name>"].(string)
 
 		fmt.Printf("Deleting classifier '%s'... ", classifierName)
-		err = commands.NewDeleteClassifier(apiClient.Classifiers).Execute(classifierName)
+		err = commands.NewDeleteClassifier(os.Stdout, apiClient.Classifiers).Execute(classifierName)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
@@ -133,7 +133,7 @@ Filename and glob pattern examples:
 		fmt.Println("[OK]")
 	} else if args["list"].(bool) {
 		var classifiers ch360.ClassifierList
-		classifiers, err = commands.NewListClassifiers(apiClient.Classifiers).Execute()
+		classifiers, err = commands.NewListClassifiers(os.Stdout, apiClient.Classifiers).Execute()
 
 		if err != nil {
 			fmt.Println(err.Error())
