@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"bytes"
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
@@ -15,12 +16,14 @@ type ListClassifierSuite struct {
 	suite.Suite
 	sut    *commands.ListClassifiers
 	client *mocks.Getter
+	output *bytes.Buffer
 }
 
 func (suite *ListClassifierSuite) SetupTest() {
 	suite.client = new(mocks.Getter)
+	suite.output = &bytes.Buffer{}
 
-	suite.sut = commands.NewListClassifiers(suite.client)
+	suite.sut = commands.NewListClassifiers(suite.output, suite.client)
 }
 
 func TestListClassifierSuiteRunner(t *testing.T) {

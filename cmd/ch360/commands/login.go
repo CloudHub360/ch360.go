@@ -4,31 +4,34 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/auth"
 	"github.com/CloudHub360/ch360.go/config"
+	"io"
 )
 
 type Login struct {
 	appDirectory   config.ConfigurationWriter
 	tokenRetriever auth.TokenRetriever
+	writer         io.Writer
 }
 
-func NewLogin(appDirectory config.ConfigurationWriter, retriever auth.TokenRetriever) *Login {
+func NewLogin(writer io.Writer, appDirectory config.ConfigurationWriter, retriever auth.TokenRetriever) *Login {
 	return &Login{
 		appDirectory:   appDirectory,
 		tokenRetriever: retriever,
+		writer:         writer,
 	}
 }
 
 func (cmd *Login) Execute(clientId string, clientSecret string) error {
 
-	fmt.Print("Logging in... ")
+	fmt.Fprint(cmd.writer, "Logging in... ")
 
 	err := cmd.execute(clientId, clientSecret)
 
 	if err != nil {
-		fmt.Println("[FAILED]")
-		fmt.Println(err.Error())
+		fmt.Fprintln(cmd.writer, "[FAILED]")
+		fmt.Fprintln(cmd.writer, err.Error())
 	} else {
-		fmt.Println("[OK]")
+		fmt.Fprintln(cmd.writer, "[OK]")
 	}
 	return err
 }
