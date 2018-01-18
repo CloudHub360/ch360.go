@@ -74,8 +74,7 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 	if err != nil {
 		if os.IsNotExist(err) {
 			// The file pattern is for a specific (single) file that doesn't exist
-			err = errors.New(fmt.Sprintf("File %s does not exist", filePattern))
-			return err
+			return errors.New(fmt.Sprintf("File %s does not exist", filePattern))
 		} else {
 			return err
 		}
@@ -91,8 +90,7 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 
 	fileCount := len(matches)
 	if fileCount == 0 {
-		err = errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'ch360 -h' for glob pattern examples.", filePattern))
-		return err
+		return errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'ch360 -h' for glob pattern examples.", filePattern))
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
