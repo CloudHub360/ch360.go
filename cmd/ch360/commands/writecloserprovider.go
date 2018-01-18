@@ -14,28 +14,28 @@ type WriteCloserProvider interface {
 	Provide(fullPath string) (io.WriteCloser, error)
 }
 
-// BasicWriterFactory just returns the provided io.Writer in any call to Provide
-type BasicWriterFactory struct {
+// BasicWriterProvider just returns the provided io.Writer in any call to Provide
+type BasicWriterProvider struct {
 	dest io.Writer
 }
 
-func NewBasicWriterFactory(dest io.Writer) *BasicWriterFactory {
-	return &BasicWriterFactory{
+func NewBasicWriterProvider(dest io.Writer) *BasicWriterProvider {
+	return &BasicWriterProvider{
 		dest: dest,
 	}
 }
 
-func (f *BasicWriterFactory) Provide(fullPath string) (io.Writer, error) {
+func (f *BasicWriterProvider) Provide(fullPath string) (io.Writer, error) {
 	return f.dest, nil
 }
 
-// NewAutoClosingWriterFactory wraps any io.WriteClosers returned by its underlying WriterProvider in an
+// NewAutoClosingWriterProvider wraps any io.WriteClosers returned by its underlying WriterProvider in an
 // io_util.AutoCloser.
-type AutoClosingWriterFactory struct {
+type AutoClosingWriterProvider struct {
 	underlying WriteCloserProvider
 }
 
-func (f *AutoClosingWriterFactory) Provide(fullPath string) (io.Writer, error) {
+func (f *AutoClosingWriterProvider) Provide(fullPath string) (io.Writer, error) {
 	if fullPath == "" {
 		return nil, nil
 	}
@@ -51,8 +51,8 @@ func (f *AutoClosingWriterFactory) Provide(fullPath string) (io.Writer, error) {
 	}, nil
 }
 
-func NewAutoClosingWriterFactory(underlying WriteCloserProvider) *AutoClosingWriterFactory {
-	return &AutoClosingWriterFactory{
+func NewAutoClosingWriterProvider(underlying WriteCloserProvider) *AutoClosingWriterProvider {
+	return &AutoClosingWriterProvider{
 		underlying: underlying,
 	}
 }

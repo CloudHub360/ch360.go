@@ -36,7 +36,7 @@ func TestWriteCloserProviderSuiteRunner(t *testing.T) {
 func (suite *WriteCloserProviderSuite) Test_BasicWriterFactory_Returns_Its_Param() {
 	// Arrange
 	expectedWriter := &bytes.Buffer{}
-	sut := commands.NewBasicWriterFactory(expectedWriter)
+	sut := commands.NewBasicWriterProvider(expectedWriter)
 
 	// Act
 	receivedWriterCloser, err := sut.Provide(generators.String("fullpath"))
@@ -48,7 +48,7 @@ func (suite *WriteCloserProviderSuite) Test_BasicWriterFactory_Returns_Its_Param
 
 func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Returns_Nil_For_Empty_Param() {
 	// Arrange
-	sut := commands.NewAutoClosingWriterFactory(suite.mockWriteCloserProvider)
+	sut := commands.NewAutoClosingWriterProvider(suite.mockWriteCloserProvider)
 
 	// Act
 	receivedWriter, _ := sut.Provide("")
@@ -59,7 +59,7 @@ func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Retur
 
 func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Calls_Underlying() {
 	// Arrange
-	sut := commands.NewAutoClosingWriterFactory(suite.mockWriteCloserProvider)
+	sut := commands.NewAutoClosingWriterProvider(suite.mockWriteCloserProvider)
 	suite.mockWriteCloserProvider.On("Provide", mock.Anything).Return(nil, nil)
 
 	// Act
@@ -72,7 +72,7 @@ func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Calls
 
 func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Returns_Error_From_Underlying() {
 	// Arrange
-	sut := commands.NewAutoClosingWriterFactory(suite.mockWriteCloserProvider)
+	sut := commands.NewAutoClosingWriterProvider(suite.mockWriteCloserProvider)
 	expectedError := errors.New("simulated error")
 	suite.mockWriteCloserProvider.On("Provide", mock.Anything).Return(nil, expectedError)
 
@@ -85,7 +85,7 @@ func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Retur
 
 func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Returns_Provided_Underlying_Within_AutoCloser() {
 	// Arrange
-	sut := commands.NewAutoClosingWriterFactory(suite.mockWriteCloserProvider)
+	sut := commands.NewAutoClosingWriterProvider(suite.mockWriteCloserProvider)
 
 	suite.mockWriteCloserProvider.On("Provide", mock.Anything).Return(suite.mockWriteCloser, nil)
 

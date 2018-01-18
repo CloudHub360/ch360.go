@@ -195,9 +195,9 @@ func getWriterProvider(multiFile bool, extension string) commands.WriterProvider
 				Extension: extension,
 			},
 		}
-		return commands.NewAutoClosingWriterFactory(fileProvider)
+		return commands.NewAutoClosingWriterProvider(fileProvider)
 	} else {
-		return commands.NewBasicWriterFactory(os.Stdout)
+		return commands.NewBasicWriterProvider(os.Stdout)
 	}
 }
 
