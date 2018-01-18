@@ -14,10 +14,10 @@ type ClassifyResultsWriter interface {
 }
 
 type TableClassifyResultsWriter struct {
-	provider WriteCloserProvider
+	provider WriterProvider
 }
 
-func NewTableClassifyResultsWriter(provider WriteCloserProvider) *TableClassifyResultsWriter {
+func NewTableClassifyResultsWriter(provider WriterProvider) *TableClassifyResultsWriter {
 	return &TableClassifyResultsWriter{
 		provider: provider,
 	}
@@ -26,7 +26,7 @@ func NewTableClassifyResultsWriter(provider WriteCloserProvider) *TableClassifyR
 var classifyTableOutputFormat = "%-44.44s %-24.24s %v\n"
 
 func (writer *TableClassifyResultsWriter) Start() error {
-	outWriter, err := writer.provider("")
+	outWriter, err := writer.provider.Provide("")
 
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func (writer *TableClassifyResultsWriter) Start() error {
 }
 
 func (writer *TableClassifyResultsWriter) WriteResult(fullPath string, result *types.ClassificationResult) error {
-	out, err := writer.provider(fullPath)
+	out, err := writer.provider.Provide(fullPath)
 
 	if err != nil {
 		return err
@@ -53,15 +53,5 @@ func (writer *TableClassifyResultsWriter) WriteResult(fullPath string, result *t
 }
 
 func (writer *TableClassifyResultsWriter) Finish() error {
-	outWriter, err := writer.provider("")
-
-	if err != nil {
-		return err
-	}
-
-	if outWriter != nil {
-		return outWriter.Close()
-	}
-
 	return nil
 }
