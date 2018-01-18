@@ -42,23 +42,42 @@ func (writer *JsonClassifyResultsWriter) Start() error {
 	return nil
 }
 
+func (writer *JsonClassifyResultsWriter) writeStart() error {
+	out, err := writer.writerProvider.Provide("")
+
+	if err != nil {
+		return err
+	}
+
+	if out == nil {
+		return nil
+	}
+
+	if writer.writingStarted {
+		fmt.Fprint(out, ",\n")
+	} else {
+		fmt.Fprint(out, "[")
+		writer.writingStarted = true
+	}
+
+	return nil
+}
+
 func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
 	if !writer.startCalled {
 		return errors.New("Start() must be called before WriteResult()")
+	}
+
+	err := writer.writeStart()
+
+	if err != nil {
+		return err
 	}
 
 	out, err := writer.writerProvider.Provide(filename)
 
 	if err != nil {
 		return err
-	}
-
-	if writer.writingStarted {
-		fmt.Fprint(out, ",")
-		fmt.Fprintln(out, "")
-	} else {
-		fmt.Fprint(out, "[")
-		writer.writingStarted = true
 	}
 
 	var scores []classifyDocumentResultDocumentTypeScore
@@ -77,16 +96,14 @@ func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *ty
 	}
 
 	bytes, err := json.MarshalIndent(output, "", "  ")
+
 	if err != nil {
 		return err
 	}
 
 	_, err = out.Write(bytes)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func (writer *JsonClassifyResultsWriter) Finish() error {
