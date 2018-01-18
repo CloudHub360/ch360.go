@@ -62,7 +62,7 @@ func (appDirectory *AppDirectory) read() ([]byte, error) {
 }
 
 func (appDirectory *AppDirectory) getPath() string {
-	return filepath.Join(appDirectory.homeDirectory, ".ch360")
+	return filepath.Join(appDirectory.homeDirectory, ".surf")
 }
 
 func (appDirectory *AppDirectory) configFilePath() string {
