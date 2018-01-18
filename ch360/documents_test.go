@@ -196,6 +196,7 @@ func (suite *DocumentsClientSuite) Test_GetAll_Documents_Returns_List_Of_Documen
 
 	assert.Equal(suite.T(), 2, len(docs))
 	assert.Equal(suite.T(), "yOq34IxGWk-_kAfQUdlcbw", docs[0].Id)
+	assert.Equal(suite.T(), "7rRf0hWbHUaGua7oDszMpQ", docs[1].Id)
 }
 
 func (suite *DocumentsClientSuite) Test_GetAll_Documents_Returns_Error_From_Http_Client() {
