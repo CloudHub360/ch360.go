@@ -12,6 +12,7 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -151,28 +152,22 @@ Filename and glob pattern examples:
 			fmt.Println(classifier.Name)
 		}
 	} else if args["classify"].(bool) {
-		filePattern := args["<file>"].(string)
-		classifierName := args["<classifier>"].(string)
 
-		outputFormat := argAsString(args, "--output-format")
-		var writer commands.ClassifyResultsWriter
+		var (
+			writer         commands.ClassifyResultsWriter
+			multiFile      = args["--multiple-files"].(bool)
+			outputFormat   = argAsString(args, "--output-format")
+			filePattern    = args["<file>"].(string)
+			classifierName = args["<classifier>"].(string)
+		)
+
 		switch outputFormat {
 		case "table":
-			var writeCloserProvider commands.WriteCloserProvider
-			multifile := true
-			if multifile {
-				fileProvider := &io_util.AdjacentFileProvider{
-					Extension: ".txt",
-				}
-				writeCloserProvider = commands.AutoClosingWriteCloserProvider(fileProvider.Provide)
-			} else {
-				writeCloserProvider = commands.DummyWriteCloserProvider(os.Stdout)
-			}
-			writer = commands.NewTableClassifyResultsWriter(writeCloserProvider)
+			writer = commands.NewTableClassifyResultsWriter(getWriterProvider(multiFile, ".txt"))
 		case "csv":
-			writer = commands.NewCSVClassifyResultsWriter(os.Stdout)
+			writer = commands.NewCSVClassifyResultsWriter(getWriterProvider(multiFile, ".csv"))
 		case "json":
-			writer = commands.NewJsonClassifyResultsWriter(os.Stdout)
+			writer = commands.NewJsonClassifyResultsWriter(getWriterProvider(multiFile, ".json"))
 		default:
 			// DocOpt doesn't do validation of these values for us, so we need to catch invalid values here
 			fmt.Printf("Unknown output format '%s'. Allowed values are: csv, table, json.", outputFormat)
@@ -190,6 +185,19 @@ Filename and glob pattern examples:
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
+	}
+}
+
+func getWriterProvider(multiFile bool, extension string) commands.WriterProvider {
+	if multiFile {
+		fileProvider := &factoryAdaptor{
+			afp: &io_util.AdjacentFileProvider{
+				Extension: extension,
+			},
+		}
+		return commands.NewAutoClosingWriterFactory(fileProvider)
+	} else {
+		return commands.NewBasicWriterFactory(os.Stdout)
 	}
 }
 
@@ -219,4 +227,14 @@ func readSecretFromConsole() (string, error) {
 		return "", err
 	}
 	return secret, nil
+}
+
+// Helper struct to convert an AdjacentFileProvider to a WriteCloserFactory.
+// It's needed as iface1 (*os.File, error) can't be used as iface2 (io.WriteCloser, error).
+type factoryAdaptor struct {
+	afp *io_util.AdjacentFileProvider
+}
+
+func (fa *factoryAdaptor) Provide(fullpath string) (io.WriteCloser, error) {
+	return fa.afp.Provide(fullpath)
 }
