@@ -5,31 +5,54 @@ import (
 	"io"
 )
 
-type WriteCloserProvider func(fullPath string) (io.WriteCloser, error)
+//go:generate mockery -name "WriterProvider|WriteCloserProvider"
 
-// DummyWriteCloserProvider just returns the provided io.WriteCloser in any call to the
-func NewDummyWriteCloserProvider(dest io.WriteCloser) WriteCloserProvider {
-	return func(fullPath string) (io.WriteCloser, error) {
-		return dest, nil
+type WriterProvider interface {
+	Provide(fullPath string) (io.Writer, error)
+}
+type WriteCloserProvider interface {
+	Provide(fullPath string) (io.WriteCloser, error)
+}
+
+// BasicWriterFactory just returns the provided io.Writer in any call to Provide
+type BasicWriterFactory struct {
+	dest io.Writer
+}
+
+func NewBasicWriterFactory(dest io.Writer) *BasicWriterFactory {
+	return &BasicWriterFactory{
+		dest: dest,
 	}
 }
 
-// NewAutoClosingWriteCloserProvider wraps any io.WriteClosers returned by its underlying WriteCloserProvider in an
+func (f *BasicWriterFactory) Provide(fullPath string) (io.Writer, error) {
+	return f.dest, nil
+}
+
+// NewAutoClosingWriterFactory wraps any io.WriteClosers returned by its underlying WriterProvider in an
 // io_util.AutoCloser.
-func NewAutoClosingWriteCloserProvider(underlying WriteCloserProvider) WriteCloserProvider {
-	return func(fullPath string) (io.WriteCloser, error) {
-		if fullPath == "" {
-			return nil, nil
-		}
+type AutoClosingWriterFactory struct {
+	underlying WriteCloserProvider
+}
 
-		outWriter, err := underlying(fullPath)
+func (f *AutoClosingWriterFactory) Provide(fullPath string) (io.Writer, error) {
+	if fullPath == "" {
+		return nil, nil
+	}
 
-		if err != nil {
-			return nil, err
-		}
+	outWriter, err := f.underlying.Provide(fullPath)
 
-		return &io_util.AutoCloser{
-			Underlying: outWriter,
-		}, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return &io_util.AutoCloser{
+		Underlying: outWriter,
+	}, nil
+}
+
+func NewAutoClosingWriterFactory(underlying WriteCloserProvider) *AutoClosingWriterFactory {
+	return &AutoClosingWriterFactory{
+		underlying: underlying,
 	}
 }

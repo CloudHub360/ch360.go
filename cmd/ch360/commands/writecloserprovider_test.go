@@ -1,85 +1,83 @@
 package commands_test
 
 import (
+	"bytes"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
+	"github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
 	"github.com/CloudHub360/ch360.go/io_util"
-	"github.com/CloudHub360/ch360.go/io_util/mocks"
+	iomocks "github.com/CloudHub360/ch360.go/io_util/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"io"
 	"testing"
 )
 
 type WriteCloserProviderSuite struct {
 	suite.Suite
-	mockWriteCloser     *mocks.WriteCloser
-	writeCloserProvider commands.WriteCloserProvider
+	mockWriteCloser         *iomocks.WriteCloser
+	mockWriterProvider      *mocks.WriterProvider
+	mockWriteCloserProvider *mocks.WriteCloserProvider
 }
 
 func (suite *WriteCloserProviderSuite) TearDownTest() {}
 
 func (suite *WriteCloserProviderSuite) SetupTest() {
-	suite.mockWriteCloser = &mocks.WriteCloser{}
-	suite.writeCloserProvider = func(fullPath string) (io.WriteCloser, error) {
-		return nil, nil
-	}
+	suite.mockWriteCloser = &iomocks.WriteCloser{}
+	suite.mockWriterProvider = &mocks.WriterProvider{}
+	suite.mockWriteCloserProvider = &mocks.WriteCloserProvider{}
 }
 
 func TestWriteCloserProviderSuiteRunner(t *testing.T) {
 	suite.Run(t, new(WriteCloserProviderSuite))
 }
 
-func (suite *WriteCloserProviderSuite) Test_DummyProvider_Returns_Its_Param() {
+func (suite *WriteCloserProviderSuite) Test_BasicWriterFactory_Returns_Its_Param() {
 	// Arrange
-	sut := commands.NewDummyWriteCloserProvider
+	expectedWriter := &bytes.Buffer{}
+	sut := commands.NewBasicWriterFactory(expectedWriter)
 
 	// Act
-	receivedWriterCloser, err := sut(suite.mockWriteCloser)(generators.String("fullpath"))
+	receivedWriterCloser, err := sut.Provide(generators.String("fullpath"))
 
 	// Assert
-	assert.Equal(suite.T(), suite.mockWriteCloser, receivedWriterCloser)
+	assert.Equal(suite.T(), expectedWriter, receivedWriterCloser)
 	assert.Nil(suite.T(), err)
 }
 
 func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Returns_Nil_For_Empty_Param() {
 	// Arrange
-	sut := commands.NewAutoClosingWriteCloserProvider
+	sut := commands.NewAutoClosingWriterFactory(suite.mockWriteCloserProvider)
 
 	// Act
-	receivedWriterCloser, _ := sut(suite.writeCloserProvider)("")
+	receivedWriter, _ := sut.Provide("")
 
 	// Assert
-	assert.Nil(suite.T(), receivedWriterCloser)
+	assert.Nil(suite.T(), receivedWriter)
 }
 
 func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Calls_Underlying() {
 	// Arrange
-	sut := commands.NewAutoClosingWriteCloserProvider
-	underlyingCalled := false
-	var writeCloserProvider commands.WriteCloserProvider = func(fullPath string) (io.WriteCloser, error) {
-		underlyingCalled = true
-		return nil, nil
-	}
+	sut := commands.NewAutoClosingWriterFactory(suite.mockWriteCloserProvider)
+	suite.mockWriteCloserProvider.On("Provide", mock.Anything).Return(nil, nil)
 
 	// Act
-	sut(writeCloserProvider)(generators.String("fullpath"))
+	path := generators.String("fullpath")
+	sut.Provide(path)
 
 	// Assert
-	assert.True(suite.T(), underlyingCalled)
+	suite.mockWriteCloserProvider.AssertCalled(suite.T(), "Provide", path)
 }
 
 func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Returns_Error_From_Underlying() {
 	// Arrange
-	sut := commands.NewAutoClosingWriteCloserProvider
+	sut := commands.NewAutoClosingWriterFactory(suite.mockWriteCloserProvider)
 	expectedError := errors.New("simulated error")
-	var writeCloserProvider commands.WriteCloserProvider = func(fullPath string) (io.WriteCloser, error) {
-		return nil, expectedError
-	}
+	suite.mockWriteCloserProvider.On("Provide", mock.Anything).Return(nil, expectedError)
 
 	// Act
-	_, receivedError := sut(writeCloserProvider)(generators.String("fullpath"))
+	_, receivedError := sut.Provide(generators.String("fullpath"))
 
 	// Assert
 	assert.Equal(suite.T(), expectedError, receivedError)
@@ -87,17 +85,15 @@ func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Retur
 
 func (suite *WriteCloserProviderSuite) Test_AutoClosingWriteCloserProvider_Returns_Provided_Underlying_Within_AutoCloser() {
 	// Arrange
-	sut := commands.NewAutoClosingWriteCloserProvider
-	expectedWriteCloser := &mocks.WriteCloser{}
-	var writeCloserProvider commands.WriteCloserProvider = func(fullPath string) (io.WriteCloser, error) {
-		return expectedWriteCloser, nil
-	}
+	sut := commands.NewAutoClosingWriterFactory(suite.mockWriteCloserProvider)
+
+	suite.mockWriteCloserProvider.On("Provide", mock.Anything).Return(suite.mockWriteCloser, nil)
 
 	// Act
-	receivedProvider, _ := sut(writeCloserProvider)(generators.String("fullpath"))
+	receivedWriter, _ := sut.Provide(generators.String("fullpath"))
 
 	// Assert
-	ac, ok := receivedProvider.(*io_util.AutoCloser)
+	ac, ok := receivedWriter.(*io_util.AutoCloser)
 	assert.True(suite.T(), ok)
-	assert.Equal(suite.T(), expectedWriteCloser, ac.Underlying)
+	assert.Equal(suite.T(), suite.mockWriteCloser, ac.Underlying)
 }
