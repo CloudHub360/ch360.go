@@ -158,6 +158,8 @@ Filename and glob pattern examples:
 			writer = commands.NewTableClassifyResultsWriter(os.Stdout)
 		case "csv":
 			writer = commands.NewCSVClassifyResultsWriter(os.Stdout)
+		case "json":
+			writer = commands.NewJsonClassifyResultsWriter(os.Stdout)
 		default:
 			// DocOpt doesn't do validation of these values for us, so we need to catch invalid values here
 			fmt.Printf("Unknown output format '%s'. Allowed values are: csv, table, json.", outputFormat)
