@@ -46,12 +46,6 @@ func (suite *CSVResultsWriterSuite) TestStart_Does_Not_Write_Anything() {
 	assert.Equal(suite.T(), "", suite.output.String())
 }
 
-func (suite *CSVResultsWriterSuite) TestWrite_Returns_Error_If_Start_Not_Called() {
-	err := suite.sut.WriteResult(suite.filename, suite.result)
-
-	assert.NotNil(suite.T(), err)
-}
-
 func (suite *CSVResultsWriterSuite) TestWrites_ResultWithCorrectFormat() {
 	filename := "document1.tif"
 	result := &types.ClassificationResult{

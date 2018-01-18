@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/pkg/errors"
-	"io"
 	"path/filepath"
 )
 
@@ -38,8 +37,9 @@ func NewJsonClassifyResultsWriter(writerProvider WriterProvider) *JsonClassifyRe
 	}
 }
 
-func (writer *JsonClassifyResultsWriter) Start() {
+func (writer *JsonClassifyResultsWriter) Start() error {
 	writer.startCalled = true
+	return nil
 }
 
 func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
@@ -89,14 +89,20 @@ func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *ty
 	return nil
 }
 
-func (writer *JsonClassifyResultsWriter) Finish() {
-	out, _ := writer.writerProvider.Provide("")
+func (writer *JsonClassifyResultsWriter) Finish() error {
+	out, err := writer.writerProvider.Provide("")
+
+	if err != nil {
+		return err
+	}
 
 	if out == nil {
-		return
+		return nil
 	}
 
 	if writer.writingStarted {
 		fmt.Fprint(out, "]")
 	}
+
+	return nil
 }
