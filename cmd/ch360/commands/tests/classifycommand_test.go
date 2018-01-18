@@ -59,9 +59,9 @@ func (suite *ClassifySuite) SetupTest() {
 	suite.ctx, _ = context.WithCancel(context.Background())
 
 	suite.resultsWriter = new(cmdmocks.ClassifyResultsWriter)
-	suite.resultsWriter.On("Start")
+	suite.resultsWriter.On("Start").Return(nil)
 	suite.resultsWriter.On("WriteResult", mock.Anything, mock.Anything).Return(nil)
-	suite.resultsWriter.On("Finish")
+	suite.resultsWriter.On("Finish").Return(nil)
 
 	suite.sut = commands.NewClassifyCommand(
 		suite.resultsWriter,

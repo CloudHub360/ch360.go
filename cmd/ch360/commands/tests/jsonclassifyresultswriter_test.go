@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
+	"github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"runtime"
@@ -16,15 +18,19 @@ import (
 
 type JsonResultsWriterSuite struct {
 	suite.Suite
-	output   *bytes.Buffer
-	sut      *commands.JsonClassifyResultsWriter
-	filename string
-	result   *types.ClassificationResult
+	output             *bytes.Buffer
+	sut                *commands.JsonClassifyResultsWriter
+	filename           string
+	result             *types.ClassificationResult
+	mockWriterProvider *mocks.WriterProvider
 }
 
 func (suite *JsonResultsWriterSuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
-	suite.sut = commands.NewJsonClassifyResultsWriter(suite.output)
+	suite.output = &bytes.Buffer{}
+	suite.mockWriterProvider = &mocks.WriterProvider{}
+	suite.mockWriterProvider.On("Provide", mock.Anything).Return(suite.output, nil)
+	suite.sut = commands.NewJsonClassifyResultsWriter(suite.mockWriterProvider)
 
 	suite.filename = generators.String("filename")
 	suite.result = &types.ClassificationResult{
