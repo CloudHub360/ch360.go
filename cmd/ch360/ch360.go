@@ -160,7 +160,7 @@ Filename and glob pattern examples:
 			writer = commands.NewCSVClassifyResultsWriter(os.Stdout)
 		default:
 			// DocOpt doesn't do validation of these values for us, so we need to catch invalid values here
-			fmt.Println(fmt.Sprintf("Unknown output format '%s'. Allowed values are: csv, table, json.", outputFormat))
+			fmt.Printf("Unknown output format '%s'. Allowed values are: csv, table, json.", outputFormat)
 			os.Exit(1)
 		}
 
