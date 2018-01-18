@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 )
 
-type JsonClassifyResultsWriter struct {
+type JsonClassifyResultsFormatter struct {
 	writerProvider WriterProvider
 	startCalled    bool
 	writingStarted bool
 }
 
 type classifyDocumentOutput struct {
-	Filename string                       `json:"filename"`
+	Filename string                       `json:"destinationFilename"`
 	Results  classifyDocumentResultOutput `json:"classification_results"`
 }
 
@@ -31,18 +31,18 @@ type classifyDocumentResultDocumentTypeScore struct {
 	Score        float64 `json:"score"`
 }
 
-func NewJsonClassifyResultsWriter(writerProvider WriterProvider) *JsonClassifyResultsWriter {
-	return &JsonClassifyResultsWriter{
+func NewJsonClassifyResultsFormatter(writerProvider WriterProvider) *JsonClassifyResultsFormatter {
+	return &JsonClassifyResultsFormatter{
 		writerProvider: writerProvider,
 	}
 }
 
-func (writer *JsonClassifyResultsWriter) Start() error {
+func (writer *JsonClassifyResultsFormatter) Start() error {
 	writer.startCalled = true
 	return nil
 }
 
-func (writer *JsonClassifyResultsWriter) writeStart() error {
+func (writer *JsonClassifyResultsFormatter) writeStart() error {
 	out, err := writer.writerProvider.Provide("")
 
 	if err != nil {
@@ -63,7 +63,7 @@ func (writer *JsonClassifyResultsWriter) writeStart() error {
 	return nil
 }
 
-func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
+func (writer *JsonClassifyResultsFormatter) WriteResult(filename string, result *types.ClassificationResult) error {
 	if !writer.startCalled {
 		return errors.New("Start() must be called before WriteResult()")
 	}
@@ -106,7 +106,7 @@ func (writer *JsonClassifyResultsWriter) WriteResult(filename string, result *ty
 	return err
 }
 
-func (writer *JsonClassifyResultsWriter) Finish() error {
+func (writer *JsonClassifyResultsFormatter) Finish() error {
 	out, err := writer.writerProvider.Provide("")
 
 	if err != nil {

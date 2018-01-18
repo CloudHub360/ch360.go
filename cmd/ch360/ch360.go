@@ -154,7 +154,7 @@ Filename and glob pattern examples:
 	} else if args["classify"].(bool) {
 
 		var (
-			writer         commands.ClassifyResultsWriter
+			writer         commands.ClassifyResultsFormatter
 			multiFile      = args["--multiple-files"].(bool)
 			outputFormat   = argAsString(args, "--output-format")
 			filePattern    = args["<file>"].(string)
@@ -163,11 +163,11 @@ Filename and glob pattern examples:
 
 		switch outputFormat {
 		case "table":
-			writer = commands.NewTableClassifyResultsWriter(getWriterProvider(multiFile, ".txt"))
+			writer = commands.NewTableClassifyResultsFormatter(getWriterProvider(multiFile, ".txt"))
 		case "csv":
-			writer = commands.NewCSVClassifyResultsWriter(getWriterProvider(multiFile, ".csv"))
+			writer = commands.NewCSVClassifyResultsFormatter(getWriterProvider(multiFile, ".csv"))
 		case "json":
-			writer = commands.NewJsonClassifyResultsWriter(getWriterProvider(multiFile, ".json"))
+			writer = commands.NewJsonClassifyResultsFormatter(getWriterProvider(multiFile, ".json"))
 		default:
 			// DocOpt doesn't do validation of these values for us, so we need to catch invalid values here
 			fmt.Printf("Unknown output format '%s'. Allowed values are: csv, table, json.", outputFormat)

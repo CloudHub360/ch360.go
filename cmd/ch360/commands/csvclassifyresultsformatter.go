@@ -7,21 +7,21 @@ import (
 	"path/filepath"
 )
 
-type CSVClassifyResultsWriter struct {
+type CSVClassifyResultsFormatter struct {
 	writerProvider WriterProvider
 }
 
-func NewCSVClassifyResultsWriter(provider WriterProvider) *CSVClassifyResultsWriter {
-	return &CSVClassifyResultsWriter{
+func NewCSVClassifyResultsFormatter(provider WriterProvider) *CSVClassifyResultsFormatter {
+	return &CSVClassifyResultsFormatter{
 		writerProvider: provider,
 	}
 }
 
-func (writer *CSVClassifyResultsWriter) Start() error {
+func (writer *CSVClassifyResultsFormatter) Start() error {
 	return nil
 }
 
-func (writer *CSVClassifyResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
+func (writer *CSVClassifyResultsFormatter) WriteResult(filename string, result *types.ClassificationResult) error {
 	destWriter, err := writer.writerProvider.Provide(filename)
 
 	if err != nil {
@@ -45,7 +45,7 @@ func (writer *CSVClassifyResultsWriter) WriteResult(filename string, result *typ
 	return nil
 }
 
-func (writer *CSVClassifyResultsWriter) Finish() error {
+func (writer *CSVClassifyResultsFormatter) Finish() error {
 	return nil
 }
 

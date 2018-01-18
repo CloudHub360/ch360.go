@@ -6,26 +6,26 @@ import (
 	"path/filepath"
 )
 
-//go:generate mockery -name "ClassifyResultsWriter"
-type ClassifyResultsWriter interface {
+//go:generate mockery -name "ClassifyResultsFormatter"
+type ClassifyResultsFormatter interface {
 	Start() error
 	WriteResult(filename string, result *types.ClassificationResult) error
 	Finish() error
 }
 
-type TableClassifyResultsWriter struct {
+type TableClassifyResultsFormatter struct {
 	provider WriterProvider
 }
 
-func NewTableClassifyResultsWriter(provider WriterProvider) *TableClassifyResultsWriter {
-	return &TableClassifyResultsWriter{
+func NewTableClassifyResultsFormatter(provider WriterProvider) *TableClassifyResultsFormatter {
+	return &TableClassifyResultsFormatter{
 		provider: provider,
 	}
 }
 
 var classifyTableOutputFormat = "%-44.44s %-24.24s %v\n"
 
-func (writer *TableClassifyResultsWriter) Start() error {
+func (writer *TableClassifyResultsFormatter) Start() error {
 	outWriter, err := writer.provider.Provide("")
 
 	if err != nil {
@@ -39,7 +39,7 @@ func (writer *TableClassifyResultsWriter) Start() error {
 	return nil
 }
 
-func (writer *TableClassifyResultsWriter) WriteResult(fullPath string, result *types.ClassificationResult) error {
+func (writer *TableClassifyResultsFormatter) WriteResult(fullPath string, result *types.ClassificationResult) error {
 	out, err := writer.provider.Provide(fullPath)
 
 	if err != nil {
@@ -52,6 +52,6 @@ func (writer *TableClassifyResultsWriter) WriteResult(fullPath string, result *t
 	return nil
 }
 
-func (writer *TableClassifyResultsWriter) Finish() error {
+func (writer *TableClassifyResultsFormatter) Finish() error {
 	return nil
 }
