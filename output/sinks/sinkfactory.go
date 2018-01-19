@@ -6,6 +6,7 @@ type SinkParams struct {
 	InputFilename string
 }
 
+//go:generate mockery -name SinkFactory
 type SinkFactory interface {
 	Sink(params SinkParams) (Sink, error)
 }
