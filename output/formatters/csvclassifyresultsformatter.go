@@ -1,36 +1,28 @@
-package commands
+package formatters
 
 import (
 	"encoding/csv"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/types"
+	"io"
 	"path/filepath"
 )
 
 type CSVClassifyResultsFormatter struct {
-	writerProvider WriterProvider
 }
 
-func NewCSVClassifyResultsFormatter(provider WriterProvider) *CSVClassifyResultsFormatter {
-	return &CSVClassifyResultsFormatter{
-		writerProvider: provider,
-	}
+func NewCSVClassifyResultsFormatter() *CSVClassifyResultsFormatter {
+	return &CSVClassifyResultsFormatter{}
 }
 
-func (writer *CSVClassifyResultsFormatter) Start() error {
+func (f *CSVClassifyResultsFormatter) WriteHeader(writer io.Writer) error {
 	return nil
 }
 
-func (writer *CSVClassifyResultsFormatter) WriteResult(filename string, result *types.ClassificationResult) error {
-	destWriter, err := writer.writerProvider.Provide(filename)
-
-	if err != nil {
-		return err
-	}
-
+func (f *CSVClassifyResultsFormatter) WriteResult(writer io.Writer, filename string, result *types.ClassificationResult) error {
 	record := []string{filepath.FromSlash(filename), result.DocumentType, boolToString(result.IsConfident), fmt.Sprintf("%.3f", result.RelativeConfidence)}
 
-	csvWriter := csv.NewWriter(destWriter)
+	csvWriter := csv.NewWriter(writer)
 
 	if err := csvWriter.Write(record); err != nil {
 		return err
@@ -45,7 +37,11 @@ func (writer *CSVClassifyResultsFormatter) WriteResult(filename string, result *
 	return nil
 }
 
-func (writer *CSVClassifyResultsFormatter) Finish() error {
+func (f *CSVClassifyResultsFormatter) WriteSeparator(writer io.Writer) error {
+	return nil
+}
+
+func (f *CSVClassifyResultsFormatter) WriteFooter(writer io.Writer) error {
 	return nil
 }
 

@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/types"
-	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
-	"github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
+	"github.com/CloudHub360/ch360.go/output/formatters"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"runtime"
@@ -18,19 +16,16 @@ import (
 
 type JsonResultsFormatterSuite struct {
 	suite.Suite
-	output             *bytes.Buffer
-	sut                *commands.JsonClassifyResultsFormatter
-	filename           string
-	result             *types.ClassificationResult
-	mockWriterProvider *mocks.WriterProvider
+	output   *bytes.Buffer
+	sut      *formatters.JsonClassifyResultsFormatter
+	filename string
+	result   *types.ClassificationResult
 }
 
 func (suite *JsonResultsFormatterSuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
 	suite.output = &bytes.Buffer{}
-	suite.mockWriterProvider = &mocks.WriterProvider{}
-	suite.mockWriterProvider.On("Provide", mock.Anything).Return(suite.output, nil)
-	suite.sut = commands.NewJsonClassifyResultsFormatter(suite.mockWriterProvider)
+	suite.sut = formatters.NewJsonClassifyResultsFormatter()
 
 	suite.filename = generators.String("filename")
 	suite.result = &types.ClassificationResult{
@@ -43,32 +38,32 @@ func TestJsonTableResultsWriterRunner(t *testing.T) {
 	suite.Run(t, new(JsonResultsFormatterSuite))
 }
 
-func (suite *JsonResultsFormatterSuite) TestStart_Does_Not_Write_Anything() {
-	suite.sut.Start()
+func (suite *JsonResultsFormatterSuite) TestWriteHeader_Writes_Header() {
+	suite.sut.WriteHeader(suite.output)
 
-	assert.Equal(suite.T(), "", suite.output.String())
+	assert.Equal(suite.T(), "[", suite.output.String())
 }
 
 func (suite *JsonResultsFormatterSuite) TestWrites_ResultWithCorrectFormat() {
-	suite.sut.Start()
-	err := suite.sut.WriteResult(exampleFilename, exampleResult)
-	suite.sut.Finish()
+	suite.sut.WriteHeader(suite.output)
+	err := suite.sut.WriteResult(suite.output, exampleFilename, exampleResult)
+	suite.sut.WriteFooter(suite.output)
 
 	require.Nil(suite.T(), err)
 	assert.Equal(suite.T(), exampleOutput, suite.output.String())
 }
 
 func (suite *JsonResultsFormatterSuite) TestWrites_Filename() {
-	suite.sut.Start()
-	err := suite.sut.WriteResult(suite.filename, suite.result)
+	suite.sut.WriteHeader(suite.output)
+	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.filename))
 }
 
 func (suite *JsonResultsFormatterSuite) TestWrites_DocumentType() {
-	suite.sut.Start()
-	err := suite.sut.WriteResult(suite.filename, suite.result)
+	suite.sut.WriteHeader(suite.output)
+	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.result.DocumentType))
@@ -77,8 +72,8 @@ func (suite *JsonResultsFormatterSuite) TestWrites_DocumentType() {
 func (suite *JsonResultsFormatterSuite) TestWrites_False_For_Not_IsConfident() {
 	suite.result.IsConfident = false
 
-	suite.sut.Start()
-	err := suite.sut.WriteResult(suite.filename, suite.result)
+	suite.sut.WriteHeader(suite.output)
+	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), "false"))
@@ -96,8 +91,8 @@ func (suite *JsonResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Ha
 		expectedFilename = `/var/folder/document1.tif`
 	}
 
-	suite.sut.Start()
-	err := suite.sut.WriteResult(filename, suite.result)
+	suite.sut.WriteHeader(suite.output)
+	err := suite.sut.WriteResult(suite.output, filename, suite.result)
 
 	require.Nil(suite.T(), err)
 	containsFilenameWithPath := strings.Contains(suite.output.String(), expectedFilename)
@@ -108,6 +103,8 @@ func (suite *JsonResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Ha
 		fmt.Printf("Output does not contain %s", expectedFilename)
 	}
 }
+
+//TODO Test that WriteFooter writes nothing
 
 var exampleFilename = "document1.tif"
 var exampleResult = &types.ClassificationResult{
