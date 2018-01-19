@@ -7,7 +7,6 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/CloudHub360/ch360.go/io_util"
 	"github.com/CloudHub360/ch360.go/output/formatters"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/CloudHub360/ch360.go/output/sinks"
@@ -15,7 +14,6 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
-	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -239,14 +237,4 @@ func readSecretFromConsole() (string, error) {
 		return "", err
 	}
 	return secret, nil
-}
-
-// Helper struct to convert an AdjacentFileProvider to a WriteCloserFactory.
-// It's needed as iface1 (*os.File, error) can't be used as iface2 (io.WriteCloser, error).
-type factoryAdaptor struct {
-	afp *io_util.AdjacentFileProvider
-}
-
-func (fa *factoryAdaptor) Provide(fullpath string) (io.WriteCloser, error) {
-	return fa.afp.Provide(fullpath)
 }
