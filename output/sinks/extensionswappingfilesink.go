@@ -44,6 +44,5 @@ func (f *ExtensionSwappingFileSink) Close() error {
 }
 
 func (f *ExtensionSwappingFileSink) Write(b []byte) (int, error) {
-	//TODO Call Open if not already called, or throw Error
 	return f.file.Write(b)
 }

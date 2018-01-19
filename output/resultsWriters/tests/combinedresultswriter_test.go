@@ -134,7 +134,6 @@ func (suite *CombinedResultsWriterSuite) TestFinish_Writes_Footer_Then_ClosesSin
 	err := suite.sut.Finish()
 
 	assert.Nil(suite.T(), err)
-	//TODO Fake sink to check WriteFooter first?
 	suite.sink.AssertCalled(suite.T(), "Close")
 	suite.formatter.AssertCalled(suite.T(), "WriteFooter", suite.sink)
 }
