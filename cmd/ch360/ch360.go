@@ -7,14 +7,11 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/CloudHub360/ch360.go/output/formatters"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
-	"github.com/CloudHub360/ch360.go/output/sinks"
 	"github.com/CloudHub360/ch360.go/response"
 	"github.com/docopt/docopt-go"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
-	"github.com/spf13/afero"
 	"net/http"
 	"os"
 	"os/signal"
@@ -157,45 +154,18 @@ Filename and glob pattern examples:
 	} else if args["classify"].(bool) {
 
 		var (
-			formatter           formatters.ClassifyResultsFormatter
-			outputFormat        = argAsString(args, "--output-format")
-			filePattern         = args["<file>"].(string)
-			classifierName      = args["<classifier>"].(string)
-			outputFilename      = argAsString(args, "--output-file")
-			multiFile           = args["--multiple-files"].(bool)
-			outputFileExtension string
-			resultsWriter       resultsWriters.ResultsWriter
-			writerFactory       sinks.SinkFactory
+			outputFormat       = argAsString(args, "--output-format")
+			outputFilename     = argAsString(args, "--output-file")
+			writeMultipleFiles = args["--multiple-files"].(bool)
+			filePattern        = args["<file>"].(string)
+			classifierName     = args["<classifier>"].(string)
 		)
 
-		//TODO: Throw error if multiple files AND single file options are both set
-
-		switch outputFormat {
-		case "table":
-			formatter = formatters.NewTableClassifyResultsFormatter()
-			outputFileExtension = ".tab"
-		case "csv":
-			formatter = formatters.NewCSVClassifyResultsFormatter()
-			outputFileExtension = ".csv"
-		case "json":
-			formatter = formatters.NewJsonClassifyResultsFormatter()
-			outputFileExtension = ".json"
-		default:
-			// DocOpt doesn't do validation of these values for us, so we need to catch invalid values here
-			fmt.Printf("Unknown output format '%s'. Allowed values are: csv, table, json.", outputFormat)
+		builder := resultsWriters.NewResultsWriterBuilder(outputFormat, writeMultipleFiles, outputFilename)
+		resultsWriter, err := builder.Build()
+		if err != nil {
+			fmt.Println(err.Error())
 			os.Exit(1)
-		}
-
-		if multiFile {
-			// Write output to a file "next to" each input file, with the specified extension
-			writerFactory = sinks.NewExtensionSwappingFileSinkFactory(outputFileExtension)
-			resultsWriter = resultsWriters.NewIndividualResultsWriter(writerFactory, formatter)
-		} else if outputFilename != "" {
-			// Write output to a single "combined results" file with the specified filename
-			resultsWriter = resultsWriters.NewCombinedResultsWriter(sinks.NewBasicFileSink(afero.NewOsFs(), outputFilename), formatter)
-		} else {
-			// Write output to the console
-			resultsWriter = resultsWriters.NewCombinedResultsWriter(sinks.NewBasicWriterSink(os.Stdout), formatter)
 		}
 
 		err = commands.NewClassifyCommand(resultsWriter,
