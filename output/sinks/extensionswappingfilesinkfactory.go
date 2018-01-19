@@ -1,5 +1,7 @@
 package sinks
 
+import "github.com/spf13/afero"
+
 type ExtensionSwappingFileWriterFactory struct {
 	fileExtension string
 }
@@ -12,5 +14,5 @@ func NewExtensionSwappingFileSinkFactory(fileExtension string) *ExtensionSwappin
 }
 
 func (p *ExtensionSwappingFileWriterFactory) Sink(params SinkParams) (Sink, error) {
-	return newExtensionSwappingFileSink(p.fileExtension, params.InputFilename), nil
+	return NewExtensionSwappingFileSink(afero.NewOsFs(), p.fileExtension, params.InputFilename), nil
 }

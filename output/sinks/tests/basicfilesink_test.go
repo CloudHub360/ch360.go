@@ -20,7 +20,7 @@ type BasicFileSinkSuite struct {
 }
 
 func (suite *BasicFileSinkSuite) SetupTest() {
-	suite.filename = generators.String("filename")
+	suite.filename = generators.String("inputFilename")
 	suite.filecontents = generators.String("contents")
 	suite.fileSystem = afero.NewMemMapFs()
 	suite.sut = sinks.NewBasicFileSink(suite.fileSystem, suite.filename)

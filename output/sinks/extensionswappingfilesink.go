@@ -1,7 +1,7 @@
 package sinks
 
 import (
-	"os"
+	"github.com/spf13/afero"
 	"path/filepath"
 	"strings"
 )
@@ -9,12 +9,14 @@ import (
 // The ExtensionSwappingFileSink creates a file adjacent to the specified inputFilename (but with the specified extension),
 // overwriting if necessary and returns an io.Writer that is that file
 type ExtensionSwappingFileSink struct {
+	fileSystem          afero.Fs
 	destinationFilename string
-	file                *os.File
+	file                afero.File
 }
 
-func newExtensionSwappingFileSink(fileExtension string, inputFilename string) *ExtensionSwappingFileSink {
+func NewExtensionSwappingFileSink(fileSystem afero.Fs, fileExtension string, inputFilename string) *ExtensionSwappingFileSink {
 	return &ExtensionSwappingFileSink{
+		fileSystem:          fileSystem,
 		destinationFilename: replaceFileExtension(inputFilename, fileExtension),
 	}
 }
@@ -32,7 +34,7 @@ func replaceFileExtension(fullPath string, newFileExtension string) string {
 }
 
 func (f *ExtensionSwappingFileSink) Open() error {
-	file, err := os.Create(f.destinationFilename)
+	file, err := f.fileSystem.Create(f.destinationFilename)
 	f.file = file
 	return err
 }
