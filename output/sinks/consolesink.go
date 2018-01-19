@@ -1,10 +1,18 @@
 package sinks
 
 import (
-	"os"
+	"io"
 )
 
-type ConsoleSink struct{}
+type ConsoleSink struct {
+	writer io.Writer
+}
+
+func NewConsoleSink(writer io.Writer) *ConsoleSink {
+	return &ConsoleSink{
+		writer: writer,
+	}
+}
 
 func (f *ConsoleSink) Open() error {
 	return nil
@@ -15,5 +23,5 @@ func (f *ConsoleSink) Close() error {
 }
 
 func (f *ConsoleSink) Write(b []byte) (int, error) {
-	return os.Stdout.Write(b)
+	return f.writer.Write(b)
 }
