@@ -8,7 +8,7 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360/mocks"
 	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
-	cmdmocks "github.com/CloudHub360/ch360.go/cmd/ch360/commands/mocks"
+	rwmocks "github.com/CloudHub360/ch360.go/output/resultsWriters/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -32,7 +32,7 @@ type ClassifySuite struct {
 	testFilePath         string
 	testFilesPattern     string
 	output               *bytes.Buffer
-	resultsWriter        *cmdmocks.ClassifyResultsWriter
+	resultsWriter        *rwmocks.ResultsWriter
 	ctx                  context.Context
 }
 
@@ -58,7 +58,8 @@ func (suite *ClassifySuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
 	suite.ctx, _ = context.WithCancel(context.Background())
 
-	suite.resultsWriter = new(cmdmocks.ClassifyResultsWriter)
+	suite.resultsWriter = new(rwmocks.ResultsWriter)
+
 	suite.resultsWriter.On("Start").Return(nil)
 	suite.resultsWriter.On("WriteResult", mock.Anything, mock.Anything).Return(nil)
 	suite.resultsWriter.On("Finish").Return(nil)

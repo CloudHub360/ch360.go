@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/mattn/go-zglob"
 	"io"
@@ -19,11 +20,11 @@ type ClassifyCommand struct {
 	documentDeleter    ch360.DocumentDeleter
 	documentGetter     ch360.DocumentGetter
 	parallelWorkers    int
-	resultsWriter      ClassifyResultsWriter
+	resultsWriter      resultsWriters.ResultsWriter
 	errorWriter        io.Writer
 }
 
-func NewClassifyCommand(resultsWriter ClassifyResultsWriter,
+func NewClassifyCommand(resultsWriter resultsWriters.ResultsWriter,
 	errorWriter io.Writer,
 	docClassifier ch360.DocumentClassifier,
 	docCreator ch360.DocumentCreator,
@@ -47,8 +48,6 @@ func min(x, y int) int {
 	}
 	return y
 }
-
-var ClassifyOutputFormat = "%-36.36s %-32.32s %v\n"
 
 func (cmd *ClassifyCommand) handlerFor(cancel context.CancelFunc, filename string, errs *[]error) pool.HandlerFunc {
 	return func(value interface{}, err error) {
