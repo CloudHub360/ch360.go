@@ -35,6 +35,14 @@ function Invoke-Classifier([Io.FileInfo]$file, [string]$classifierName) {
     Invoke-App classify $($file.FullName) $classifierName
 }
 
+function Classify-Files-And-Write-CSV-OutputFile([string]$filePattern, [string]$classifierName, [string]$outputFile) {
+    Invoke-App classify $filePattern $classifierName -o $outputFile -f csv
+}
+
+function Classify-Files-And-Write-Multiple-OutputFiles([string]$filePattern, [string]$classifierName, [string]$format) {
+    Invoke-App classify $filePattern $classifierName -m -f $format
+}
+
 function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){
     $input -join [Environment]::NewLine
 }
@@ -85,7 +93,8 @@ Describe "classifiers" {
     }
 
     BeforeEach {
-        Get-Classifiers | Should -Be "No classifiers found."
+        # Tidy up any leftover classifiers in the account
+        Get-Classifiers | Remove-Classifier
     }
 
     It "should be created from a zip file of samples" {
@@ -98,9 +107,6 @@ Adding samples from file '$samples'... [OK]
 
         # Verify
         Get-Classifiers | Format-MultilineOutput | Should -Contain $classifierName
-
-        # Teardown
-        Remove-Classifier $classifierName
     }
 
     It "should not be created from an invalid zip file of samples" {
@@ -111,9 +117,6 @@ Adding samples from file '$samples'... [FAILED]
 "@)
 
         $LASTEXITCODE | Should -Be 1
-
-        #Teardown
-        Remove-Classifier $classifierName
     }
 
     It "should not be created from a non-existent zip file of samples" {
@@ -130,17 +133,64 @@ The file '$samples' could not be found.
     It "should attempt to classify a file" {
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples
-
+        
         $document = (Join-Path $PSScriptRoot "documents/document1.pdf")
         Invoke-Classifier $document $classifierName | Format-MultilineOutput | Should -Be @"
 FILE                                 DOCUMENT TYPE                    CONFIDENT
 document1.pdf                        Notice of Lien                   true
 "@
-
-        # Teardown
-        Remove-Classifier $classifierName
     }
 
+    It "should classify files and write to a multiple csv results files" {
+        $samples = (Join-Path $PSScriptRoot "samples.zip")
+        New-Classifier $classifierName $samples
+        
+        $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/*.pdf")
+        $document2OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.csv")
+        $document3OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document3.csv")
+        
+        Classify-Files-And-Write-Multiple-OutputFiles $filePattern $classifierName "csv"
+        
+        (Get-Content -Path $document2OutputFile) | Format-MultilineOutput | Should -BeLike @"
+*document2.pdf,Notice of Lien,true,1.177
+"@
+
+        (Get-Content -Path $document3OutputFile) | Format-MultilineOutput | Should -BeLike @"
+*document3.pdf,Notice of Lien,true,1.177
+"@
+
+        Remove-Item -Path $document2OutputFile
+        Remove-Item -Path $document3OutputFile
+    }
+
+    It "should classify files and write to a single csv results file" {
+        $samples = (Join-Path $PSScriptRoot "samples.zip")
+        New-Classifier $classifierName $samples
+        
+        $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/*.pdf")
+        $outputFile = New-TemporaryFile
+        Classify-Files-And-Write-CSV-OutputFile $filePattern $classifierName $outputFile
+        
+        (Get-Content -Path $outputFile) | Format-MultilineOutput | Should -BeLike @"
+*document2.pdf,Notice of Lien,true,1.177
+*document3.pdf,Notice of Lien,true,1.177
+"@
+        Remove-Item -Path $outputFile
+    }
+    
+It "should classify a file and write a json result file" {
+    $samples = (Join-Path $PSScriptRoot "samples.zip")
+    New-Classifier $classifierName $samples
+    
+    $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/document2.pdf")
+    $outputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.json")
+    
+    Classify-Files-And-Write-Multiple-OutputFiles $filePattern $classifierName "json"
+    
+    (Get-Content -Path $outputFile) | Format-MultilineOutput | Should -BeLike "{*}"
+
+    Remove-Item -Path $outputFile
+}
     AfterAll {
         # Tidy up any leftover classifiers in the account
         Get-Classifiers | Remove-Classifier
