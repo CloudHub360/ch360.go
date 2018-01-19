@@ -64,11 +64,11 @@ func (f *JsonClassifyResultsFormatter) WriteResult(writer io.Writer, filename st
 }
 
 func (f *JsonClassifyResultsFormatter) WriteSeparator(writer io.Writer) error {
-	fmt.Fprint(writer, ",\n")
-	return nil
+	_, err := fmt.Fprint(writer, ",\n")
+	return err
 }
 
 func (f *JsonClassifyResultsFormatter) WriteFooter(writer io.Writer) error {
-	fmt.Fprint(writer, "]")
-	return nil
+	_, err := fmt.Fprint(writer, "]")
+	return err
 }
