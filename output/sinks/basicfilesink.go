@@ -1,24 +1,26 @@
 package sinks
 
 import (
-	"os"
+	"github.com/spf13/afero"
 )
 
 // The BasicFileSink creates a file with the specified destinationFilename,
 // overwriting if necessary and returns an io.Writer that is that file
 type BasicFileSink struct {
+	fileSystem          afero.Fs
 	destinationFilename string
-	file                *os.File
+	file                afero.File
 }
 
-func NewBasicFileSink(destinationFilename string) *BasicFileSink {
+func NewBasicFileSink(fileSystem afero.Fs, destinationFilename string) *BasicFileSink {
 	return &BasicFileSink{
+		fileSystem:          fileSystem,
 		destinationFilename: destinationFilename,
 	}
 }
 
 func (f *BasicFileSink) Open() error {
-	file, err := os.Create(f.destinationFilename)
+	file, err := f.fileSystem.Create(f.destinationFilename)
 	f.file = file
 	return err
 }

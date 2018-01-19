@@ -14,6 +14,7 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"net/http"
 	"os"
 	"os/signal"
@@ -191,7 +192,7 @@ Filename and glob pattern examples:
 			resultsWriter = resultsWriters.NewIndividualResultsWriter(writerFactory, formatter)
 		} else if outputFilename != "" {
 			// Write output to a single "combined results" file with the specified filename
-			resultsWriter = resultsWriters.NewCombinedResultsWriter(sinks.NewBasicFileSink(outputFilename), formatter)
+			resultsWriter = resultsWriters.NewCombinedResultsWriter(sinks.NewBasicFileSink(afero.NewOsFs(), outputFilename), formatter)
 		} else {
 			// Write output to the console
 			resultsWriter = resultsWriters.NewCombinedResultsWriter(&sinks.ConsoleSink{}, formatter)
