@@ -25,13 +25,25 @@ func (c *IndividualResultsWriter) Start() error {
 }
 
 func (c *IndividualResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
-	resultSink, _ := c.sinkFactory.Sink(
+	resultSink, err := c.sinkFactory.Sink(
 		sinks.SinkParams{InputFilename: filename}) //Returns resultSink configured to write to destination file
 
-	resultSink.Open()
-	c.resultsFormatter.WriteResult(resultSink, filename, result)
+	if err != nil {
+		return err
+	}
 
-	resultSink.Close()
+	if err = resultSink.Open(); err != nil {
+		return err
+	}
+
+	if err = c.resultsFormatter.WriteResult(resultSink, filename, result); err != nil {
+		return err
+	}
+
+	if err = resultSink.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
