@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/output/formatters"
 	formatterMocks "github.com/CloudHub360/ch360.go/output/formatters/mocks"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	sinkMocks "github.com/CloudHub360/ch360.go/output/sinks/mocks"
@@ -47,13 +48,21 @@ func TestCombinedResultsWriterRunner(t *testing.T) {
 	suite.Run(t, new(CombinedResultsWriterSuite))
 }
 
-func (suite *CombinedResultsWriterSuite) TestStart_OpensSink_Then_Writes_Header() {
+func (suite *CombinedResultsWriterSuite) TestStart_OpensSink_And_Writes_Header() {
 	err := suite.sut.Start()
 
 	assert.Nil(suite.T(), err)
-	//TODO Fake sink to check opened first?
 	suite.sink.AssertCalled(suite.T(), "Open")
 	suite.formatter.AssertCalled(suite.T(), "WriteHeader", suite.sink)
+}
+
+func (suite *CombinedResultsWriterSuite) TestStart_OpensSink_Before_Writing_Header() {
+	sink := &fakeSink{}
+	sut := resultsWriters.NewCombinedResultsWriter(sink, formatters.NewCSVClassifyResultsFormatter())
+	err := sut.Start()
+
+	assert.Nil(suite.T(), err)
+	assert.True(suite.T(), sink.IsOpen)
 }
 
 func (suite *CombinedResultsWriterSuite) TestStart_Returns_Error_From_WriteHeader() {
@@ -146,4 +155,25 @@ func (suite *CombinedResultsWriterSuite) TestFinish_Returns_Error_From_SinkClose
 
 	err := suite.sut.Finish()
 	assert.Equal(suite.T(), expectedErr, err)
+}
+
+type fakeSink struct {
+	IsOpen bool
+}
+
+func (f *fakeSink) Open() error {
+	f.IsOpen = true
+	return nil
+}
+
+func (f *fakeSink) Close() error {
+	return nil
+}
+
+func (f *fakeSink) Write(b []byte) (int, error) {
+	if f.IsOpen {
+		return 0, nil
+	} else {
+		return 0, errors.New("Sink hasn't been opened")
+	}
 }
