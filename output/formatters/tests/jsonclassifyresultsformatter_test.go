@@ -104,7 +104,11 @@ func (suite *JsonResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Ha
 	}
 }
 
-//TODO Test that WriteFooter writes nothing
+func (suite *JsonResultsFormatterSuite) TestWriteFooter_Writes_Footer() {
+	suite.sut.WriteFooter(suite.output)
+
+	assert.Equal(suite.T(), "]", suite.output.String())
+}
 
 var exampleFilename = "document1.tif"
 var exampleResult = &types.ClassificationResult{
