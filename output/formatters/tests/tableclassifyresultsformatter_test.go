@@ -97,4 +97,8 @@ func (suite *TableResultsFormatterSuite) TestWrites_Filename_Only_When_It_Has_Pa
 	assert.Equal(suite.T(), expectedFilename, suite.output.String()[:len(expectedFilename)])
 }
 
-//TODO Test that WriteFooter writes nothing
+func (suite *TableResultsFormatterSuite) TestWriteFooter_Writes_Nothing() {
+	suite.sut.WriteFooter(suite.output)
+
+	assert.Equal(suite.T(), "", suite.output.String())
+}

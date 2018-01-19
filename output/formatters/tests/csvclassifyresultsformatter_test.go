@@ -93,4 +93,8 @@ func (suite *CSVResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Has
 	assert.Equal(suite.T(), filename, suite.output.String()[:len(filename)])
 }
 
-//TODO Test that WriteFooter writes nothing
+func (suite *CSVResultsFormatterSuite) TestWriteFooter_Writes_Nothing() {
+	suite.sut.WriteFooter(suite.output)
+
+	assert.Equal(suite.T(), "", suite.output.String())
+}
