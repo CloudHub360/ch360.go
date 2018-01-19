@@ -8,6 +8,9 @@ import (
 	"github.com/CloudHub360/ch360.go/cmd/ch360/commands"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/io_util"
+	"github.com/CloudHub360/ch360.go/output/formatters"
+	"github.com/CloudHub360/ch360.go/output/resultsWriters"
+	"github.com/CloudHub360/ch360.go/output/sinks"
 	"github.com/CloudHub360/ch360.go/response"
 	"github.com/docopt/docopt-go"
 	"github.com/mitchellh/go-homedir"
@@ -38,6 +41,7 @@ Options:
   -i, --client-id <id>             : Client ID
   -s, --client-secret <secret>     : Client secret
   -f, --output-format <format>     : Output format for classification results. Allowed values: table, csv, json [default: table]
+  -o, --output-file <file>  : Write all results to the specified file 
   -m, --multiple-files             : Write results output to multiple files with the same
                                    : basename as the input
 `
@@ -154,27 +158,48 @@ Filename and glob pattern examples:
 	} else if args["classify"].(bool) {
 
 		var (
-			writer         commands.ClassifyResultsFormatter
-			multiFile      = args["--multiple-files"].(bool)
-			outputFormat   = argAsString(args, "--output-format")
-			filePattern    = args["<file>"].(string)
-			classifierName = args["<classifier>"].(string)
+			formatter           formatters.ClassifyResultsFormatter
+			outputFormat        = argAsString(args, "--output-format")
+			filePattern         = args["<file>"].(string)
+			classifierName      = args["<classifier>"].(string)
+			outputFilename      = argAsString(args, "--output-file")
+			multiFile           = args["--multiple-files"].(bool)
+			outputFileExtension string
+			resultsWriter       resultsWriters.ResultsWriter
+			writerFactory       sinks.SinkFactory
 		)
+
+		//TODO: Throw error if multiple files AND single file options are both set
 
 		switch outputFormat {
 		case "table":
-			writer = commands.NewTableClassifyResultsFormatter(getWriterProvider(multiFile, ".txt"))
+			formatter = formatters.NewTableClassifyResultsFormatter()
+			outputFileExtension = ".tab"
 		case "csv":
-			writer = commands.NewCSVClassifyResultsFormatter(getWriterProvider(multiFile, ".csv"))
+			formatter = formatters.NewCSVClassifyResultsFormatter()
+			outputFileExtension = ".csv"
 		case "json":
-			writer = commands.NewJsonClassifyResultsFormatter(getWriterProvider(multiFile, ".json"))
+			formatter = formatters.NewJsonClassifyResultsFormatter()
+			outputFileExtension = ".json"
 		default:
 			// DocOpt doesn't do validation of these values for us, so we need to catch invalid values here
 			fmt.Printf("Unknown output format '%s'. Allowed values are: csv, table, json.", outputFormat)
 			os.Exit(1)
 		}
 
-		err = commands.NewClassifyCommand(writer,
+		if multiFile {
+			// Write output to a file "next to" each input file, with the specified extension
+			writerFactory = sinks.NewExtensionSwappingFileSinkFactory(outputFileExtension)
+			resultsWriter = resultsWriters.NewIndividualResultsWriter(writerFactory, formatter)
+		} else if outputFilename != "" {
+			// Write output to a single "combined results" file with the specified filename
+			resultsWriter = resultsWriters.NewCombinedResultsWriter(sinks.NewBasicFileSink(outputFilename), formatter)
+		} else {
+			// Write output to the console
+			resultsWriter = resultsWriters.NewCombinedResultsWriter(&sinks.ConsoleSink{}, formatter)
+		}
+
+		err = commands.NewClassifyCommand(resultsWriter,
 			os.Stdout,
 			apiClient.Documents,
 			apiClient.Documents,
@@ -185,19 +210,6 @@ Filename and glob pattern examples:
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
-	}
-}
-
-func getWriterProvider(multiFile bool, extension string) commands.WriterProvider {
-	if multiFile {
-		fileProvider := &factoryAdaptor{
-			afp: &io_util.AdjacentFileProvider{
-				Extension: extension,
-			},
-		}
-		return commands.NewAutoClosingWriterProvider(fileProvider)
-	} else {
-		return commands.NewBasicWriterProvider(os.Stdout)
 	}
 }
 
