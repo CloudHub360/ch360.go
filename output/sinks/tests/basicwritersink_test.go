@@ -13,7 +13,7 @@ import (
 
 type ConsoleSinkSuite struct {
 	suite.Suite
-	sut      *sinks.ConsoleSink
+	sut      *sinks.BasicWriterSink
 	contents string
 	output   *bytes.Buffer
 }
@@ -22,7 +22,7 @@ func (suite *ConsoleSinkSuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
 	suite.contents = generators.String("contents")
 
-	suite.sut = sinks.NewConsoleSink(suite.output)
+	suite.sut = sinks.NewBasicWriterSink(suite.output)
 }
 
 func TestConsoleSinkRunner(t *testing.T) {
@@ -49,7 +49,7 @@ func (suite *ConsoleSinkSuite) TestWrite_Delegates_To_Writer() {
 }
 
 func (suite *ConsoleSinkSuite) TestWrite_Returns_Error_From_Writer() {
-	sut := sinks.NewConsoleSink(&erroringWriter{})
+	sut := sinks.NewBasicWriterSink(&erroringWriter{})
 	length, err := fmt.Fprint(sut, suite.contents)
 
 	assert.NotNil(suite.T(), err)
