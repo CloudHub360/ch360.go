@@ -23,24 +23,29 @@ func NewCombinedResultsWriter(sink sinks.Sink, resultsFormatter formatters.Class
 }
 
 func (c *CombinedResultsWriter) Start() error {
-	c.resultSink.Open()
-	c.resultsFormatter.WriteHeader(c.resultSink)
-	return nil
+	if err := c.resultSink.Open(); err != nil {
+		return err
+	}
+
+	return c.resultsFormatter.WriteHeader(c.resultSink)
 }
 
 func (c *CombinedResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
 	if c.resultWritten {
-		c.resultsFormatter.WriteSeparator(c.resultSink)
+		if err := c.resultsFormatter.WriteSeparator(c.resultSink); err != nil {
+			return err
+		}
 	}
 
-	c.resultsFormatter.WriteResult(c.resultSink, filename, result)
+	err := c.resultsFormatter.WriteResult(c.resultSink, filename, result)
 	c.resultWritten = true
-	return nil
+	return err
 }
 
 func (c *CombinedResultsWriter) Finish() error {
-	c.resultsFormatter.WriteFooter(c.resultSink)
+	if err := c.resultsFormatter.WriteFooter(c.resultSink); err != nil {
+		return err
+	}
 
-	c.resultSink.Close()
-	return nil
+	return c.resultSink.Close()
 }
