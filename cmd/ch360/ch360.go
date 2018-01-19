@@ -195,7 +195,7 @@ Filename and glob pattern examples:
 			resultsWriter = resultsWriters.NewCombinedResultsWriter(sinks.NewBasicFileSink(afero.NewOsFs(), outputFilename), formatter)
 		} else {
 			// Write output to the console
-			resultsWriter = resultsWriters.NewCombinedResultsWriter(sinks.NewConsoleSink(os.Stdout), formatter)
+			resultsWriter = resultsWriters.NewCombinedResultsWriter(sinks.NewBasicWriterSink(os.Stdout), formatter)
 		}
 
 		err = commands.NewClassifyCommand(resultsWriter,
