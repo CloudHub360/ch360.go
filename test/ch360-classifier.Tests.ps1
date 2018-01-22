@@ -150,15 +150,15 @@ document1.pdf                        Notice of Lien                   true
         $document3OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document3.csv")
         
         Classify-Files-And-Write-Multiple-OutputFiles $filePattern $classifierName "csv"
+
+        Get-Content $document2OutputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score" `
+          | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)} `
+          | Should -Not -Be $null
         
-        (Get-Content -Path $document2OutputFile) | Format-MultilineOutput | Should -BeLike @"
-*document2.pdf,Notice of Lien,true,1.177
-"@
-
-        (Get-Content -Path $document3OutputFile) | Format-MultilineOutput | Should -BeLike @"
-*document3.pdf,Notice of Default,true,3.351
-"@
-
+        Get-Content $document3OutputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score" `
+          | where {($_.file -like "*document3.pdf" -and $_.documenttype -eq "Notice of Default" -and $_.score -eq 3.351 -and $_.confident)} `
+          | Should -Not -Be $null
+        
         Remove-Item -Path $document2OutputFile
         Remove-Item -Path $document3OutputFile
     }
@@ -172,9 +172,6 @@ document1.pdf                        Notice of Lien                   true
         Classify-Files-And-Write-CSV-OutputFile $filePattern $classifierName $outputFile
         
         $results = Get-Content $outputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score"
-        
-        Write-Host $results
-        Write-Host "Results length: " + $results.length
         
         $results.length | Should -Be 2        
         $doc2result = ($results | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)})
@@ -195,7 +192,14 @@ It "should classify a file and write a json result file" {
     
     Classify-Files-And-Write-Multiple-OutputFiles $filePattern $classifierName "json"
     
-    (Get-Content -Path $outputFile) | Format-MultilineOutput | Should -BeLike "{*}"
+    $results = Get-Content -Path $outputFile | ConvertFrom-Json
+    Write-Host $results
+    Write-Host $results.file
+    
+    $results.filename | Should -BeLike "*document2.pdf"
+    $results.classification_results.document_type | Should -Be "Notice of Lien"
+    $results.classification_results.is_confident | Should -Be True
+    $results.classification_results.relative_confidence | Should -Be 1.17683673
 
     Remove-Item -Path $outputFile
 }
