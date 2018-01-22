@@ -6,10 +6,8 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/ch360/types"
-	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/mattn/go-zglob"
-	"io"
 	"io/ioutil"
 	"os"
 )
@@ -20,20 +18,25 @@ type ClassifyCommand struct {
 	documentDeleter    ch360.DocumentDeleter
 	documentGetter     ch360.DocumentGetter
 	parallelWorkers    int
-	resultsWriter      resultsWriters.ResultsWriter
-	errorWriter        io.Writer
+	progressHandler    ClassifyProgressHandler
 }
 
-func NewClassifyCommand(resultsWriter resultsWriters.ResultsWriter,
-	errorWriter io.Writer,
+//go:generate mockery -name ClassifyProgressHandler
+type ClassifyProgressHandler interface {
+	Notify(filename string, result *types.ClassificationResult) error
+	NotifyErr(filename string, err error)
+	NotifyStart(totalJobs int) error
+	NotifyFinish() error
+}
+
+func NewClassifyCommand(progressHandler ClassifyProgressHandler,
 	docClassifier ch360.DocumentClassifier,
 	docCreator ch360.DocumentCreator,
 	docDeleter ch360.DocumentDeleter,
 	docGetter ch360.DocumentGetter,
 	parallelism int) *ClassifyCommand {
 	return &ClassifyCommand{
-		resultsWriter:      resultsWriter,
-		errorWriter:        errorWriter,
+		progressHandler:    progressHandler,
 		documentClassifier: docClassifier,
 		documentCreator:    docCreator,
 		documentDeleter:    docDeleter,
@@ -53,15 +56,15 @@ func (cmd *ClassifyCommand) handlerFor(cancel context.CancelFunc, filename strin
 	return func(value interface{}, err error) {
 		if err != nil {
 			errMsg := fmt.Sprintf("Error classifying file %s: %v", filename, err)
-			*errs = append(*errs, errors.New(errMsg))
+			err = errors.New(errMsg)
+			cmd.progressHandler.NotifyErr(filename, err)
+			*errs = append(*errs, err)
 			// Don't process any more if there's an error
 			cancel()
 		} else {
 			classificationResult := value.(*types.ClassificationResult)
 
-			if err = cmd.resultsWriter.WriteResult(filename, classificationResult); err != nil {
-				*errs = append(*errs, err)
-
+			if err = cmd.progressHandler.Notify(filename, classificationResult); err != nil {
 				cancel()
 			}
 		}
@@ -96,8 +99,9 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 
 	var (
 		processFileJobs []pool.Job
-		errs            []error
+		errors          []error
 	)
+
 	for _, filename := range matches {
 		// The memory of the 'filename' var is reused here, see:
 		// https://golang.org/doc/faq#closures_and_goroutines
@@ -108,7 +112,7 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 			func() (interface{}, error) {
 				return cmd.processFile(ctx, filename, classifierName)
 			},
-			cmd.handlerFor(cancel, filename, &errs))
+			cmd.handlerFor(cancel, filename, &errors))
 
 		processFileJobs = append(processFileJobs, processFileJob)
 	}
@@ -116,13 +120,13 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 	workPool := pool.NewPool(processFileJobs, cmd.parallelWorkers)
 
 	// Print results
-	cmd.resultsWriter.Start()
-	defer cmd.resultsWriter.Finish()
+	cmd.progressHandler.NotifyStart(len(processFileJobs))
+	defer cmd.progressHandler.NotifyFinish()
 	workPool.Run(ctx)
 
 	// Just return the first error.
-	if len(errs) > 0 {
-		return errs[0]
+	if len(errors) > 0 {
+		return errors[0]
 	}
 
 	return nil
