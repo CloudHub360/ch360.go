@@ -36,11 +36,11 @@ function Invoke-Classifier([Io.FileInfo]$file, [string]$classifierName) {
 }
 
 function Classify-Files-And-Write-CSV-OutputFile([string]$filePattern, [string]$classifierName, [string]$outputFile) {
-    Invoke-App classify $filePattern $classifierName -o $outputFile -f csv
+    Invoke-App classify "`"$filePattern`"" $classifierName -o $outputFile -f csv
 }
 
 function Classify-Files-And-Write-Multiple-OutputFiles([string]$filePattern, [string]$classifierName, [string]$format) {
-    Invoke-App classify $filePattern $classifierName -m -f $format
+    Invoke-App classify "`"$filePattern`"" $classifierName -m -f $format
 }
 
 function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){
@@ -156,7 +156,7 @@ document1.pdf                        Notice of Lien                   true
 "@
 
         (Get-Content -Path $document3OutputFile) | Format-MultilineOutput | Should -BeLike @"
-*document3.pdf,Notice of Lien,true,1.177
+*document3.pdf,Notice of Default,true,3.351
 "@
 
         Remove-Item -Path $document2OutputFile
@@ -173,7 +173,7 @@ document1.pdf                        Notice of Lien                   true
         
         (Get-Content -Path $outputFile) | Format-MultilineOutput | Should -BeLike @"
 *document2.pdf,Notice of Lien,true,1.177
-*document3.pdf,Notice of Lien,true,1.177
+*document3.pdf,Notice of Default,true,3.351
 "@
         Remove-Item -Path $outputFile
     }
