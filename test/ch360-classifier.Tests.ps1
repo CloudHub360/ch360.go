@@ -171,10 +171,18 @@ document1.pdf                        Notice of Lien                   true
         $outputFile = New-TemporaryFile
         Classify-Files-And-Write-CSV-OutputFile $filePattern $classifierName $outputFile
         
-        (Get-Content -Path $outputFile) | Format-MultilineOutput | Should -BeLike @"
-*document2.pdf,Notice of Lien,true,1.177
-*document3.pdf,Notice of Default,true,3.351
-"@
+        $results = Get-Content $outputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score"
+        
+        Write-Host $results
+        Write-Host "Results length: " + $results.length
+        
+        $results.length | Should -Be 2        
+        $doc2result = ($results | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)})
+        $doc2result | Should -Not -Be $null
+        
+        $doc3result = ($results | where {($_.file -like "*document3.pdf" -and $_.documenttype -eq "Notice of Default" -and $_.score -eq 3.351 -and $_.confident)})
+        $doc3result | Should -Not -Be $null
+        
         Remove-Item -Path $outputFile
     }
     
