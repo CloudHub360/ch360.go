@@ -7,9 +7,12 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/CloudHub360/ch360.go/output/formatters"
+	"github.com/CloudHub360/ch360.go/output/progress"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/CloudHub360/ch360.go/response"
 	"github.com/docopt/docopt-go"
+	"github.com/mattn/go-isatty"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"net/http"
@@ -37,9 +40,10 @@ Options:
   -i, --client-id <id>             : Client ID
   -s, --client-secret <secret>     : Client secret
   -f, --output-format <format>     : Output format for classification results. Allowed values: table, csv, json [default: table]
-  -o, --output-file <file>         : Write all results to the specified file 
+  -o, --output-file <file>         : Write all results to the specified file
   -m, --multiple-files             : Write results output to multiple files with the same
                                    : basename as the input
+  -p, --progress                   : Show progress
 `
 
 	filenameExamples := `
@@ -159,6 +163,7 @@ Filename and glob pattern examples:
 			writeMultipleFiles = args["--multiple-files"].(bool)
 			filePattern        = args["<file>"].(string)
 			classifierName     = args["<classifier>"].(string)
+			showProgress       = args["--progress"].(bool)
 		)
 
 		builder := resultsWriters.NewResultsWriterBuilder(outputFormat, writeMultipleFiles, outputFilename)
@@ -168,8 +173,13 @@ Filename and glob pattern examples:
 			os.Exit(1)
 		}
 
-		err = commands.NewClassifyCommand(resultsWriter,
-			os.Stdout,
+		// Only show progress if stdout is being redirected
+		if isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd()) {
+			showProgress = false
+		}
+
+		progressHandler := progress.NewClassifyProgressHandler(resultsWriter, showProgress, os.Stderr)
+		err = commands.NewClassifyCommand(progressHandler,
 			apiClient.Documents,
 			apiClient.Documents,
 			apiClient.Documents,

@@ -8,7 +8,7 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360/mocks"
 	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
-	rwmocks "github.com/CloudHub360/ch360.go/output/resultsWriters/mocks"
+	cmdmocks "github.com/CloudHub360/ch360.go/cmd/surf/commands/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -32,7 +32,7 @@ type ClassifySuite struct {
 	testFilePath         string
 	testFilesPattern     string
 	output               *bytes.Buffer
-	resultsWriter        *rwmocks.ResultsWriter
+	progressHandler      *cmdmocks.ClassifyProgressHandler
 	ctx                  context.Context
 }
 
@@ -58,15 +58,15 @@ func (suite *ClassifySuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
 	suite.ctx, _ = context.WithCancel(context.Background())
 
-	suite.resultsWriter = new(rwmocks.ResultsWriter)
+	suite.progressHandler = new(cmdmocks.ClassifyProgressHandler)
 
-	suite.resultsWriter.On("Start").Return(nil)
-	suite.resultsWriter.On("WriteResult", mock.Anything, mock.Anything).Return(nil)
-	suite.resultsWriter.On("Finish").Return(nil)
+	suite.progressHandler.On("NotifyStart", mock.Anything).Return(nil)
+	suite.progressHandler.On("Notify", mock.Anything, mock.Anything).Return(nil)
+	suite.progressHandler.On("NotifyErr", mock.Anything, mock.Anything)
+	suite.progressHandler.On("NotifyFinish").Return(nil)
 
 	suite.sut = commands.NewClassifyCommand(
-		suite.resultsWriter,
-		suite.output,
+		suite.progressHandler,
 		suite.documentClassifier,
 		suite.documentCreator,
 		suite.documentDeleter,
@@ -122,36 +122,35 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Processes_All_Files_Matched
 	suite.documentClassifier.AssertNumberOfCalls(suite.T(), "Classify", 5)
 }
 
-func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Start() {
+func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ProgressHandler_NotifyStart() {
 	suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
-	require.True(suite.T(), len(suite.resultsWriter.Calls) > 0)
-	assert.Equal(suite.T(), "Start", suite.resultsWriter.Calls[0].Method)
+	require.True(suite.T(), len(suite.progressHandler.Calls) > 0)
+	assert.Equal(suite.T(), "NotifyStart", suite.progressHandler.Calls[0].Method)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Write_For_Each_File() {
 	suite.sut.Execute(suite.ctx, suite.testFilesPattern, suite.classifierName)
 
 	// There are 5 files identified by suite.testFilesPattern
-	suite.resultsWriter.AssertNumberOfCalls(suite.T(), "WriteResult", 5)
+	suite.progressHandler.AssertNumberOfCalls(suite.T(), "Notify", 5)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Write_With_Correct_Parameters() {
 	suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
-	resultsCall := suite.resultsWriter.Calls[1]
-	assert.Equal(suite.T(), "WriteResult", resultsCall.Method)
-	suite.AssertWriteResultsCallHasCorrectParameters(resultsCall)
+	resultsCall := suite.progressHandler.Calls[1]
+	assert.Equal(suite.T(), "Notify", resultsCall.Method)
+	suite.AssertNotifyCallHasCorrectParameters(resultsCall)
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Finish() {
 	suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
-	require.Equal(suite.T(), 3, len(suite.resultsWriter.Calls))
-	assert.Equal(suite.T(), "Finish", suite.resultsWriter.Calls[2].Method)
+	suite.progressHandler.AssertCalled(suite.T(), "NotifyFinish")
 }
 
-func (suite *ClassifySuite) AssertWriteResultsCallHasCorrectParameters(call mock.Call) {
+func (suite *ClassifySuite) AssertNotifyCallHasCorrectParameters(call mock.Call) {
 	require.Equal(suite.T(), 2, len(call.Arguments))
 	assert.Equal(suite.T(), suite.testFilePath, call.Arguments[0])
 	assert.Equal(suite.T(), suite.classificationResult, call.Arguments[1])

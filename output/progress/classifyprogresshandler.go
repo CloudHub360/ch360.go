@@ -9,11 +9,11 @@ import (
 )
 
 type ClassifyProgressHandler struct {
-	errs          []error
 	resultsWriter resultsWriters.ResultsWriter
 	showProgress  bool
 	progress      *uiprogress.Progress
 	progressBar   *uiprogress.Bar
+	out           *os.File
 }
 
 func NewClassifyProgressHandler(resultsWriter resultsWriters.ResultsWriter, showProgress bool, progressOut *os.File) *ClassifyProgressHandler {
@@ -23,11 +23,12 @@ func NewClassifyProgressHandler(resultsWriter resultsWriters.ResultsWriter, show
 		resultsWriter: resultsWriter,
 		showProgress:  showProgress,
 		progress:      progress,
+		out:           progressOut,
 	}
 }
 
 func (c *ClassifyProgressHandler) handleClassifyComplete() {
-	if len(c.errs) == 0 && c.showProgress {
+	if c.showProgress {
 		c.progressBar.Incr()
 	}
 }
@@ -39,7 +40,7 @@ func (c *ClassifyProgressHandler) Notify(filename string, result *types.Classifi
 
 func (c *ClassifyProgressHandler) NotifyErr(filename string, err error) {
 	c.handleClassifyComplete()
-	c.errs = append(c.errs, err)
+	fmt.Fprintln(c.out, err)
 }
 
 func (c *ClassifyProgressHandler) initProgressBar(total int) {
@@ -61,8 +62,4 @@ func (c *ClassifyProgressHandler) NotifyFinish() error {
 		c.progress.Stop()
 	}
 	return c.resultsWriter.Finish()
-}
-
-func (c *ClassifyProgressHandler) Errs() []error {
-	return c.errs
 }
