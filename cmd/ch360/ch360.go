@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	usage := `_CloudHub360 command-line tool.
+	usage := `CloudHub360 command-line tool.
 
 Usage:
   ch360 login [options]
