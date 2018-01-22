@@ -37,7 +37,7 @@ Options:
   -i, --client-id <id>             : Client ID
   -s, --client-secret <secret>     : Client secret
   -f, --output-format <format>     : Output format for classification results. Allowed values: table, csv, json [default: table]
-  -o, --output-file <file>  : Write all results to the specified file 
+  -o, --output-file <file>         : Write all results to the specified file 
   -m, --multiple-files             : Write results output to multiple files with the same
                                    : basename as the input
 `
