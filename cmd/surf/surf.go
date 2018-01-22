@@ -7,7 +7,6 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/CloudHub360/ch360.go/output/formatters"
 	"github.com/CloudHub360/ch360.go/output/progress"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/CloudHub360/ch360.go/response"
