@@ -35,7 +35,7 @@ function Invoke-Classifier([Io.FileInfo]$file, [string]$classifierName) {
     Invoke-App classify $($file.FullName) $classifierName
 }
 
-function Classify-Files-And-Write-CSV-OutputFile([string]$filePattern, [string]$classifierName, [string]$outputFile) {
+function Invoke-Classifier([string]$filePattern, [string]$classifierName, [Io.FileInfo]$outputFile) {
     Invoke-App classify "`"$filePattern`"" $classifierName -o $outputFile -f csv
 }
 
@@ -169,7 +169,7 @@ document1.pdf                        Notice of Lien                   true
 
         $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/*.pdf")
         $outputFile = New-TemporaryFile
-        Classify-Files-And-Write-CSV-OutputFile $filePattern $classifierName $outputFile
+        Invoke-Classifier $filePattern $classifierName $outputFile
 
         $results = Get-Content $outputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score"
 
