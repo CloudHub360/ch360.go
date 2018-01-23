@@ -34,10 +34,10 @@ func (suite *AppDirectorySuite) SetupTest() {
 
 	suite.expectedConfigDir = filepath.Join(
 		suite.homeDirectory.Path(),
-		".ch360")
+		".surf")
 	suite.expectedConfigFilePath = filepath.Join(
 		suite.homeDirectory.Path(),
-		".ch360",
+		".surf",
 		"config.yaml")
 
 	assertThat.DirectoryDoesNotExist(suite.T(), suite.expectedConfigDir)
