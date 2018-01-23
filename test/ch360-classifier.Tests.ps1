@@ -39,7 +39,7 @@ function Invoke-Classifier([string]$filePattern, [string]$classifierName, [Io.Fi
     Invoke-App classify "`"$filePattern`"" $classifierName -o $outputFile -f csv
 }
 
-function Classify-Files-And-Write-Multiple-OutputFiles([string]$filePattern, [string]$classifierName, [string]$format) {
+function Invoke-Classifier([string]$filePattern, [string]$classifierName, [string]$format) {
     Invoke-App classify "`"$filePattern`"" $classifierName -m -f $format
 }
 
@@ -149,7 +149,7 @@ document1.pdf                        Notice of Lien                   true
         $document2OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.csv")
         $document3OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document3.csv")
 
-        Classify-Files-And-Write-Multiple-OutputFiles $filePattern $classifierName "csv"
+        Invoke-Classifier $filePattern $classifierName "csv"
 
         Get-Content $document2OutputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score" `
           | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)} `
@@ -190,7 +190,7 @@ document1.pdf                        Notice of Lien                   true
         $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/document2.pdf")
         $outputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.json")
 
-        Classify-Files-And-Write-Multiple-OutputFiles $filePattern $classifierName "json"
+        Invoke-Classifier $filePattern $classifierName "json"
 
         $results = Get-Content -Path $outputFile | ConvertFrom-Json
         Write-Host $results
