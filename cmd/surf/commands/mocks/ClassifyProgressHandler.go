@@ -24,8 +24,17 @@ func (_m *ClassifyProgressHandler) Notify(filename string, result *types.Classif
 }
 
 // NotifyErr provides a mock function with given fields: filename, err
-func (_m *ClassifyProgressHandler) NotifyErr(filename string, err error) {
-	_m.Called(filename, err)
+func (_m *ClassifyProgressHandler) NotifyErr(filename string, err error) error {
+	ret := _m.Called(filename, err)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, error) error); ok {
+		r0 = rf(filename, err)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // NotifyFinish provides a mock function with given fields:

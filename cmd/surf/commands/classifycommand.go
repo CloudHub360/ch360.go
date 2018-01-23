@@ -24,7 +24,7 @@ type ClassifyCommand struct {
 //go:generate mockery -name ClassifyProgressHandler
 type ClassifyProgressHandler interface {
 	Notify(filename string, result *types.ClassificationResult) error
-	NotifyErr(filename string, err error)
+	NotifyErr(filename string, err error) error
 	NotifyStart(totalJobs int) error
 	NotifyFinish() error
 }
