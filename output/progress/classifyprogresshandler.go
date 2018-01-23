@@ -15,6 +15,7 @@ type ClassifyProgressHandler struct {
 	progress      *uiprogress.Progress
 	progressBar   *uiprogress.Bar
 	out           io.Writer
+	started       bool
 }
 
 func NewClassifyProgressHandler(resultsWriter resultsWriters.ResultsWriter, showProgress bool, progressOut io.Writer) *ClassifyProgressHandler {
@@ -35,7 +36,7 @@ func (c *ClassifyProgressHandler) handleClassifyComplete() {
 }
 
 func (c *ClassifyProgressHandler) Notify(filename string, result *types.ClassificationResult) error {
-	if !c.inited() {
+	if !c.started {
 		return errors.New("NotifyStart must be called before Notify")
 	}
 	c.handleClassifyComplete()
@@ -43,7 +44,7 @@ func (c *ClassifyProgressHandler) Notify(filename string, result *types.Classifi
 }
 
 func (c *ClassifyProgressHandler) NotifyErr(filename string, err error) error {
-	if !c.inited() {
+	if !c.started {
 		return errors.New("NotifyStart must be called before NotifyErr")
 	}
 	c.handleClassifyComplete()
@@ -62,19 +63,16 @@ func (c *ClassifyProgressHandler) NotifyStart(total int) error {
 	if c.showProgress {
 		c.initProgressBar(total)
 	}
+	c.started = true
 	return c.resultsWriter.Start()
 }
 
 func (c *ClassifyProgressHandler) NotifyFinish() error {
-	if !c.inited() {
+	if !c.started {
 		return errors.New("NotifyStart must be called before NotifyFinish")
 	}
 	if c.showProgress {
 		c.progress.Stop()
 	}
 	return c.resultsWriter.Finish()
-}
-
-func (c *ClassifyProgressHandler) inited() bool {
-	return c.progressBar != nil
 }

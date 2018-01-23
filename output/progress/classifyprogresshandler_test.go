@@ -16,7 +16,7 @@ import (
 
 type ClassifyProgressHandlerSuite struct {
 	suite.Suite
-	sut              *progress.ClassifyProgressHandler
+	suts             []*progress.ClassifyProgressHandler
 	mockResultWriter *mocks.ResultsWriter
 	outBuffer        *bytes.Buffer
 }
@@ -24,10 +24,15 @@ type ClassifyProgressHandlerSuite struct {
 func (suite *ClassifyProgressHandlerSuite) SetupTest() {
 	suite.mockResultWriter = &mocks.ResultsWriter{}
 	suite.outBuffer = new(bytes.Buffer)
-	suite.sut = progress.NewClassifyProgressHandler(suite.mockResultWriter, true, suite.outBuffer)
+	//suite.sut = progress.NewClassifyProgressHandler(suite.mockResultWriter, true, suite.outBuffer)
 	suite.setupMockResultWriter(true, true, true)
 
 	rand.Seed(time.Now().Unix())
+
+	suite.suts = []*progress.ClassifyProgressHandler{
+		progress.NewClassifyProgressHandler(suite.mockResultWriter, true, suite.outBuffer),
+		progress.NewClassifyProgressHandler(suite.mockResultWriter, false, suite.outBuffer),
+	}
 }
 
 func (suite *ClassifyProgressHandlerSuite) setupMockResultWriter(start, write, finish bool) {
@@ -51,58 +56,68 @@ func TestClassifyProgressHandlerSuiteRunner(t *testing.T) {
 }
 
 func (suite *ClassifyProgressHandlerSuite) Test_ClassifyProgressHandler_Calls_Underlying_ResultWriter() {
-	// Arrange
-	expectedFilename := generators.String("filename")
-	expectedResult := AClassificationResult()
+	for _, sut := range suite.suts {
+		// Arrange
+		expectedFilename := generators.String("filename")
+		expectedResult := AClassificationResult()
 
-	// Act
-	suite.sut.NotifyStart(1)
-	suite.sut.Notify(expectedFilename, expectedResult)
+		// Act
+		sut.NotifyStart(1)
+		sut.Notify(expectedFilename, expectedResult)
 
-	// Assert
-	suite.mockResultWriter.AssertCalled(suite.T(), "WriteResult", expectedFilename, expectedResult)
+		// Assert
+		suite.mockResultWriter.AssertCalled(suite.T(), "WriteResult", expectedFilename, expectedResult)
+	}
 }
 
 func (suite *ClassifyProgressHandlerSuite) Test_ClassifyProgressHandler_Returns_Error_From_ResultWriter() {
-	// Arrange
-	expectedErr := errors.New("simulated error")
-	suite.setupMockResultWriter(true, false, false)
-	suite.mockResultWriter.On("WriteResult", mock.Anything, mock.Anything).Return(expectedErr)
+	for _, sut := range suite.suts {
+		// Arrange
+		expectedErr := errors.New("simulated error")
+		suite.setupMockResultWriter(true, false, false)
+		suite.mockResultWriter.On("WriteResult", mock.Anything, mock.Anything).Return(expectedErr)
 
-	// Act
-	suite.sut.NotifyStart(rand.Int())
-	receivedErr := suite.sut.Notify(generators.String("filename"), AClassificationResult())
+		// Act
+		sut.NotifyStart(rand.Int())
+		receivedErr := sut.Notify(generators.String("filename"), AClassificationResult())
 
-	// Assert
-	suite.Assert().Equal(expectedErr, receivedErr)
+		// Assert
+		suite.Assert().Equal(expectedErr, receivedErr)
+	}
 }
 
 func (suite *ClassifyProgressHandlerSuite) Test_ClassifyProgressHandler_Returns_Error_If_Notify_Is_Called_Before_NotifyStart() {
-	// Act
-	err := suite.sut.Notify(generators.String("filename"), AClassificationResult())
+	for _, sut := range suite.suts {
+		// Act
+		err := sut.Notify(generators.String("filename"), AClassificationResult())
 
-	// Assert
-	suite.Assert().NotNil(err)
-	suite.mockResultWriter.AssertNotCalled(suite.T(), "WriteResult", mock.Anything, mock.Anything)
+		// Assert
+		suite.Assert().NotNil(err)
+		suite.mockResultWriter.AssertNotCalled(suite.T(), "WriteResult", mock.Anything, mock.Anything)
+	}
 
 }
 
 func (suite *ClassifyProgressHandlerSuite) Test_ClassifyProgressHandler_Returns_Error_If_NotifyErr_Is_Called_Before_NotifyStart() {
-	// Act
-	err := suite.sut.NotifyErr(generators.String("filename"), errors.New("simulated error"))
+	for _, sut := range suite.suts {
+		// Act
+		err := sut.NotifyErr(generators.String("filename"), errors.New("simulated error"))
 
-	// Assert
-	suite.Assert().NotNil(err)
-	suite.mockResultWriter.AssertNotCalled(suite.T(), "WriteResult", mock.Anything, mock.Anything)
+		// Assert
+		suite.Assert().NotNil(err)
+		suite.mockResultWriter.AssertNotCalled(suite.T(), "WriteResult", mock.Anything, mock.Anything)
+	}
 }
 
 func (suite *ClassifyProgressHandlerSuite) Test_ClassifyProgressHandler_Returns_Error_If_NotifyFinish_Is_Called_Before_NotifyStart() {
-	// Act
-	err := suite.sut.NotifyFinish()
+	for _, sut := range suite.suts {
+		// Act
+		err := sut.NotifyFinish()
 
-	// Assert
-	suite.Assert().NotNil(err)
-	suite.mockResultWriter.AssertNotCalled(suite.T(), "WriteResult", mock.Anything, mock.Anything)
+		// Assert
+		suite.Assert().NotNil(err)
+		suite.mockResultWriter.AssertNotCalled(suite.T(), "WriteResult", mock.Anything, mock.Anything)
+	}
 }
 
 func AClassificationResult() *types.ClassificationResult {
