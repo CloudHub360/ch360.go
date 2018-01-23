@@ -31,16 +31,37 @@ function Remove-Classifier([Parameter(ValueFromPipeline=$true)]$classifierName) 
     Invoke-App delete classifier $classifierName 2>&1
 }
 
-function Invoke-Classifier([Io.FileInfo]$file, [string]$classifierName) {
-    Invoke-App classify $($file.FullName) $classifierName
+function Invoke-Classifier(
+    [Parameter(ParameterSetName="SingleFile", Position=0)]
+    [Io.FileInfo]$file,
+
+    [Parameter(Mandatory=$true, Position=1)]
+    [string]$classifierName,
+
+    [Parameter(ParameterSetName="MultipleFiles", Position=0)]
+    [string]$filePattern,
+
+    [Parameter(ParameterSetName="MultipleFiles", Position=2)]
+    [Io.FileInfo]$outputFile,
+
+    [Parameter(ParameterSetName="MultipleFiles", Position=3)]
+    [string]$Format = "csv")
+{
+    if ($file -ne $null) {
+        Invoke-App classify $($file.FullName) $classifierName
+    } else {
+        if ($outputFile -ne $null) {
+            Invoke-App classify "`"$filePattern`"" $classifierName -o $outputFile -f $Format
+        } else {
+            Invoke-App classify "`"$filePattern`"" $classifierName -m -f $Format
+        }
+    }
 }
 
-function Invoke-Classifier([string]$filePattern, [string]$classifierName, [Io.FileInfo]$outputFile) {
-    Invoke-App classify "`"$filePattern`"" $classifierName -o $outputFile -f csv
-}
-
-function Invoke-Classifier([string]$filePattern, [string]$classifierName, [string]$format) {
-    Invoke-App classify "`"$filePattern`"" $classifierName -m -f $format
+function ConvertFrom-WaivesCsv([Parameter(ValueFromPipeline=$true)][PsObject[]]$InputObject) {
+    PROCESS {
+        $InputObject | ConvertFrom-Csv -Header "file","documenttype","confident","score"
+    }
 }
 
 function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){
@@ -135,7 +156,7 @@ The file '$samples' could not be found.
         New-Classifier $classifierName $samples
 
         $document = (Join-Path $PSScriptRoot "documents/document1.pdf")
-        Invoke-Classifier $document $classifierName | Format-MultilineOutput | Should -Be @"
+        Invoke-Classifier -File $document $classifierName | Format-MultilineOutput | Should -Be @"
 FILE                                 DOCUMENT TYPE                    CONFIDENT
 document1.pdf                        Notice of Lien                   true
 "@
@@ -149,13 +170,13 @@ document1.pdf                        Notice of Lien                   true
         $document2OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.csv")
         $document3OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document3.csv")
 
-        Invoke-Classifier $filePattern $classifierName "csv"
+        Invoke-Classifier $filePattern $classifierName -Format "csv"
 
-        Get-Content $document2OutputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score" `
+        Get-Content $document2OutputFile | ConvertFrom-WaivesCsv `
           | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)} `
           | Should -Not -Be $null
 
-        Get-Content $document3OutputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score" `
+        Get-Content $document3OutputFile | ConvertFrom-WaivesCsv `
           | where {($_.file -like "*document3.pdf" -and $_.documenttype -eq "Notice of Default" -and $_.score -eq 3.351 -and $_.confident)} `
           | Should -Not -Be $null
 
@@ -169,9 +190,9 @@ document1.pdf                        Notice of Lien                   true
 
         $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/*.pdf")
         $outputFile = New-TemporaryFile
-        Invoke-Classifier $filePattern $classifierName $outputFile
+        Invoke-Classifier $filePattern $classifierName -OutputFile $outputFile -Format "csv"
 
-        $results = Get-Content $outputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score"
+        $results = Get-Content $outputFile | ConvertFrom-WaivesCsv
 
         $results.length | Should -Be 2
         $doc2result = ($results | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)})
@@ -190,7 +211,7 @@ document1.pdf                        Notice of Lien                   true
         $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/document2.pdf")
         $outputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.json")
 
-        Invoke-Classifier $filePattern $classifierName "json"
+        Invoke-Classifier $filePattern $classifierName -OutputFile $outputFile -Format "json"
 
         $results = Get-Content -Path $outputFile | ConvertFrom-Json
         Write-Host $results
