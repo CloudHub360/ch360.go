@@ -62,7 +62,7 @@ func (suite *ClassifySuite) SetupTest() {
 
 	suite.progressHandler.On("NotifyStart", mock.Anything).Return(nil)
 	suite.progressHandler.On("Notify", mock.Anything, mock.Anything).Return(nil)
-	suite.progressHandler.On("NotifyErr", mock.Anything, mock.Anything)
+	suite.progressHandler.On("NotifyErr", mock.Anything, mock.Anything).Return(nil)
 	suite.progressHandler.On("NotifyFinish").Return(nil)
 
 	suite.sut = commands.NewClassifyCommand(
