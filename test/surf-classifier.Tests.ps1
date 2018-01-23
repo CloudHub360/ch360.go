@@ -4,7 +4,7 @@ param(
 )
 
 $classifierName = "test-classifier"
-$applicationFolderPath = Join-Path -Path "~" -ChildPath ".ch360"
+$applicationFolderPath = Join-Path -Path "~" -ChildPath ".surf"
 $applicationFolderPathBackup = "$applicationFolderPath" + "_backup"
 $configFilePath = Join-Path -Path $applicationFolderPath -ChildPath "config.yaml"
 
