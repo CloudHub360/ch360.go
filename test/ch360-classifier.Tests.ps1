@@ -60,11 +60,11 @@ function Backup-ApplicationFolder() {
     Copy-Folder $applicationFolderPath $applicationFolderPathBackup
     Remove-Item $applicationFolderPath -Recurse -Force -ErrorAction SilentlyContinue
     Write-Host "Backed up application folder"
-  }
+}
 
-  function Restore-ApplicationFolder() {
+function Restore-ApplicationFolder() {
     if (!(Test-Path $applicationFolderPathBackup)) {
-      return
+        return
     }
 
     Remove-Item $applicationFolderPath -Recurse -Force -ErrorAction SilentlyContinue
@@ -73,12 +73,12 @@ function Backup-ApplicationFolder() {
     Write-Host "Restored application folder"
 }
 
-  function Copy-Folder($source, $destination) {
+function Copy-Folder($source, $destination) {
     if (!(Test-Path $destination)) {
-      New-Item -ItemType Directory $destination
+        New-Item -ItemType Directory $destination
     }
     Get-ChildItem -Path $source | Copy-Item -Destination $destination -Recurse -Container
-  }
+}
 
 Describe "classifiers" {
     BeforeAll {
@@ -133,7 +133,7 @@ The file '$samples' could not be found.
     It "should attempt to classify a file" {
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples
-        
+
         $document = (Join-Path $PSScriptRoot "documents/document1.pdf")
         Invoke-Classifier $document $classifierName | Format-MultilineOutput | Should -Be @"
 FILE                                 DOCUMENT TYPE                    CONFIDENT
@@ -144,21 +144,21 @@ document1.pdf                        Notice of Lien                   true
     It "should classify files and write to a multiple csv results files" {
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples
-        
+
         $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/*.pdf")
         $document2OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.csv")
         $document3OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document3.csv")
-        
+
         Classify-Files-And-Write-Multiple-OutputFiles $filePattern $classifierName "csv"
 
         Get-Content $document2OutputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score" `
           | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)} `
           | Should -Not -Be $null
-        
+
         Get-Content $document3OutputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score" `
           | where {($_.file -like "*document3.pdf" -and $_.documenttype -eq "Notice of Default" -and $_.score -eq 3.351 -and $_.confident)} `
           | Should -Not -Be $null
-        
+
         Remove-Item -Path $document2OutputFile
         Remove-Item -Path $document3OutputFile
     }
@@ -166,43 +166,44 @@ document1.pdf                        Notice of Lien                   true
     It "should classify files and write to a single csv results file" {
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples
-        
+
         $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/*.pdf")
         $outputFile = New-TemporaryFile
         Classify-Files-And-Write-CSV-OutputFile $filePattern $classifierName $outputFile
-        
+
         $results = Get-Content $outputFile | ConvertFrom-Csv -Header "file","documenttype","confident", "score"
-        
-        $results.length | Should -Be 2        
+
+        $results.length | Should -Be 2
         $doc2result = ($results | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)})
         $doc2result | Should -Not -Be $null
-        
+
         $doc3result = ($results | where {($_.file -like "*document3.pdf" -and $_.documenttype -eq "Notice of Default" -and $_.score -eq 3.351 -and $_.confident)})
         $doc3result | Should -Not -Be $null
-        
+
         Remove-Item -Path $outputFile
     }
-    
-It "should classify a file and write a json result file" {
-    $samples = (Join-Path $PSScriptRoot "samples.zip")
-    New-Classifier $classifierName $samples
-    
-    $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/document2.pdf")
-    $outputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.json")
-    
-    Classify-Files-And-Write-Multiple-OutputFiles $filePattern $classifierName "json"
-    
-    $results = Get-Content -Path $outputFile | ConvertFrom-Json
-    Write-Host $results
-    Write-Host $results.file
-    
-    $results.filename | Should -BeLike "*document2.pdf"
-    $results.classification_results.document_type | Should -Be "Notice of Lien"
-    $results.classification_results.is_confident | Should -Be True
-    $results.classification_results.relative_confidence | Should -Be 1.17683673
 
-    Remove-Item -Path $outputFile
-}
+    It "should classify a file and write a json result file" {
+        $samples = (Join-Path $PSScriptRoot "samples.zip")
+        New-Classifier $classifierName $samples
+
+        $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/document2.pdf")
+        $outputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.json")
+
+        Classify-Files-And-Write-Multiple-OutputFiles $filePattern $classifierName "json"
+
+        $results = Get-Content -Path $outputFile | ConvertFrom-Json
+        Write-Host $results
+        Write-Host $results.file
+
+        $results.filename | Should -BeLike "*document2.pdf"
+        $results.classification_results.document_type | Should -Be "Notice of Lien"
+        $results.classification_results.is_confident | Should -Be True
+        $results.classification_results.relative_confidence | Should -Be 1.17683673
+
+        Remove-Item -Path $outputFile
+    }
+
     AfterAll {
         # Tidy up any leftover classifiers in the account
         Get-Classifiers | Remove-Classifier
