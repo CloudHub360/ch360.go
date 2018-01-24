@@ -56,7 +56,7 @@ Task Release {
         -ContentType "application/json" `
         -Body (ConvertTo-Json $releaseMetadata))
 
-    $binaries = Get-ChildItem $GO_BIN -Recurse -Include ch360*
+    $binaries = Get-ChildItem $GO_BIN -Recurse -Include surf*
 
     $binaries |% {
         $uploadUrl = Get-UploadUrl $release.upload_url (Get-AssetName $_)
