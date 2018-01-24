@@ -75,7 +75,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Config_Values_If_Neit
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Values_Are_Needed_And_Id_Is_Empty() {
 	configuration := config.NewConfiguration("", suite.configClientSecret)
-	expectedErr := errors.New("Your configuration file does not contain valid credentials. Please run 'ch360 login' to connect to your account.")
+	expectedErr := errors.New("Your configuration file does not contain valid credentials. Please run 'surf login' to connect to your account.")
 
 	suite.reader.ExpectedCalls = nil
 	suite.reader.On("ReadConfiguration").Return(configuration, nil)
@@ -86,7 +86,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Value
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Values_Are_Needed_And_Secret_Is_Empty() {
 	configuration := config.NewConfiguration(suite.configClientId, "")
-	expectedErr := errors.New("Your configuration file does not contain valid credentials. Please run 'ch360 login' to connect to your account.")
+	expectedErr := errors.New("Your configuration file does not contain valid credentials. Please run 'surf login' to connect to your account.")
 
 	suite.reader.ExpectedCalls = nil
 	suite.reader.On("ReadConfiguration").Return(configuration, nil)
@@ -100,7 +100,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Value
 	configuration := &config.Configuration{
 		Credentials: credentials,
 	}
-	expectedErr := errors.New("Your configuration file does not contain any credentials. Please run 'ch360 login' to connect to your account.")
+	expectedErr := errors.New("Your configuration file does not contain any credentials. Please run 'surf login' to connect to your account.")
 
 	suite.reader.ExpectedCalls = nil
 	suite.reader.On("ReadConfiguration").Return(configuration, nil)
@@ -110,7 +110,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Config_Value
 }
 
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_ConfigurationReader_Returns_A_No_ConfigFile_Error() {
-	expectedError := errors.New("Please run 'ch360 login' to connect to your account.")
+	expectedError := errors.New("Please run 'surf login' to connect to your account.")
 
 	suite.reader.ExpectedCalls = nil
 	suite.reader.On("ReadConfiguration").Return(nil, os.ErrNotExist)
@@ -122,7 +122,7 @@ func (suite *CredentialsResolverSuite) TestResolve_Returns_Error_If_Configuratio
 func (suite *CredentialsResolverSuite) TestResolve_Returns_Wrapped_Error_If_ConfigurationReader_Returns_Another_Error() {
 	errorText := "Corrupted file"
 	configReadingError := errors.New(errorText)
-	expectedError := errors.New("There was an error loading your configuration file. Please run 'ch360 login' to connect to your account. Error: " + errorText)
+	expectedError := errors.New("There was an error loading your configuration file. Please run 'surf login' to connect to your account. Error: " + errorText)
 
 	suite.reader.ExpectedCalls = nil
 	suite.reader.On("ReadConfiguration").Return(nil, configReadingError)
