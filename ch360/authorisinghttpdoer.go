@@ -2,15 +2,16 @@ package ch360
 
 import (
 	"github.com/CloudHub360/ch360.go/auth"
+	"github.com/CloudHub360/ch360.go/net"
 	"net/http"
 )
 
 type AuthorisingDoer struct {
 	tokenRetriever auth.TokenRetriever
-	wrappedSender  HttpDoer
+	wrappedSender  net.HttpDoer
 }
 
-func NewAuthorisingDoer(retriever auth.TokenRetriever, httpDoer HttpDoer) *AuthorisingDoer {
+func NewAuthorisingDoer(retriever auth.TokenRetriever, httpDoer net.HttpDoer) *AuthorisingDoer {
 	return &AuthorisingDoer{
 		tokenRetriever: retriever,
 		wrappedSender:  httpDoer,

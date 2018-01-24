@@ -3,10 +3,12 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/CloudHub360/ch360.go/net"
 	"github.com/CloudHub360/ch360.go/response"
 	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -25,18 +27,14 @@ type HttpTokenRetriever struct {
 	apiUrl          string
 	clientId        string
 	clientSecret    string
-	formPoster      FormPoster
+	httpDoer        net.HttpDoer
 	responseChecker response.Checker
 }
 
-type FormPoster interface {
-	PostForm(url string, values url.Values) (*http.Response, error)
-}
-
-func NewHttpTokenRetriever(clientId string, clientSecret string, formPoster FormPoster, apiUrl string, responseChecker response.Checker) *HttpTokenRetriever {
+func NewHttpTokenRetriever(clientId string, clientSecret string, httpDoer net.HttpDoer, apiUrl string, responseChecker response.Checker) *HttpTokenRetriever {
 	return &HttpTokenRetriever{
 		clientId:        clientId,
-		formPoster:      formPoster,
+		httpDoer:        httpDoer,
 		clientSecret:    clientSecret,
 		apiUrl:          apiUrl,
 		responseChecker: responseChecker,
@@ -55,7 +53,10 @@ func (retriever *HttpTokenRetriever) RetrieveToken() (*AccessToken, error) {
 		"client_secret": []string{retriever.clientSecret},
 	}
 
-	resp, err := retriever.formPoster.PostForm(retriever.apiUrl+"/oauth/token", form)
+	req, err := http.NewRequest("POST", retriever.apiUrl+"/oauth/token", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := retriever.httpDoer.Do(req)
 	if err != nil {
 		// No response received
 		return nil, err

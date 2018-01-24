@@ -1,4 +1,4 @@
-package ch360
+package net
 
 import (
 	"net/http"

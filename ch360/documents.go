@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/net"
 	"net/http"
 )
 
@@ -46,10 +47,10 @@ type createDocumentResponse struct {
 
 type DocumentsClient struct {
 	baseUrl       string
-	requestSender HttpDoer
+	requestSender net.HttpDoer
 }
 
-func NewDocumentsClient(baseUrl string, httpDoer HttpDoer) *DocumentsClient {
+func NewDocumentsClient(baseUrl string, httpDoer net.HttpDoer) *DocumentsClient {
 	return &DocumentsClient{
 		baseUrl:       baseUrl,
 		requestSender: httpDoer,

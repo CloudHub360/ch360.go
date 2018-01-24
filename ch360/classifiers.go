@@ -5,16 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/CloudHub360/ch360.go/net"
 	"net/http"
 	"os"
 )
 
 type ClassifiersClient struct {
 	baseUrl       string
-	requestSender HttpDoer
+	requestSender net.HttpDoer
 }
 
-func NewClassifiersClient(baseUrl string, requestSender HttpDoer) *ClassifiersClient {
+func NewClassifiersClient(baseUrl string, requestSender net.HttpDoer) *ClassifiersClient {
 	return &ClassifiersClient{
 		baseUrl:       baseUrl,
 		requestSender: requestSender,
