@@ -89,7 +89,7 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 
 	fileCount := len(matches)
 	if fileCount == 0 {
-		return errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'ch360 -h' for glob pattern examples.", filePattern))
+		return errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'surf -h' for glob pattern examples.", filePattern))
 	}
 
 	ctx, cancel := context.WithCancel(ctx)

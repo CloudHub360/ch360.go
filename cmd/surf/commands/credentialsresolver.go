@@ -26,21 +26,21 @@ func (resolver *CredentialsResolver) Resolve(clientId string, clientSecret strin
 			// Return sensible error if user hasn't logged in and there therefore is no
 			// configuration file. This also masks other errors due to e.g. malformed
 			// configuration file.
-			return "", "", errors.New("Please run 'ch360 login' to connect to your account.")
+			return "", "", errors.New("Please run 'surf login' to connect to your account.")
 		} else {
-			return "", "", errors.New(fmt.Sprintf("There was an error loading your configuration file. Please run 'ch360 login' to connect to your account. Error: %s", err.Error()))
+			return "", "", errors.New(fmt.Sprintf("There was an error loading your configuration file. Please run 'surf login' to connect to your account. Error: %s", err.Error()))
 		}
 	}
 
 	if len(configuration.Credentials) == 0 {
-		return "", "", errors.New("Your configuration file does not contain any credentials. Please run 'ch360 login' to connect to your account.")
+		return "", "", errors.New("Your configuration file does not contain any credentials. Please run 'surf login' to connect to your account.")
 	}
 
 	clientId = configuration.Credentials[0].Id
 	clientSecret = configuration.Credentials[0].Secret
 
 	if clientId == "" || clientSecret == "" {
-		return "", "", errors.New("Your configuration file does not contain valid credentials. Please run 'ch360 login' to connect to your account.")
+		return "", "", errors.New("Your configuration file does not contain valid credentials. Please run 'surf login' to connect to your account.")
 	}
 
 	return clientId, clientSecret, nil

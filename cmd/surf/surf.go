@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	usage := `CloudHub360 command-line tool.
+	usage := `surf - the official command line client for waives.io.
 
 Usage:
   surf login [options]
