@@ -2,8 +2,8 @@ package ch360
 
 import (
 	"github.com/CloudHub360/ch360.go/auth"
+	"github.com/CloudHub360/ch360.go/net"
 	"github.com/CloudHub360/ch360.go/response"
-	"net/http"
 )
 
 const ApiAddress = "https://api.waives.io"
@@ -13,20 +13,22 @@ type ApiClient struct {
 	Documents   *DocumentsClient
 }
 
-func NewApiClient(httpClient *http.Client, apiUrl string, clientId string, clientSecret string) *ApiClient {
+func NewApiClient(httpClient net.HttpDoer, apiUrl string, clientId string, clientSecret string) *ApiClient {
 
 	responseChecker := response.ErrorChecker{}
+
+	ctxhttpClient := net.NewContextAwareHttpClient(httpClient)
 
 	tokenRetriever := auth.NewHttpTokenCache(
 		auth.NewHttpTokenRetriever(
 			clientId,
 			clientSecret,
-			httpClient,
+			ctxhttpClient,
 			apiUrl,
 			&responseChecker))
 
 	authorisingDoer := AuthorisingDoer{
-		wrappedSender:  httpClient,
+		wrappedSender:  ctxhttpClient,
 		tokenRetriever: tokenRetriever,
 	}
 
