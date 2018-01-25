@@ -2,7 +2,7 @@ package ch360_test
 
 import (
 	"github.com/CloudHub360/ch360.go/ch360"
-	mockch360 "github.com/CloudHub360/ch360.go/ch360/mocks"
+	"github.com/CloudHub360/ch360.go/net/mocks"
 	mockresponse "github.com/CloudHub360/ch360.go/response/mocks"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -15,12 +15,12 @@ import (
 type ResponseCheckingDoerSuite struct {
 	suite.Suite
 	sut        *ch360.ResponseCheckingDoer
-	underlying *mockch360.HttpDoer
+	underlying *mocks.HttpDoer
 	checker    *mockresponse.Checker
 }
 
 func (suite *ResponseCheckingDoerSuite) SetupTest() {
-	suite.underlying = &mockch360.HttpDoer{}
+	suite.underlying = &mocks.HttpDoer{}
 	suite.checker = &mockresponse.Checker{}
 	suite.sut = ch360.NewResponseCheckingdoer(suite.checker, suite.underlying)
 }

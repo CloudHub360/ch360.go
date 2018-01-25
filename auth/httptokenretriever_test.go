@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/CloudHub360/ch360.go/auth"
-	mockauth "github.com/CloudHub360/ch360.go/auth/mocks"
+	mocknet "github.com/CloudHub360/ch360.go/net/mocks"
 	"github.com/CloudHub360/ch360.go/response"
 	mockresponse "github.com/CloudHub360/ch360.go/response/mocks"
 	"github.com/stretchr/testify/assert"
@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"testing"
 )
 
@@ -29,7 +28,7 @@ func AnHttpResponse(body []byte) *http.Response {
 type HttpTokenRetrieverSuite struct {
 	suite.Suite
 	sut                 *auth.HttpTokenRetriever
-	mockHttpClient      *mockauth.FormPoster
+	mockHttpClient      *mocknet.HttpDoer
 	mockResponseChecker *mockresponse.Checker
 	validTokenValue     string
 	validTokenBody      string
@@ -37,7 +36,7 @@ type HttpTokenRetrieverSuite struct {
 }
 
 func (suite *HttpTokenRetrieverSuite) SetupTest() {
-	suite.mockHttpClient = new(mockauth.FormPoster)
+	suite.mockHttpClient = new(mocknet.HttpDoer)
 	suite.mockResponseChecker = new(mockresponse.Checker)
 	suite.sut = auth.NewHttpTokenRetriever(fakeClientId, fakeClientSecret, suite.mockHttpClient, "notused", suite.mockResponseChecker)
 
@@ -55,15 +54,15 @@ func TestSuiteRunner(t *testing.T) {
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Sends_Client_Id_And_Secret() {
 	// Arrange
-	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(suite.validTokenResponse, nil)
+	suite.mockHttpClient.On("Do", mock.Anything).Return(suite.validTokenResponse, nil)
 	suite.mockResponseChecker.On("CheckForErrors", mock.Anything, mock.Anything).Return(nil)
 
 	// Act
 	suite.sut.RetrieveToken()
 
 	// Assert
-	suite.mockHttpClient.AssertCalled(suite.T(), "PostForm", mock.Anything, mock.Anything)
-	assert_FormData_Includes_Client_Id_And_Secret(suite.T(), (suite.mockHttpClient.Calls[0].Arguments[1]).(url.Values))
+	suite.mockHttpClient.AssertCalled(suite.T(), "Do", mock.Anything)
+	assert_Request_Includes_Client_Id_And_Secret(suite.T(), (suite.mockHttpClient.Calls[0].Arguments[0]).(*http.Request))
 }
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error() {
@@ -79,7 +78,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_H
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Passes_Response_To_Checker() {
 	// Arrange
-	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(suite.validTokenResponse, nil)
+	suite.mockHttpClient.On("Do", mock.Anything).Return(suite.validTokenResponse, nil)
 	suite.mockResponseChecker.On("CheckForErrors", mock.Anything).Return(nil)
 
 	// Act
@@ -93,7 +92,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_R
 	// Arrange
 	response := AnHttpResponse(nil)
 
-	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
+	suite.mockHttpClient.On("Do", mock.Anything).Return(response, nil)
 	suite.mockResponseChecker.On("CheckForErrors", mock.Anything).Return(errors.New("An error"))
 
 	// Act
@@ -106,7 +105,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_R
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Parses_Token_Response() {
 	// Arrange
-	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(suite.validTokenResponse, nil)
+	suite.mockHttpClient.On("Do", mock.Anything).Return(suite.validTokenResponse, nil)
 	suite.mockResponseChecker.On("CheckForErrors", mock.Anything).Return(nil)
 
 	// Act
@@ -122,7 +121,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Inv
 	expectedResponseBody := `<invalid-json>`
 	response := AnHttpResponse([]byte(expectedResponseBody))
 
-	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
+	suite.mockHttpClient.On("Do", mock.Anything).Return(response, nil)
 	suite.mockResponseChecker.On("CheckForErrors", mock.Anything).Return(nil)
 
 	// Act
@@ -138,7 +137,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Emp
 	expectedResponseBody := `{"access_token": ""}`
 	response := AnHttpResponse([]byte(expectedResponseBody))
 
-	suite.mockHttpClient.On("PostForm", mock.Anything, mock.Anything).Return(response, nil)
+	suite.mockHttpClient.On("Do", mock.Anything).Return(response, nil)
 	suite.mockResponseChecker.On("CheckForErrors", mock.Anything).Return(nil)
 
 	// Act
@@ -149,7 +148,8 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Err_On_Emp
 	assert.EqualError(suite.T(), err, "Received empty authentication token")
 }
 
-func assert_FormData_Includes_Client_Id_And_Secret(t *testing.T, receivedFormData url.Values) {
-	assert.Equal(t, []string{fakeClientId}, receivedFormData["client_id"])
-	assert.Equal(t, []string{fakeClientSecret}, receivedFormData["client_secret"])
+func assert_Request_Includes_Client_Id_And_Secret(t *testing.T, receivedRequest *http.Request) {
+	receivedRequest.ParseForm()
+	assert.Equal(t, []string{fakeClientId}, receivedRequest.PostForm["client_id"])
+	assert.Equal(t, []string{fakeClientSecret}, receivedRequest.PostForm["client_secret"])
 }
