@@ -129,14 +129,14 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ProgressHandler_Notif
 	assert.Equal(suite.T(), "NotifyStart", suite.progressHandler.Calls[0].Method)
 }
 
-func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Write_For_Each_File() {
+func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ProgressHandler_Write_For_Each_File() {
 	suite.sut.Execute(suite.ctx, suite.testFilesPattern, suite.classifierName)
 
 	// There are 5 files identified by suite.testFilesPattern
 	suite.progressHandler.AssertNumberOfCalls(suite.T(), "Notify", 5)
 }
 
-func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Write_With_Correct_Parameters() {
+func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ProgressHandler_Write_With_Correct_Parameters() {
 	suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
 	resultsCall := suite.progressHandler.Calls[1]
@@ -144,7 +144,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Write_W
 	suite.AssertNotifyCallHasCorrectParameters(resultsCall)
 }
 
-func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ResultsWriter_Finish() {
+func (suite *ClassifySuite) TestClassifyDoer_Execute_Calls_ProgressHandler_Finish() {
 	suite.sut.Execute(suite.ctx, suite.testFilePath, suite.classifierName)
 
 	suite.progressHandler.AssertCalled(suite.T(), "NotifyFinish")
