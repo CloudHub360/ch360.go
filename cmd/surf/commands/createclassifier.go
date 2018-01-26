@@ -5,54 +5,52 @@ import (
 	"io"
 )
 
-//go:generate mockery -name "Creator|Trainer|CreatorTrainer"
+//go:generate mockery -name "ClassifierCreator|ClassifierTrainer|ClassifierClient"
 
-type Creator interface {
+type ClassifierCreator interface {
 	Create(name string) error
 }
 
-type Trainer interface {
+type ClassifierTrainer interface {
 	Train(name string, samplesPath string) error
 }
 
-type CreatorTrainer interface {
-	Creator
-	Trainer
-}
-
 type CreateClassifier struct {
-	writer           io.Writer
-	client           CreatorTrainer
-	deleteClassifier ClassifierCommand
+	writer  io.Writer
+	creator ClassifierCreator
+	deleter ClassifierDeleter
+	trainer ClassifierTrainer
 }
 
-func NewCreateClassifier(writer io.Writer, client CreatorTrainer, deleteClassifier ClassifierCommand) *CreateClassifier {
+func NewCreateClassifier(writer io.Writer,
+	creator ClassifierCreator,
+	trainer ClassifierTrainer,
+	deleter ClassifierDeleter) *CreateClassifier {
 	return &CreateClassifier{
-		writer:           writer,
-		client:           client,
-		deleteClassifier: deleteClassifier,
+		writer:  writer,
+		creator: creator,
+		deleter: deleter,
+		trainer: trainer,
 	}
 }
 
 func (cmd *CreateClassifier) Execute(classifierName string, samplesPath string) error {
 	fmt.Fprintf(cmd.writer, "Creating classifier '%s'... ", classifierName)
 
-	err := cmd.client.Create(classifierName)
+	err := cmd.creator.Create(classifierName)
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
-		fmt.Fprintln(cmd.writer, err.Error())
 		return err
 	}
 
 	fmt.Fprintln(cmd.writer, "[OK]")
 
 	fmt.Fprintf(cmd.writer, "Adding samples from file '%s'... ", samplesPath)
-	err = cmd.client.Train(classifierName, samplesPath)
+	err = cmd.trainer.Train(classifierName, samplesPath)
 
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
-		fmt.Fprintln(cmd.writer, err.Error())
-		cmd.deleteClassifier.Execute(classifierName)
+		cmd.deleter.Delete(classifierName)
 		return err
 	}
 

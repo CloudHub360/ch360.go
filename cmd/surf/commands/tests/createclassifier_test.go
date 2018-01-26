@@ -3,7 +3,6 @@ package tests
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands/mocks"
 	"github.com/stretchr/testify/assert"
@@ -14,88 +13,101 @@ import (
 
 type CreateClassifierSuite struct {
 	suite.Suite
-	output           *bytes.Buffer
-	deleteClassifier *mocks.ClassifierCommand
-	client           *mocks.CreatorTrainer
+	output  *bytes.Buffer
+	deleter *mocks.ClassifierDeleter
+	trainer *mocks.ClassifierTrainer
+	creator *mocks.ClassifierCreator
+	sut     *commands.CreateClassifier
 }
 
 func (suite *CreateClassifierSuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
-	suite.deleteClassifier = new(mocks.ClassifierCommand)
-	suite.client = new(mocks.CreatorTrainer)
+	suite.deleter = new(mocks.ClassifierDeleter)
+	suite.trainer = new(mocks.ClassifierTrainer)
+	suite.creator = new(mocks.ClassifierCreator)
 
-	suite.client.On("Create", mock.Anything).Return(nil)
-	suite.client.On("Train", mock.Anything, mock.Anything).Return(nil)
+	suite.sut = commands.NewCreateClassifier(suite.output,
+		suite.creator,
+		suite.trainer,
+		suite.deleter)
+
+	suite.creator.On("Create", mock.Anything).Return(nil)
+	suite.trainer.On("Train", mock.Anything, mock.Anything).Return(nil)
+	suite.deleter.On("Delete", mock.Anything).Return(nil)
 }
 
 func TestCreateClassifierSuiteRunner(t *testing.T) {
 	suite.Run(t, new(CreateClassifierSuite))
 }
 
-func (suite *CreateClassifierSuite) ClearExpectedCalls() {
-	suite.client.ExpectedCalls = nil
+func (suite *CreateClassifierSuite) ClearExpectedCalls(creator, trainer, deleter bool) {
+	if creator {
+		suite.creator.ExpectedCalls = nil
+	}
+
+	if trainer {
+		suite.trainer.ExpectedCalls = nil
+	}
+
+	if deleter {
+		suite.deleter.ExpectedCalls = nil
+	}
 }
 
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Creates_The_Named_Classifier() {
-	sut := commands.NewCreateClassifier(suite.output, suite.client, suite.deleteClassifier)
-	sut.Execute("charlie", "samples.zip")
+	suite.sut.Execute("charlie", "samples.zip")
 
-	suite.client.AssertCalled(suite.T(), "Create", "charlie")
+	suite.creator.AssertCalled(suite.T(), "Create", "charlie")
 }
 
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Trains_The_New_Classifier() {
-	sut := commands.NewCreateClassifier(suite.output, suite.client, suite.deleteClassifier)
-	sut.Execute("charlie", "samples.zip")
+	suite.sut.Execute("charlie", "samples.zip")
 
-	suite.client.AssertCalled(suite.T(), "Train", "charlie", "samples.zip")
+	suite.trainer.AssertCalled(suite.T(), "Train", "charlie", "samples.zip")
 }
 
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Returns_An_Error_If_The_Classifier_Cannot_Be_Created() {
 	expected := errors.New("Failed")
-	suite.ClearExpectedCalls()
-	suite.client.On("Create", mock.Anything).Return(expected)
+	suite.ClearExpectedCalls(true, false, false)
+	suite.creator.On("Create", mock.Anything).Return(expected)
 
-	sut := commands.NewCreateClassifier(suite.output, suite.client, suite.deleteClassifier)
-	err := sut.Execute("charlie", "samples.zip")
+	err := suite.sut.Execute("charlie", "samples.zip")
 
 	assert.NotNil(suite.T(), err)
-	suite.client.AssertCalled(suite.T(), "Create", "charlie")
-	suite.client.AssertNotCalled(suite.T(), "Train", "charlie", "samples.zip")
+	suite.creator.AssertCalled(suite.T(), "Create", "charlie")
+	suite.trainer.AssertNotCalled(suite.T(), "Train", "charlie", "samples.zip")
 }
 
-func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Writes_Error_To_Output_If_The_Classifier_Cannot_Be_Created() {
-	expected := errors.New("Error message")
-	suite.ClearExpectedCalls()
-	suite.client.On("Create", mock.Anything).Return(expected)
+func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Returns_Error_If_The_Classifier_Cannot_Be_Created() {
+	expectedErr := errors.New("Error message")
+	suite.ClearExpectedCalls(true, false, false)
+	suite.creator.On("Create", mock.Anything).Return(expectedErr)
 
-	sut := commands.NewCreateClassifier(suite.output, suite.client, suite.deleteClassifier)
-	sut.Execute("charlie", "samples.zip")
+	receivedErr := suite.sut.Execute("charlie", "samples.zip")
 
-	assert.Equal(suite.T(), fmt.Sprintf("Creating classifier 'charlie'... [FAILED]\n%s\n", expected.Error()), suite.output.String())
+	assert.Equal(suite.T(), expectedErr, receivedErr)
 }
 
-func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Writes_Error_To_Output_If_The_Classifier_Cannot_Be_Trained() {
-	expected := errors.New("Error message")
-	suite.ClearExpectedCalls()
-	suite.client.On("Create", mock.Anything).Return(nil)
-	suite.client.On("Train", mock.Anything, mock.Anything).Return(expected)
-	suite.deleteClassifier.On("Execute", mock.Anything).Return(nil)
+func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Returns_Error_If_The_Classifier_Cannot_Be_Trained() {
+	expectedErr := errors.New("Error message")
+	suite.ClearExpectedCalls(true, true, true)
+	suite.creator.On("Create", mock.Anything).Return(nil)
+	suite.trainer.On("Train", mock.Anything, mock.Anything).Return(expectedErr)
+	suite.deleter.On("Delete", mock.Anything).Return(nil)
 
-	sut := commands.NewCreateClassifier(suite.output, suite.client, suite.deleteClassifier)
-	sut.Execute("charlie", "samples.zip")
+	receivedErr := suite.sut.Execute("charlie", "samples.zip")
 
-	assert.Equal(suite.T(), fmt.Sprintf("Creating classifier 'charlie'... [OK]\nAdding samples from file 'samples.zip'... [FAILED]\n%s\n", expected.Error()), suite.output.String())
+	assert.Equal(suite.T(), expectedErr, receivedErr)
 }
 
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Deletes_The_Classifier_If_The_Classifier_Cannot_Be_Trained_From_The_Samples() {
-	suite.deleteClassifier.On("Execute", mock.Anything).Return(nil)
+	suite.deleter.On("Execute", mock.Anything).Return(nil)
 	expected := errors.New("Failed")
-	suite.ClearExpectedCalls()
-	suite.client.On("Create", mock.Anything).Return(nil)
-	suite.client.On("Train", mock.Anything, mock.Anything).Return(expected)
+	suite.ClearExpectedCalls(true, true, false)
+	suite.creator.On("Create", mock.Anything).Return(nil)
+	suite.trainer.On("Train", mock.Anything, mock.Anything).Return(expected)
 
-	sut := commands.NewCreateClassifier(suite.output, suite.client, suite.deleteClassifier)
-	sut.Execute("charlie", "non-existent.zip")
+	suite.sut.Execute("charlie", "non-existent.zip")
 
-	suite.deleteClassifier.AssertCalled(suite.T(), "Execute", "charlie")
+	suite.deleter.AssertCalled(suite.T(), "Delete", "charlie")
 }
