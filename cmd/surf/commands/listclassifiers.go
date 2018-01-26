@@ -25,5 +25,13 @@ func (cmd *ListClassifiers) Execute() (ch360.ClassifierList, error) {
 		return nil, err
 	}
 
+	if !classifiers.Any() {
+		fmt.Fprintln(cmd.writer, "No classifiers found.")
+	}
+
+	for _, classifier := range classifiers {
+		fmt.Fprintln(cmd.writer, classifier.Name)
+	}
+
 	return classifiers, nil
 }

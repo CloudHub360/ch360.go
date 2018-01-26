@@ -39,6 +39,8 @@ func NewDeleteClassifier(writer io.Writer, client DeleterGetter) ClassifierComma
 }
 
 func (cmd *DeleteClassifier) Execute(classifierName string) error {
+	fmt.Fprintf(cmd.writer, "Deleting classifier '%s'... ", classifierName)
+
 	classifiers, err := cmd.client.GetAll()
 
 	if err != nil {
@@ -57,5 +59,6 @@ func (cmd *DeleteClassifier) Execute(classifierName string) error {
 		return err
 	}
 
+	fmt.Fprintln(cmd.writer, "[OK]")
 	return nil
 }

@@ -71,7 +71,7 @@ func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Writes_Error_To
 	sut := commands.NewCreateClassifier(suite.output, suite.client, suite.deleteClassifier)
 	sut.Execute("charlie", "samples.zip")
 
-	assert.Equal(suite.T(), fmt.Sprintf("[FAILED]\n%s\n", expected.Error()), suite.output.String())
+	assert.Equal(suite.T(), fmt.Sprintf("Creating classifier 'charlie'... [FAILED]\n%s\n", expected.Error()), suite.output.String())
 }
 
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Writes_Error_To_Output_If_The_Classifier_Cannot_Be_Trained() {
@@ -84,7 +84,7 @@ func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Writes_Error_To
 	sut := commands.NewCreateClassifier(suite.output, suite.client, suite.deleteClassifier)
 	sut.Execute("charlie", "samples.zip")
 
-	assert.Equal(suite.T(), fmt.Sprintf("[OK]\nAdding samples from file 'samples.zip'... [FAILED]\n%s\n", expected.Error()), suite.output.String())
+	assert.Equal(suite.T(), fmt.Sprintf("Creating classifier 'charlie'... [OK]\nAdding samples from file 'samples.zip'... [FAILED]\n%s\n", expected.Error()), suite.output.String())
 }
 
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Deletes_The_Classifier_If_The_Classifier_Cannot_Be_Trained_From_The_Samples() {
