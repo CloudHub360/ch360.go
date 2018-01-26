@@ -26,10 +26,6 @@ type Classifier struct {
 	Name string
 }
 
-type Request interface {
-	Issue(client *ClassifiersClient) error
-}
-
 type ClassifierList []Classifier
 
 func (client *ClassifiersClient) issueRequest(method string, classifierName string) (*http.Response, error) {
