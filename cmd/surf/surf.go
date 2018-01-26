@@ -174,7 +174,7 @@ Filename and glob pattern examples:
 		}
 
 		// Only show progress if stdout is being redirected
-		if !canShowProgressBar(writeMultipleFiles || outputFilename != "") {
+		if !shouldShowProgressBar(writeMultipleFiles || outputFilename != "") {
 			showProgress = false
 		}
 
@@ -192,7 +192,7 @@ Filename and glob pattern examples:
 	}
 }
 
-func canShowProgressBar(writingToFile bool) bool {
+func shouldShowProgressBar(writingToFile bool) bool {
 	return writingToFile || isRedirected(os.Stdout.Fd())
 }
 
