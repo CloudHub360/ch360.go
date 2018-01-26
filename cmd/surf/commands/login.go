@@ -29,7 +29,6 @@ func (cmd *Login) Execute(clientId string, clientSecret string) error {
 
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
-		fmt.Fprintln(cmd.writer, err.Error())
 	} else {
 		fmt.Fprintln(cmd.writer, "[OK]")
 	}
