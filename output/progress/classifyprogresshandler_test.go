@@ -24,7 +24,6 @@ type ClassifyProgressHandlerSuite struct {
 func (suite *ClassifyProgressHandlerSuite) SetupTest() {
 	suite.mockResultWriter = &mocks.ResultsWriter{}
 	suite.outBuffer = new(bytes.Buffer)
-	//suite.sut = progress.NewClassifyProgressHandler(suite.mockResultWriter, true, suite.outBuffer)
 	suite.setupMockResultWriter(true, true, true)
 
 	rand.Seed(time.Now().Unix())

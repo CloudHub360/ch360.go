@@ -42,7 +42,8 @@ Options:
   -o, --output-file <file>         : Write all results to the specified file
   -m, --multiple-files             : Write results output to multiple files with the same
                                    : basename as the input
-  -p, --progress                   : Show progress
+  -p, --progress                   : Show progress when classifying files. Only visible when
+                                     redirecting stdout or in conjunction with -m or -o.
 `
 
 	filenameExamples := `
