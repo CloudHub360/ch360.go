@@ -211,7 +211,8 @@ func doCreateClassifier(args map[string]interface{}) error {
 	return commands.NewCreateClassifier(
 		os.Stdout,
 		apiClient.Classifiers,
-		commands.NewDeleteClassifier(os.Stdout, apiClient.Classifiers),
+		apiClient.Classifiers,
+		apiClient.Classifiers,
 	).Execute(classifierName, samplesPath)
 
 }
