@@ -173,7 +173,7 @@ Filename and glob pattern examples:
 		}
 
 		// Only show progress if stdout is being redirected
-		if isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd()) {
+		if !canShowProgressBar(writeMultipleFiles || outputFilename != "") {
 			showProgress = false
 		}
 
@@ -189,6 +189,15 @@ Filename and glob pattern examples:
 			os.Exit(1)
 		}
 	}
+}
+
+func canShowProgressBar(writingToFile bool) bool {
+	return writingToFile || isRedirected(os.Stdout.Fd())
+}
+
+func isRedirected(fd uintptr) bool {
+	return !isatty.IsTerminal(fd) &&
+		!isatty.IsCygwinTerminal(fd)
 }
 
 func handleInterrupt(canceller context.CancelFunc) {
