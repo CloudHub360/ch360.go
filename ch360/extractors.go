@@ -3,15 +3,16 @@ package ch360
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/CloudHub360/ch360.go/net"
 	"net/http"
 )
 
 type ExtractorsClient struct {
 	baseUrl       string
-	requestSender HttpDoer
+	requestSender net.HttpDoer
 }
 
-func NewExtractorsClient(baseUrl string, requestSender HttpDoer) *ExtractorsClient {
+func NewExtractorsClient(baseUrl string, requestSender net.HttpDoer) *ExtractorsClient {
 	return &ExtractorsClient{
 		baseUrl:       baseUrl,
 		requestSender: requestSender,
