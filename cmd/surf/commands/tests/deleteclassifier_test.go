@@ -16,11 +16,11 @@ type DeleteClassifierSuite struct {
 	suite.Suite
 	sut    commands.ClassifierCommand
 	output *bytes.Buffer
-	client *mocks.DeleterGetter
+	client *mocks.ClassifierDeleterGetter
 }
 
 func (suite *DeleteClassifierSuite) SetupTest() {
-	suite.client = new(mocks.DeleterGetter)
+	suite.client = new(mocks.ClassifierDeleterGetter)
 	suite.client.On("GetAll", mock.Anything).Return(
 		AListOfClassifiers("charlie", "jo", "chris"), nil)
 

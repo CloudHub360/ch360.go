@@ -7,11 +7,11 @@ import (
 )
 
 type ListClassifiers struct {
-	client Getter
+	client ClassifierGetter
 	writer io.Writer
 }
 
-func NewListClassifiers(writer io.Writer, client Getter) *ListClassifiers {
+func NewListClassifiers(writer io.Writer, client ClassifierGetter) *ListClassifiers {
 	return &ListClassifiers{
 		client: client,
 		writer: writer,

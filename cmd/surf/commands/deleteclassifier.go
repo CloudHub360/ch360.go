@@ -7,19 +7,19 @@ import (
 	"io"
 )
 
-//go:generate mockery -name "Deleter|Getter|DeleterGetter|ClassifierCommand"
+//go:generate mockery -name "ClassifierDeleter|ClassifierGetter|ClassifierDeleterGetter|ClassifierCommand"
 
-type Deleter interface {
+type ClassifierDeleter interface {
 	Delete(name string) error
 }
 
-type Getter interface {
+type ClassifierGetter interface {
 	GetAll() (ch360.ClassifierList, error)
 }
 
-type DeleterGetter interface {
-	Deleter
-	Getter
+type ClassifierDeleterGetter interface {
+	ClassifierDeleter
+	ClassifierGetter
 }
 
 type ClassifierCommand interface {
@@ -27,11 +27,11 @@ type ClassifierCommand interface {
 }
 
 type DeleteClassifier struct {
-	client DeleterGetter
+	client ClassifierDeleterGetter
 	writer io.Writer
 }
 
-func NewDeleteClassifier(writer io.Writer, client DeleterGetter) ClassifierCommand {
+func NewDeleteClassifier(writer io.Writer, client ClassifierDeleterGetter) ClassifierCommand {
 	return &DeleteClassifier{
 		writer: writer,
 		client: client,
