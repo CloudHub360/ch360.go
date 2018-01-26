@@ -11,6 +11,7 @@ const ApiAddress = "https://api.waives.io"
 type ApiClient struct {
 	Classifiers *ClassifiersClient
 	Documents   *DocumentsClient
+	Extractors  *ExtractorsClient
 }
 
 func NewApiClient(httpClient net.HttpDoer, apiUrl string, clientId string, clientSecret string) *ApiClient {
@@ -43,6 +44,10 @@ func NewApiClient(httpClient net.HttpDoer, apiUrl string, clientId string, clien
 			requestSender: &responseCheckingDoer,
 		},
 		Documents: &DocumentsClient{
+			baseUrl:       apiUrl,
+			requestSender: &responseCheckingDoer,
+		},
+		Extractors: &ExtractorsClient{
 			baseUrl:       apiUrl,
 			requestSender: &responseCheckingDoer,
 		},

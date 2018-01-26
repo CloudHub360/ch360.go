@@ -29,6 +29,7 @@ Usage:
   surf create classifier <name> <samples-zip> [options]
   surf delete classifier <name> [options]
   surf list classifiers [options]
+  surf list extractors [options]
   surf classify <file> <classifier> [options]
   surf -h | --help
   surf -v | --version
@@ -85,11 +86,27 @@ Filename and glob pattern examples:
 		exitOnErr(doDeleteClassifier(args))
 	case "list classifiers":
 		exitOnErr(doListClassifiers(args))
+	case "list extractors":
+		exitOnErr(doListExtractors(args))
 	case "classify":
 		exitOnErr(doClassifyFiles(ctx, args))
 	}
 
 }
+func doListExtractors(args map[string]interface{}) error {
+	clientId, clientSecret, err := resolveCredentials(args)
+
+	if err != nil {
+		return err
+	}
+
+	apiClient := ch360.NewApiClient(httpClient(), ch360.ApiAddress, clientId, clientSecret)
+
+	_, err = commands.NewListExtractors(os.Stdout, apiClient.Extractors).Execute()
+
+	return err
+}
+
 func doClassifyFiles(ctx context.Context, args map[string]interface{}) error {
 	var (
 		outputFormat       = argAsString(args, "--output-format")
@@ -305,7 +322,7 @@ func verbFromArgs(args map[string]interface{}) (string, error) {
 }
 
 func nounFromArgs(args map[string]interface{}) string {
-	supportedNouns := []string{"classifier", "classifiers"}
+	supportedNouns := []string{"classifier", "classifiers", "extractors"}
 	for _, noun := range supportedNouns {
 		if args[noun].(bool) {
 			return noun
