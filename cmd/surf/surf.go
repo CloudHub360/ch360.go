@@ -59,136 +59,201 @@ Filename and glob pattern examples:
 
 	args, err := docopt.Parse(usage, nil, true, ch360.Version, false)
 
-	if err != nil {
-		fmt.Printf(err.Error())
-		os.Exit(1)
-	}
-
-	httpClient := &http.Client{
-		Timeout: time.Minute * 5,
-	}
-
-	clientId := argAsString(args, "--client-id")
-	clientSecret := argAsString(args, "--client-secret")
-
-	homedir, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(errors.New(fmt.Sprintf("Could not determine home directory. Details: %s", err.Error())))
-		os.Exit(1)
-	}
-
-	appDirectory := config.NewAppDirectory(homedir)
+	exitOnErr(err)
 
 	ctx, canceller := context.WithCancel(context.Background())
 
 	go handleInterrupt(canceller)
 
-	if args["login"].(bool) {
-		if clientId == "" {
-			fmt.Print("Client Id: ")
-			if clientId, err = readSecretFromConsole(); err != nil {
-				os.Exit(1)
-			}
-		}
+	verb, err := verbFromArgs(args)
+	exitOnErr(err)
+	noun := nounFromArgs(args)
 
-		if clientSecret == "" {
-			fmt.Print("Client Secret: ")
-			if clientSecret, err = readSecretFromConsole(); err != nil {
-				os.Exit(1)
-			}
-		}
+	var cmd string
+	if noun != "" {
+		cmd = fmt.Sprintf("%s %s", verb, noun)
+	} else {
+		cmd = verb
+	}
 
-		responseChecker := &response.ErrorChecker{}
-		tokenRetriever := auth.NewHttpTokenRetriever(clientId, clientSecret, httpClient, ch360.ApiAddress, responseChecker)
-		err = commands.NewLogin(os.Stdout, appDirectory, tokenRetriever).Execute(clientId, clientSecret)
-		if err != nil {
-			os.Exit(1)
-		}
+	switch cmd {
+	case "login ":
+		exitOnErr(doLogin(args))
+	case "create classifier":
+		exitOnErr(doCreateClassifier(args))
+	case "delete classifier":
+		exitOnErr(doDeleteClassifier(args))
+	case "list classifiers":
+		exitOnErr(doListClassifiers(args))
+	case "classify":
+		exitOnErr(doClassifyFiles(ctx, args))
+	}
+
+}
+func doClassifyFiles(ctx context.Context, args map[string]interface{}) error {
+	var (
+		outputFormat       = argAsString(args, "--output-format")
+		outputFilename     = argAsString(args, "--output-file")
+		writeMultipleFiles = args["--multiple-files"].(bool)
+		filePattern        = args["<file>"].(string)
+		classifierName     = args["<classifier>"].(string)
+		showProgress       = args["--progress"].(bool)
+	)
+
+	clientId, clientSecret, err := resolveCredentials(args)
+
+	if err != nil {
+		return err
+	}
+
+	apiClient := ch360.NewApiClient(httpClient(), ch360.ApiAddress, clientId, clientSecret)
+
+	builder := resultsWriters.NewResultsWriterBuilder(outputFormat,
+		writeMultipleFiles,
+		outputFilename)
+
+	resultsWriter, err := builder.Build()
+
+	if err != nil {
+		return err
+	}
+
+	// Only show progress if stdout is being redirected
+	if !shouldShowProgressBar(writeMultipleFiles || outputFilename != "") {
+		showProgress = false
+	}
+
+	progressHandler := progress.NewClassifyProgressHandler(resultsWriter, showProgress, os.Stderr)
+	return commands.NewClassifyCommand(progressHandler,
+		apiClient.Documents,
+		apiClient.Documents,
+		apiClient.Documents,
+		apiClient.Documents,
+		10).Execute(ctx, filePattern, classifierName)
+}
+
+func doListClassifiers(args map[string]interface{}) error {
+	clientId, clientSecret, err := resolveCredentials(args)
+
+	if err != nil {
+		return err
+	}
+
+	apiClient := ch360.NewApiClient(httpClient(), ch360.ApiAddress, clientId, clientSecret)
+
+	_, err = commands.NewListClassifiers(os.Stdout, apiClient.Classifiers).Execute()
+
+	return err
+}
+
+func doDeleteClassifier(args map[string]interface{}) error {
+	classifierName := args["<name>"].(string)
+
+	clientId, clientSecret, err := resolveCredentials(args)
+
+	if err != nil {
+		return err
+	}
+
+	apiClient := ch360.NewApiClient(httpClient(), ch360.ApiAddress, clientId, clientSecret)
+
+	return commands.NewDeleteClassifier(os.Stdout, apiClient.Classifiers).Execute(classifierName)
+}
+
+func resolveCredentials(args map[string]interface{}) (clientId, clientSecret string, err error) {
+	var (
+		clientIdArg     = argAsString(args, "--client-id")
+		clientSecretArg = argAsString(args, "--client-secret")
+	)
+
+	appDir, err := appDirectory()
+
+	if err != nil {
 		return
 	}
 
 	// Get credentials from configuration
 	resolver := &commands.CredentialsResolver{}
-	clientId, clientSecret, err = resolver.Resolve(clientId, clientSecret, appDirectory)
+	clientId, clientSecret, err = resolver.Resolve(clientIdArg, clientSecretArg, appDir)
+
+	return
+}
+
+func doCreateClassifier(args map[string]interface{}) error {
+	clientId, clientSecret, err := resolveCredentials(args)
+
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		return err
 	}
 
-	apiClient := ch360.NewApiClient(httpClient, ch360.ApiAddress, clientId, clientSecret)
+	apiClient := ch360.NewApiClient(httpClient(), ch360.ApiAddress, clientId, clientSecret)
 
-	if args["create"].(bool) {
-		classifierName := args["<name>"].(string)
-		samplesPath := args["<samples-zip>"].(string)
-		fmt.Printf("Creating classifier '%s'... ", classifierName)
-		err = commands.NewCreateClassifier(
-			os.Stdout,
-			apiClient.Classifiers,
-			commands.NewDeleteClassifier(os.Stdout, apiClient.Classifiers),
-		).Execute(classifierName, samplesPath)
+	classifierName := args["<name>"].(string)
+	samplesPath := args["<samples-zip>"].(string)
+
+	return commands.NewCreateClassifier(
+		os.Stdout,
+		apiClient.Classifiers,
+		commands.NewDeleteClassifier(os.Stdout, apiClient.Classifiers),
+	).Execute(classifierName, samplesPath)
+
+}
+
+func appDirectory() (*config.AppDirectory, error) {
+	homedir, err := homedir.Dir()
+	if err != nil {
+		return nil, err
+	}
+	appDirectory := config.NewAppDirectory(homedir)
+	return appDirectory, nil
+}
+
+func doLogin(args map[string]interface{}) error {
+	var (
+		clientId     = argAsString(args, "--client-id")
+		clientSecret = argAsString(args, "--client-secret")
+		err          error
+	)
+
+	if clientId == "" {
+		fmt.Print("Client Id: ")
+		clientId, err = readSecretFromConsole()
 		if err != nil {
-			os.Exit(1)
+			return err
 		}
-	} else if args["delete"].(bool) {
-		classifierName := args["<name>"].(string)
+	}
 
-		fmt.Printf("Deleting classifier '%s'... ", classifierName)
-		err = commands.NewDeleteClassifier(os.Stdout, apiClient.Classifiers).Execute(classifierName)
+	if clientSecret == "" {
+		fmt.Print("Client Secret: ")
+		clientSecret, err = readSecretFromConsole()
 		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
+			return err
 		}
-		fmt.Println("[OK]")
-	} else if args["list"].(bool) {
-		var classifiers ch360.ClassifierList
-		classifiers, err = commands.NewListClassifiers(os.Stdout, apiClient.Classifiers).Execute()
+	}
 
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
+	responseChecker := &response.ErrorChecker{}
 
-		if !classifiers.Any() {
-			fmt.Println("No classifiers found.")
-		}
+	tokenRetriever := auth.NewHttpTokenRetriever(clientId,
+		clientSecret,
+		httpClient(),
+		ch360.ApiAddress,
+		responseChecker)
 
-		for _, classifier := range classifiers {
-			fmt.Println(classifier.Name)
-		}
-	} else if args["classify"].(bool) {
+	appDir, err := appDirectory()
 
-		var (
-			outputFormat       = argAsString(args, "--output-format")
-			outputFilename     = argAsString(args, "--output-file")
-			writeMultipleFiles = args["--multiple-files"].(bool)
-			filePattern        = args["<file>"].(string)
-			classifierName     = args["<classifier>"].(string)
-			showProgress       = args["--progress"].(bool)
-		)
+	if err != nil {
+		return err
+	}
 
-		builder := resultsWriters.NewResultsWriterBuilder(outputFormat, writeMultipleFiles, outputFilename)
-		resultsWriter, err := builder.Build()
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
+	return commands.NewLogin(os.Stdout,
+		appDir,
+		tokenRetriever).Execute(clientId, clientSecret)
 
-		// Only show progress if stdout is being redirected
-		if !shouldShowProgressBar(writeMultipleFiles || outputFilename != "") {
-			showProgress = false
-		}
+}
 
-		progressHandler := progress.NewClassifyProgressHandler(resultsWriter, showProgress, os.Stderr)
-		err = commands.NewClassifyCommand(progressHandler,
-			apiClient.Documents,
-			apiClient.Documents,
-			apiClient.Documents,
-			apiClient.Documents,
-			10).Execute(ctx, filePattern, classifierName)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
+func httpClient() *http.Client {
+	return &http.Client{
+		Timeout: time.Minute * 5,
 	}
 }
 
@@ -227,4 +292,31 @@ func readSecretFromConsole() (string, error) {
 		return "", err
 	}
 	return secret, nil
+}
+
+func verbFromArgs(args map[string]interface{}) (string, error) {
+	supportedVerbs := []string{"login", "list", "create", "delete", "classify"}
+	for _, verb := range supportedVerbs {
+		if args[verb].(bool) {
+			return verb, nil
+		}
+	}
+	return "", errors.New("No supported verbs found.")
+}
+
+func nounFromArgs(args map[string]interface{}) string {
+	supportedNouns := []string{"classifier", "classifiers"}
+	for _, noun := range supportedNouns {
+		if args[noun].(bool) {
+			return noun
+		}
+	}
+	return ""
+}
+
+func exitOnErr(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }

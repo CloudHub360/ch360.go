@@ -35,6 +35,8 @@ func NewCreateClassifier(writer io.Writer, client CreatorTrainer, deleteClassifi
 }
 
 func (cmd *CreateClassifier) Execute(classifierName string, samplesPath string) error {
+	fmt.Fprintf(cmd.writer, "Creating classifier '%s'... ", classifierName)
+
 	err := cmd.client.Create(classifierName)
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
