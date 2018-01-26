@@ -220,7 +220,7 @@ func doCreateClassifier(args map[string]interface{}) error {
 func appDirectory() (*config.AppDirectory, error) {
 	homedir, err := homedir.Dir()
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Could not determine home directory. Details: %v", err))
 	}
 	appDirectory := config.NewAppDirectory(homedir)
 	return appDirectory, nil
