@@ -78,7 +78,7 @@ Filename and glob pattern examples:
 	}
 
 	switch cmd {
-	case "login ":
+	case "login":
 		exitOnErr(doLogin(args))
 	case "create classifier":
 		exitOnErr(doCreateClassifier(args))
