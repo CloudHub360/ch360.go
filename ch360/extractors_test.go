@@ -14,9 +14,10 @@ import (
 
 type ExtractorsClientSuite struct {
 	suite.Suite
-	sut           *ch360.ExtractorsClient
-	httpClient    *mocks.HttpDoer
-	extractorName string
+	sut             *ch360.ExtractorsClient
+	httpClient      *mocks.HttpDoer
+	extractorName   string
+	extractorConfig *bytes.Buffer
 }
 
 func (suite *ExtractorsClientSuite) SetupTest() {
@@ -25,6 +26,7 @@ func (suite *ExtractorsClientSuite) SetupTest() {
 
 	suite.sut = ch360.NewExtractorsClient(apiUrl, suite.httpClient)
 	suite.extractorName = "extractor-name"
+	suite.extractorConfig = &bytes.Buffer{}
 }
 
 func TestExtractorsClientSuiteRunner(t *testing.T) {
@@ -50,12 +52,15 @@ func (suite *ExtractorsClientSuite) ClearExpectedCalls() {
 }
 
 func (suite *ExtractorsClientSuite) Test_CreateExtractor_Issues_Create_Extractor_Request() {
+	// Arrange
+	suite.extractorConfig.Write([]byte("some bytes"))
+	suite.extractorConfig.Reset()
+
 	// Act
-	suite.sut.Create(suite.extractorName)
+	suite.sut.Create(suite.extractorName, suite.extractorConfig)
 
 	// Assert
 	suite.AssertRequestIssued("POST", apiUrl+"/extractors/"+suite.extractorName)
-
 }
 
 func (suite *ExtractorsClientSuite) Test_DeleteExtractor_Issues_Delete_Extractor_Request() {

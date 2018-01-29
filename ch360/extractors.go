@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/CloudHub360/ch360.go/net"
+	"io"
 	"net/http"
 )
 
@@ -26,9 +27,13 @@ type Extractor struct {
 type ExtractorList []Extractor
 
 func (client *ExtractorsClient) issueRequest(method string, extractorName string) (*http.Response, error) {
+	return client.issueRequestWithBody(method, extractorName, nil)
+}
+
+func (client *ExtractorsClient) issueRequestWithBody(method, extractorName string, body io.Reader) (*http.Response, error) {
 	request, err := http.NewRequest(method,
 		client.baseUrl+"/extractors/"+extractorName,
-		nil)
+		body)
 
 	if err != nil {
 		return nil, err
@@ -37,8 +42,8 @@ func (client *ExtractorsClient) issueRequest(method string, extractorName string
 	return client.requestSender.Do(request)
 }
 
-func (client *ExtractorsClient) Create(name string) error {
-	_, err := client.issueRequest("POST", name)
+func (client *ExtractorsClient) Create(name string, config io.Reader) error {
+	_, err := client.issueRequestWithBody("POST", name, config)
 
 	return err
 }

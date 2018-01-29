@@ -27,6 +27,7 @@ func main() {
 Usage:
   surf login [options]
   surf create classifier <name> <samples-zip> [options]
+  surf create extractor <name> <config-file> [options]
   surf delete classifier <name> [options]
   surf list classifiers [options]
   surf list extractors [options]
@@ -82,6 +83,8 @@ Filename and glob pattern examples:
 		exitOnErr(doLogin(args))
 	case "create classifier":
 		exitOnErr(doCreateClassifier(args))
+	case "create extractor":
+		exitOnErr(doCreateExtractor(args))
 	case "delete classifier":
 		exitOnErr(doDeleteClassifier(args))
 	case "list classifiers":
@@ -93,6 +96,30 @@ Filename and glob pattern examples:
 	}
 
 }
+func doCreateExtractor(args map[string]interface{}) error {
+	clientId, clientSecret, err := resolveCredentials(args)
+
+	if err != nil {
+		return err
+	}
+
+	extractorName := args["<name>"].(string)
+	configPath := args["<config-file>"].(string)
+
+	configFile, err := os.Open(configPath)
+
+	if err != nil {
+		return err
+	}
+
+	apiClient := ch360.NewApiClient(httpClient(), ch360.ApiAddress, clientId, clientSecret)
+
+	err = commands.NewCreateExtractor(os.Stdout, apiClient.Extractors).
+		Execute(extractorName, configFile)
+
+	return err
+}
+
 func doListExtractors(args map[string]interface{}) error {
 	clientId, clientSecret, err := resolveCredentials(args)
 
@@ -323,7 +350,7 @@ func verbFromArgs(args map[string]interface{}) (string, error) {
 }
 
 func nounFromArgs(args map[string]interface{}) string {
-	supportedNouns := []string{"classifier", "classifiers", "extractors"}
+	supportedNouns := []string{"classifier", "classifiers", "extractor", "extractors"}
 	for _, noun := range supportedNouns {
 		if args[noun].(bool) {
 			return noun
