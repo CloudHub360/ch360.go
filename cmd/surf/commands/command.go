@@ -38,6 +38,8 @@ func CommandFor(args docopt.Opts) (Command, error) {
 		return NewCreateExtractorFromArgs(args, apiClient.Extractors, out)
 	case new(DeleteClassifier).Usage():
 		return NewDeleteClassifierFromArgs(args, apiClient.Classifiers, out)
+	case new(DeleteExtractor).Usage():
+		return NewDeleteExtractorFromArgs(args, apiClient.Extractors, out)
 	case new(ListClassifiers).Usage():
 		return NewListClassifiers(apiClient.Classifiers, out), nil
 	case new(ListExtractors).Usage():

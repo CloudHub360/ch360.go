@@ -20,6 +20,7 @@ Usage:
   surf ` + commands.CreateClassifierCommand + ` <name> <samples-zip> [options]
   surf ` + commands.CreateExtractorCommand + ` <name> <config-file> [options]
   surf ` + commands.DeleteClassifierCommand + ` <name> [options]
+  surf ` + commands.DeleteExtractorCommand + ` <name> [options]
   surf ` + commands.ListClassifiersCommand + ` [options]
   surf ` + commands.ListExtractorsCommand + ` [options]
   surf ` + commands.ClassifyFilesCommand + ` <file> <classifier> [options]
