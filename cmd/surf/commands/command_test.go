@@ -30,6 +30,10 @@ var expectedRunnerTypes = []struct {
 		expectedRunnerType: reflect.TypeOf(&commands.DeleteClassifier{}),
 	},
 	{
+		cmd:                new(commands.DeleteExtractor).Usage(),
+		expectedRunnerType: reflect.TypeOf(&commands.DeleteExtractor{}),
+	},
+	{
 		cmd:                new(commands.ListExtractors).Usage(),
 		expectedRunnerType: reflect.TypeOf(&commands.ListExtractors{}),
 	},
