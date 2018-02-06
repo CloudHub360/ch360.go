@@ -1,7 +1,10 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"github.com/CloudHub360/ch360.go/fs"
+	"github.com/mitchellh/go-homedir"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -24,10 +27,19 @@ type ConfigurationReader interface {
 const FileRWPermissions os.FileMode = 0600
 const DirRWPermissions os.FileMode = 0700
 
-func NewAppDirectory(homeDirectory string) *AppDirectory {
+func NewAppDirectoryInDir(dir string) *AppDirectory {
 	return &AppDirectory{
-		homeDirectory: homeDirectory,
+		homeDirectory: dir,
 	}
+}
+
+func NewAppDirectory() (*AppDirectory, error) {
+	dir, err := homedir.Dir()
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Could not determine home directory. Details: %v", err))
+	}
+
+	return NewAppDirectoryInDir(dir), nil
 }
 
 func (appDirectory *AppDirectory) WriteConfiguration(configuration *Configuration) error {

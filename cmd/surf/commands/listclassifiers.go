@@ -1,28 +1,30 @@
 package commands
 
 import (
+	"context"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360"
 	"io"
 )
+
+const ListClassifiersCommand = "list classifiers"
 
 type ListClassifiers struct {
 	client ClassifierGetter
 	writer io.Writer
 }
 
-func NewListClassifiers(writer io.Writer, client ClassifierGetter) *ListClassifiers {
+func NewListClassifiers(client ClassifierGetter, out io.Writer) *ListClassifiers {
 	return &ListClassifiers{
 		client: client,
-		writer: writer,
+		writer: out,
 	}
 }
 
-func (cmd *ListClassifiers) Execute() (ch360.ClassifierList, error) {
+func (cmd *ListClassifiers) Execute(ctx context.Context) error {
 	classifiers, err := cmd.client.GetAll()
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
-		return nil, err
+		return err
 	}
 
 	if !classifiers.Any() {
@@ -33,5 +35,5 @@ func (cmd *ListClassifiers) Execute() (ch360.ClassifierList, error) {
 		fmt.Fprintln(cmd.writer, classifier.Name)
 	}
 
-	return classifiers, nil
+	return nil
 }

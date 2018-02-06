@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
@@ -23,38 +24,27 @@ func (suite *ListExtractorSuite) SetupTest() {
 	suite.client = new(mocks.ExtractorGetter)
 	suite.output = &bytes.Buffer{}
 
-	suite.sut = commands.NewListExtractors(suite.output, suite.client)
+	suite.sut = commands.NewListExtractors(suite.client, suite.output)
 }
 
 func TestListExtractorSuiteRunner(t *testing.T) {
 	suite.Run(t, new(ListExtractorSuite))
 }
 
-func (suite *ListExtractorSuite) TestGetAllExtractors_Execute_Returns_The_Extractors_When_There_Are_Some() {
+func (suite *ListExtractorSuite) TestGetAllExtractors_Execute_Calls_The_Client() {
 	expectedExtractors := AListOfExtractors("charlie", "jo", "chris").(ch360.ExtractorList)
 	suite.client.On("GetAll", mock.Anything).Return(expectedExtractors, nil)
 
-	extractors, _ := suite.sut.Execute()
+	suite.sut.Execute(context.Background())
 
 	suite.client.AssertCalled(suite.T(), "GetAll")
-	assert.Equal(suite.T(), expectedExtractors, extractors)
-}
-
-func (suite *ListExtractorSuite) TestGetAllExtractors_Execute_Returns_Empty_Extractors_List_When_There_Are_None() {
-	expectedExtractors := make(ch360.ExtractorList, 0)
-	suite.client.On("GetAll", mock.Anything).Return(expectedExtractors, nil)
-
-	extractors, _ := suite.sut.Execute()
-
-	suite.client.AssertCalled(suite.T(), "GetAll")
-	assert.Equal(suite.T(), expectedExtractors, extractors)
 }
 
 func (suite *ListExtractorSuite) TestGetAllExtractors_Execute_Returns_An_Error_If_The_Extractors_Cannot_Be_Retrieved() {
 	expectedErr := errors.New("Failed")
 	suite.client.On("GetAll", mock.Anything).Return(nil, expectedErr)
 
-	_, actualErr := suite.sut.Execute()
+	actualErr := suite.sut.Execute(context.Background())
 
 	assert.Equal(suite.T(), expectedErr, actualErr)
 }

@@ -27,7 +27,7 @@ func (suite *AppDirectorySuite) SetupTest() {
 	suite.homeDirectory = NewTemporaryDirectory()
 	suite.homeDirectory.Create()
 
-	suite.sut = config.NewAppDirectory(suite.homeDirectory.Path())
+	suite.sut = config.NewAppDirectoryInDir(suite.homeDirectory.Path())
 	suite.clientId = generators.String("clientid")
 	suite.clientSecret = generators.String("clientsecret")
 	suite.config = config.NewConfiguration(suite.clientId, suite.clientSecret)

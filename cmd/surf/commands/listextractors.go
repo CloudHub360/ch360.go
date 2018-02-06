@@ -1,12 +1,15 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"io"
 )
 
 //go:generate mockery -name "ExtractorDeleter|ExtractorGetter|ExtractorDeleterGetter|ExtractorCommand"
+
+const ListExtractorsCommand = "list extractors"
 
 type ExtractorDeleter interface {
 	Delete(name string) error
@@ -26,18 +29,18 @@ type ListExtractors struct {
 	writer io.Writer
 }
 
-func NewListExtractors(writer io.Writer, client ExtractorGetter) *ListExtractors {
+func NewListExtractors(client ExtractorGetter, out io.Writer) *ListExtractors {
 	return &ListExtractors{
 		client: client,
-		writer: writer,
+		writer: out,
 	}
 }
 
-func (cmd *ListExtractors) Execute() (ch360.ExtractorList, error) {
+func (cmd *ListExtractors) Execute(ctx context.Context) error {
 	extractors, err := cmd.client.GetAll()
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
-		return nil, err
+		return err
 	}
 
 	if len(extractors) == 0 {
@@ -48,5 +51,5 @@ func (cmd *ListExtractors) Execute() (ch360.ExtractorList, error) {
 		fmt.Fprintln(cmd.writer, extractor.Name)
 	}
 
-	return extractors, nil
+	return nil
 }

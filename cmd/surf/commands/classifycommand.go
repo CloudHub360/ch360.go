@@ -6,11 +6,17 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/output/progress"
+	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/CloudHub360/ch360.go/pool"
+	"github.com/docopt/docopt-go"
+	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-zglob"
 	"io/ioutil"
 	"os"
 )
+
+const ClassifyFilesCommand = "classify"
 
 type ClassifyCommand struct {
 	documentClassifier ch360.DocumentClassifier
@@ -19,6 +25,9 @@ type ClassifyCommand struct {
 	documentGetter     ch360.DocumentGetter
 	parallelWorkers    int
 	progressHandler    ClassifyProgressHandler
+
+	classifierName string
+	filesPattern   string
 }
 
 //go:generate mockery -name ClassifyProgressHandler
@@ -34,7 +43,9 @@ func NewClassifyCommand(progressHandler ClassifyProgressHandler,
 	docCreator ch360.DocumentCreator,
 	docDeleter ch360.DocumentDeleter,
 	docGetter ch360.DocumentGetter,
-	parallelism int) *ClassifyCommand {
+	parallelism int,
+	filesPattern string,
+	classifierName string) *ClassifyCommand {
 	return &ClassifyCommand{
 		progressHandler:    progressHandler,
 		documentClassifier: docClassifier,
@@ -42,6 +53,8 @@ func NewClassifyCommand(progressHandler ClassifyProgressHandler,
 		documentDeleter:    docDeleter,
 		documentGetter:     docGetter,
 		parallelWorkers:    parallelism,
+		filesPattern:       filesPattern,
+		classifierName:     classifierName,
 	}
 }
 
@@ -71,12 +84,12 @@ func (cmd *ClassifyCommand) handlerFor(cancel context.CancelFunc, filename strin
 	}
 }
 
-func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, classifierName string) error {
-	matches, err := zglob.Glob(filePattern)
+func (cmd *ClassifyCommand) Execute(ctx context.Context) error {
+	matches, err := zglob.Glob(cmd.filesPattern)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// The file pattern is for a specific (single) file that doesn't exist
-			return errors.New(fmt.Sprintf("File %s does not exist", filePattern))
+			return errors.New(fmt.Sprintf("File %s does not exist", cmd.filesPattern))
 		} else {
 			return err
 		}
@@ -92,7 +105,7 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 
 	fileCount := len(matches)
 	if fileCount == 0 {
-		return errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'surf -h' for glob pattern examples.", filePattern))
+		return errors.New(fmt.Sprintf("File glob pattern %s does not match any files. Run 'surf -h' for glob pattern examples.", cmd.filesPattern))
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -110,7 +123,7 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context, filePattern string, cla
 
 		processFileJob := pool.NewJob(
 			func() (interface{}, error) {
-				return cmd.processFile(ctx, filename, classifierName)
+				return cmd.processFile(ctx, filename, cmd.classifierName)
 			},
 			cmd.handlerFor(cancel, filename, &errors))
 
@@ -159,4 +172,49 @@ func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, cl
 	}
 
 	return // named return params
+}
+
+func NewClassifyFilesCommandFromArgs(args docopt.Opts, client *ch360.ApiClient) (*ClassifyCommand, error) {
+	var (
+		outputFormat, _       = args.String("--output-format")
+		outputFilename, _     = args.String("--output-file")
+		filePattern, _        = args.String("<file>")
+		classifierName, _     = args.String("<classifier>")
+		writeMultipleFiles, _ = args.Bool("--multiple-files")
+		showProgress, _       = args.Bool("--progress")
+	)
+
+	builder := resultsWriters.NewResultsWriterBuilder(outputFormat,
+		writeMultipleFiles,
+		outputFilename)
+
+	resultsWriter, err := builder.Build()
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Only show progress if stdout is being redirected
+	if !shouldShowProgressBar(writeMultipleFiles || outputFilename != "") {
+		showProgress = false
+	}
+
+	progressHandler := progress.NewClassifyProgressHandler(resultsWriter, showProgress, os.Stderr)
+	return NewClassifyCommand(progressHandler,
+		client.Documents,
+		client.Documents,
+		client.Documents,
+		client.Documents,
+		10,
+		filePattern,
+		classifierName), nil
+}
+
+func shouldShowProgressBar(writingToFile bool) bool {
+	return writingToFile || isRedirected(os.Stdout.Fd())
+}
+
+func isRedirected(fd uintptr) bool {
+	return !isatty.IsTerminal(fd) &&
+		!isatty.IsCygwinTerminal(fd)
 }
