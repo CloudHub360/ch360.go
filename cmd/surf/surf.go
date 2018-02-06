@@ -17,11 +17,11 @@ func main() {
 
 Usage:
   surf login [options]
-  surf create classifier <name> <samples-zip> [options]
-  surf create extractor <name> <config-file> [options]
-  surf delete classifier <name> [options]
-  surf list classifiers [options]
-  surf list extractors [options]
+  surf ` + commands.CreateClassifierCommand + ` <name> <samples-zip> [options]
+  surf ` + commands.CreateExtractorCommand + ` <name> <config-file> [options]
+  surf ` + commands.DeleteClassifierCommand + ` <name> [options]
+  surf ` + commands.ListClassifiersCommand + ` [options]
+  surf ` + commands.ListExtractorsCommand + ` [options]
   surf ` + commands.ClassifyFilesCommand + ` <file> <classifier> [options]
   surf -h | --help
   surf -v | --version
