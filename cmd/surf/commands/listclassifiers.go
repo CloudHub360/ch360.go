@@ -37,3 +37,7 @@ func (cmd *ListClassifiers) Execute(ctx context.Context) error {
 
 	return nil
 }
+
+func (cmd ListClassifiers) Usage() string {
+	return ListClassifiersCommand
+}

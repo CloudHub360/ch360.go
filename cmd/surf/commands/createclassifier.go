@@ -83,3 +83,7 @@ func (cmd *CreateClassifier) Execute(ctx context.Context) error {
 	fmt.Fprintln(cmd.writer, "[OK]")
 	return nil
 }
+
+func (cmd CreateClassifier) Usage() string {
+	return CreateClassifierCommand
+}

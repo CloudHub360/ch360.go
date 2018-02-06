@@ -218,3 +218,7 @@ func isRedirected(fd uintptr) bool {
 	return !isatty.IsTerminal(fd) &&
 		!isatty.IsCygwinTerminal(fd)
 }
+
+func (cmd ClassifyCommand) Usage() string {
+	return ClassifyFilesCommand
+}

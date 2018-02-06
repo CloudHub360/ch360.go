@@ -68,3 +68,7 @@ func (cmd *CreateExtractor) Execute(ctx context.Context) error {
 
 	return nil
 }
+
+func (cmd CreateExtractor) Usage() string {
+	return CreateExtractorCommand
+}

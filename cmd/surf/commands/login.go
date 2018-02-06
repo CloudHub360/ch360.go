@@ -9,6 +9,8 @@ import (
 	"io"
 )
 
+const LoginCommand = "login"
+
 type Login struct {
 	appDirectory   config.ConfigurationWriter
 	tokenRetriever auth.TokenRetriever
@@ -93,4 +95,8 @@ func (cmd *Login) readSecretFromConsole() (string, error) {
 		return "", err
 	}
 	return secret, nil
+}
+
+func (cmd Login) Usage() string {
+	return LoginCommand
 }

@@ -53,3 +53,7 @@ func (cmd *ListExtractors) Execute(ctx context.Context) error {
 
 	return nil
 }
+
+func (cmd ListExtractors) Usage() string {
+	return ListExtractorsCommand
+}
