@@ -9,13 +9,13 @@ type TokenRetriever struct {
 	mock.Mock
 }
 
-// RetrieveToken provides a mock function with given fields:
-func (_m *TokenRetriever) RetrieveToken() (*auth.AccessToken, error) {
-	ret := _m.Called()
+// RetrieveToken provides a mock function with given fields: clientId, clientSecret
+func (_m *TokenRetriever) RetrieveToken(clientId string, clientSecret string) (*auth.AccessToken, error) {
+	ret := _m.Called(clientId, clientSecret)
 
 	var r0 *auth.AccessToken
-	if rf, ok := ret.Get(0).(func() *auth.AccessToken); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(string, string) *auth.AccessToken); ok {
+		r0 = rf(clientId, clientSecret)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*auth.AccessToken)
@@ -23,8 +23,8 @@ func (_m *TokenRetriever) RetrieveToken() (*auth.AccessToken, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(clientId, clientSecret)
 	} else {
 		r1 = ret.Error(1)
 	}
