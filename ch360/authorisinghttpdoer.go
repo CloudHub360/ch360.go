@@ -9,17 +9,21 @@ import (
 type AuthorisingDoer struct {
 	tokenRetriever auth.TokenRetriever
 	wrappedSender  net.HttpDoer
+	clientId       string
+	clientSecret   string
 }
 
-func NewAuthorisingDoer(retriever auth.TokenRetriever, httpDoer net.HttpDoer) *AuthorisingDoer {
+func NewAuthorisingDoer(retriever auth.TokenRetriever, httpDoer net.HttpDoer, clientId string, clientSecret string) *AuthorisingDoer {
 	return &AuthorisingDoer{
 		tokenRetriever: retriever,
 		wrappedSender:  httpDoer,
+		clientId:       clientId,
+		clientSecret:   clientSecret,
 	}
 }
 
-func (sender *AuthorisingDoer) Do(request *http.Request) (*http.Response, error) {
-	token, err := sender.tokenRetriever.RetrieveToken()
+func (ad *AuthorisingDoer) Do(request *http.Request) (*http.Response, error) {
+	token, err := ad.tokenRetriever.RetrieveToken(ad.clientId, ad.clientSecret)
 
 	if err != nil {
 		return nil, err
@@ -31,5 +35,5 @@ func (sender *AuthorisingDoer) Do(request *http.Request) (*http.Response, error)
 
 	request.Header.Add("Authorization", "Bearer "+token.TokenString)
 
-	return sender.wrappedSender.Do(request)
+	return ad.wrappedSender.Do(request)
 }

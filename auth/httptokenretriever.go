@@ -15,7 +15,7 @@ import (
 //go:generate mockery -name "TokenRetriever|FormPoster"
 
 type TokenRetriever interface {
-	RetrieveToken() (*AccessToken, error)
+	RetrieveToken(clientId string, clientSecret string) (*AccessToken, error)
 }
 
 type AccessToken struct {
@@ -25,23 +25,19 @@ type AccessToken struct {
 
 type HttpTokenRetriever struct {
 	apiUrl          string
-	clientId        string
-	clientSecret    string
 	httpDoer        net.HttpDoer
 	responseChecker response.Checker
 }
 
-func NewHttpTokenRetriever(clientId string, clientSecret string, httpDoer net.HttpDoer, apiUrl string, responseChecker response.Checker) *HttpTokenRetriever {
+func NewHttpTokenRetriever(httpDoer net.HttpDoer, apiUrl string, responseChecker response.Checker) *HttpTokenRetriever {
 	return &HttpTokenRetriever{
-		clientId:        clientId,
 		httpDoer:        httpDoer,
-		clientSecret:    clientSecret,
 		apiUrl:          apiUrl,
 		responseChecker: responseChecker,
 	}
 }
 
-func (retriever *HttpTokenRetriever) RetrieveToken() (*AccessToken, error) {
+func (retriever *HttpTokenRetriever) RetrieveToken(clientId string, clientSecret string) (*AccessToken, error) {
 	type tokenResponse struct {
 		AccessToken string `json:"access_token"`
 		ExpiresIn   int    `json:"expires_in"`
@@ -49,8 +45,8 @@ func (retriever *HttpTokenRetriever) RetrieveToken() (*AccessToken, error) {
 
 	form := url.Values{
 		"grant_type":    []string{"client_credentials"},
-		"client_id":     []string{retriever.clientId},
-		"client_secret": []string{retriever.clientSecret},
+		"client_id":     []string{clientId},
+		"client_secret": []string{clientSecret},
 	}
 
 	req, err := http.NewRequest("POST", retriever.apiUrl+"/oauth/token", strings.NewReader(form.Encode()))

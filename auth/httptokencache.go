@@ -9,8 +9,13 @@ type TokenCache struct {
 	retriever TokenRetriever
 	token     *AccessToken
 	once      sync.Once
-	reqChan   chan bool
+	reqChan   chan credentials
 	respChan  chan tokenAndErr
+}
+
+type credentials struct {
+	clientId     string
+	clientSecret string
 }
 
 type tokenAndErr struct {
@@ -18,8 +23,8 @@ type tokenAndErr struct {
 	err   error
 }
 
-func (cache *TokenCache) monitorRequestsForToken(reqChan chan bool, respChan chan tokenAndErr) {
-	for range reqChan {
+func (cache *TokenCache) monitorRequestsForToken(reqChan chan credentials, respChan chan tokenAndErr) {
+	for credential := range reqChan {
 		if tokenIsFresh(cache.token) {
 			respChan <- tokenAndErr{
 				token: cache.token,
@@ -28,7 +33,7 @@ func (cache *TokenCache) monitorRequestsForToken(reqChan chan bool, respChan cha
 			continue
 		}
 
-		token, err := cache.retriever.RetrieveToken()
+		token, err := cache.retriever.RetrieveToken(credential.clientId, credential.clientSecret)
 
 		if err == nil {
 			cache.token = token
@@ -41,13 +46,16 @@ func (cache *TokenCache) monitorRequestsForToken(reqChan chan bool, respChan cha
 	}
 }
 
-func (cache *TokenCache) RetrieveToken() (*AccessToken, error) {
+func (cache *TokenCache) RetrieveToken(clientId string, clientSecret string) (*AccessToken, error) {
 	cache.once.Do(func() {
 		go cache.monitorRequestsForToken(cache.reqChan, cache.respChan)
 	})
 
 	// Make a request to the monitoring goroutine to get a new token
-	cache.reqChan <- true
+	cache.reqChan <- credentials{
+		clientId:     clientId,
+		clientSecret: clientSecret,
+	}
 
 	// Wait for a response
 	res := <-cache.respChan
@@ -71,7 +79,7 @@ func NewHttpTokenCache(tokenRetriever TokenRetriever) *TokenCache {
 
 	return &TokenCache{
 		retriever: tokenRetriever,
-		reqChan:   make(chan bool),
+		reqChan:   make(chan credentials),
 		respChan:  make(chan tokenAndErr),
 	}
 }

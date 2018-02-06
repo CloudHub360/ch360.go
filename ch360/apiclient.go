@@ -14,28 +14,30 @@ type ApiClient struct {
 	Extractors  *ExtractorsClient
 }
 
-func NewApiClient(httpClient net.HttpDoer, apiUrl string, clientId string, clientSecret string) *ApiClient {
+func NewTokenRetriever(httpClient net.HttpDoer, apiUrl string) auth.TokenRetriever {
+	return auth.NewHttpTokenCache(
+		auth.NewHttpTokenRetriever(
+			httpClient,
+			apiUrl,
+			&response.ErrorChecker{}))
+}
 
-	responseChecker := response.ErrorChecker{}
+func NewApiClient(httpClient net.HttpDoer, apiUrl string, clientId string, clientSecret string) *ApiClient {
 
 	ctxhttpClient := net.NewContextAwareHttpClient(httpClient)
 
-	tokenRetriever := auth.NewHttpTokenCache(
-		auth.NewHttpTokenRetriever(
-			clientId,
-			clientSecret,
-			ctxhttpClient,
-			apiUrl,
-			&responseChecker))
+	tokenRetriever := NewTokenRetriever(ctxhttpClient, apiUrl)
 
 	authorisingDoer := AuthorisingDoer{
 		wrappedSender:  ctxhttpClient,
 		tokenRetriever: tokenRetriever,
+		clientId:       clientId,
+		clientSecret:   clientSecret,
 	}
 
 	responseCheckingDoer := ResponseCheckingDoer{
 		wrappedSender:   &authorisingDoer,
-		responseChecker: &responseChecker,
+		responseChecker: &response.ErrorChecker{},
 	}
 
 	apiClient := &ApiClient{
