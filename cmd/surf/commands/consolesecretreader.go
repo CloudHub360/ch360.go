@@ -9,7 +9,7 @@ type ConsoleSecretReader struct {
 
 var ConsoleSecretReaderErrCancelled = gopass.ErrInterrupted
 
-func (reader *ConsoleSecretReader) Read() (string, error) {
+func (reader ConsoleSecretReader) Read() (string, error) {
 	secret, err := gopass.GetPasswd()
 
 	if err != nil {

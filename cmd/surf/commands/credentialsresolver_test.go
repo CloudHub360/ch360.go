@@ -1,8 +1,7 @@
-package tests
+package commands
 
 import (
 	"errors"
-	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/config/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
@@ -14,7 +13,7 @@ import (
 
 type CredentialsResolverSuite struct {
 	suite.Suite
-	sut                *commands.CredentialsResolver
+	sut                *CredentialsResolver
 	reader             *mocks.ConfigurationReader
 	configClientId     string
 	configClientSecret string
@@ -28,7 +27,7 @@ func (suite *CredentialsResolverSuite) SetupTest() {
 	suite.reader = new(mocks.ConfigurationReader)
 	suite.reader.On("ReadConfiguration").Return(configuration, nil)
 
-	suite.sut = &commands.CredentialsResolver{}
+	suite.sut = &CredentialsResolver{}
 }
 
 func TestCredentialsResolverSuiteRunner(t *testing.T) {

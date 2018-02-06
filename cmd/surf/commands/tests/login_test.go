@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"context"
 	"github.com/CloudHub360/ch360.go/auth"
 	authmocks "github.com/CloudHub360/ch360.go/auth/mocks"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
@@ -34,10 +35,10 @@ func (suite *LoginSuite) SetupTest() {
 	suite.configWriter.On("WriteConfiguration", mock.Anything).Return(nil)
 
 	suite.tokenRetriever = new(authmocks.TokenRetriever)
-	suite.tokenRetriever.On("RetrieveToken").Return(&auth.AccessToken{}, nil)
+	suite.tokenRetriever.On("RetrieveToken", mock.Anything, mock.Anything).Return(&auth.AccessToken{}, nil)
 
 	suite.output = &bytes.Buffer{}
-	suite.sut = commands.NewLogin(suite.output, suite.configWriter, suite.tokenRetriever)
+	suite.sut = commands.NewLogin(suite.output, suite.configWriter, suite.tokenRetriever, suite.clientId, suite.clientSecret)
 }
 
 func TestLoginSuiteRunner(t *testing.T) {
@@ -45,17 +46,17 @@ func TestLoginSuiteRunner(t *testing.T) {
 }
 
 func (suite *LoginSuite) TestLogin_Execute_Writes_Configuration_When_Id_And_Secret_Specified() {
-	err := suite.sut.Execute(suite.clientId, suite.clientSecret)
+	err := suite.sut.Execute(context.Background())
 	assert.Nil(suite.T(), err)
 
 	suite.assertConfigurationWrittenWithCredentials(suite.clientId, suite.clientSecret)
 }
 
 func (suite *LoginSuite) TestLogin_Execute_Requests_Auth_Token() {
-	err := suite.sut.Execute(suite.clientId, suite.clientSecret)
+	err := suite.sut.Execute(context.Background())
 	assert.Nil(suite.T(), err)
 
-	suite.tokenRetriever.AssertCalled(suite.T(), "RetrieveToken")
+	suite.tokenRetriever.AssertCalled(suite.T(), "RetrieveToken", suite.clientId, suite.clientSecret)
 }
 
 func (suite *LoginSuite) TestLogin_Execute_Returns_Err_From_Token_Retriever() {
@@ -63,13 +64,13 @@ func (suite *LoginSuite) TestLogin_Execute_Returns_Err_From_Token_Retriever() {
 	suite.tokenRetriever.ExpectedCalls = nil
 
 	expectedErr := errors.New("An error")
-	suite.tokenRetriever.On("RetrieveToken").Return(nil, expectedErr)
+	suite.tokenRetriever.On("RetrieveToken", mock.Anything, mock.Anything).Return(nil, expectedErr)
 
 	// Act
-	err := suite.sut.Execute(suite.clientId, suite.clientSecret)
+	err := suite.sut.Execute(context.Background())
 
 	// Assert
-	suite.tokenRetriever.AssertCalled(suite.T(), "RetrieveToken")
+	suite.tokenRetriever.AssertCalled(suite.T(), "RetrieveToken", suite.clientId, suite.clientSecret)
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
