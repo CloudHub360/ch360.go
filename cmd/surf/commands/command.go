@@ -32,17 +32,17 @@ func CommandFor(args docopt.Opts) (Command, error) {
 	out := os.Stdout
 
 	switch cmd {
-	case CreateClassifierCommand:
+	case new(CreateClassifier).Usage():
 		return NewCreateClassifierFromArgs(args, apiClient, out)
-	case CreateExtractorCommand:
+	case new(CreateExtractor).Usage():
 		return NewCreateExtractorFromArgs(args, apiClient.Extractors, out)
-	case DeleteClassifierCommand:
+	case new(DeleteClassifier).Usage():
 		return NewDeleteClassifierFromArgs(args, apiClient.Classifiers, out)
-	case ListClassifiersCommand:
+	case new(ListClassifiers).Usage():
 		return NewListClassifiers(apiClient.Classifiers, out), nil
-	case ListExtractorsCommand:
+	case new(ListExtractors).Usage():
 		return NewListExtractors(apiClient.Extractors, out), nil
-	case ClassifyFilesCommand:
+	case new(ClassifyCommand).Usage():
 		return NewClassifyFilesCommandFromArgs(args, apiClient)
 	}
 

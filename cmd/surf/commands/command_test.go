@@ -14,27 +14,27 @@ var expectedRunnerTypes = []struct {
 	expectedRunnerType reflect.Type
 }{
 	{
-		cmd:                commands.ListClassifiersCommand,
+		cmd:                new(commands.ListClassifiers).Usage(),
 		expectedRunnerType: reflect.TypeOf(&commands.ListClassifiers{}),
 	},
 	{
-		cmd:                commands.CreateClassifierCommand,
+		cmd:                new(commands.CreateClassifier).Usage(),
 		expectedRunnerType: reflect.TypeOf(&commands.CreateClassifier{}),
 	},
 	{
-		cmd:                commands.CreateExtractorCommand,
+		cmd:                new(commands.CreateExtractor).Usage(),
 		expectedRunnerType: reflect.TypeOf(&commands.CreateExtractor{}),
 	},
 	{
-		cmd:                commands.DeleteClassifierCommand,
+		cmd:                new(commands.DeleteClassifier).Usage(),
 		expectedRunnerType: reflect.TypeOf(&commands.DeleteClassifier{}),
 	},
 	{
-		cmd:                commands.ListExtractorsCommand,
+		cmd:                new(commands.ListExtractors).Usage(),
 		expectedRunnerType: reflect.TypeOf(&commands.ListExtractors{}),
 	},
 	{
-		cmd:                commands.ClassifyFilesCommand,
+		cmd:                new(commands.ClassifyCommand).Usage(),
 		expectedRunnerType: reflect.TypeOf(&commands.ClassifyCommand{}),
 	},
 }

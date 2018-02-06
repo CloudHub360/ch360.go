@@ -78,3 +78,7 @@ func (cmd *DeleteClassifier) Execute(ctx context.Context) error {
 	fmt.Fprintln(cmd.writer, "[OK]")
 	return nil
 }
+
+func (cmd DeleteClassifier) Usage() string {
+	return DeleteClassifierCommand
+}
