@@ -2,13 +2,19 @@ package formatters
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/ch360/results"
 	"io"
 	"path/filepath"
 )
 
-type JsonClassifyResultsFormatter struct{}
+type JsonClassifyResultsFormatter struct {
+	resultsWritten bool
+	headerWritten  bool
+}
+
+var _ ResultsFormatter = (*JsonClassifyResultsFormatter)(nil)
 
 type classifyDocumentOutput struct {
 	Filename string                       `json:"filename"`
@@ -31,23 +37,32 @@ func NewJsonClassifyResultsFormatter() *JsonClassifyResultsFormatter {
 	return &JsonClassifyResultsFormatter{}
 }
 
-func (f *JsonClassifyResultsFormatter) WriteHeader(writer io.Writer) error {
-	fmt.Fprint(writer, "[")
-	return nil
-}
+func (f *JsonClassifyResultsFormatter) WriteResult(writer io.Writer, filename string, result interface{}, options FormatOption) error {
 
-func (f *JsonClassifyResultsFormatter) WriteResult(writer io.Writer, filename string, result *types.ClassificationResult) error {
+	classificationResult, ok := result.(*results.ClassificationResult)
+
+	if !ok {
+		return errors.New(fmt.Sprintf("Unexpected type: %T", result))
+	}
+
+	if options&IncludeHeader == IncludeHeader {
+		f.headerWritten = true
+		fmt.Fprint(writer, "[") // header
+	} else if f.resultsWritten {
+		fmt.Fprint(writer, ",\n") // write separator
+	}
+
 	var scores []classifyDocumentResultDocumentTypeScore
-	for _, score := range result.DocumentTypeScores {
+	for _, score := range classificationResult.DocumentTypeScores {
 		scores = append(scores, classifyDocumentResultDocumentTypeScore{DocumentType: score.DocumentType, Score: score.Score})
 	}
 
 	output := &classifyDocumentOutput{
 		Filename: filepath.FromSlash(filename),
 		Results: classifyDocumentResultOutput{
-			DocumentType:       result.DocumentType,
-			IsConfident:        result.IsConfident,
-			RelativeConfidence: result.RelativeConfidence,
+			DocumentType:       classificationResult.DocumentType,
+			IsConfident:        classificationResult.IsConfident,
+			RelativeConfidence: classificationResult.RelativeConfidence,
 			Scores:             scores,
 		},
 	}
@@ -60,15 +75,19 @@ func (f *JsonClassifyResultsFormatter) WriteResult(writer io.Writer, filename st
 
 	_, err = writer.Write(bytes)
 
+	f.resultsWritten = true
+
 	return err
 }
 
-func (f *JsonClassifyResultsFormatter) WriteSeparator(writer io.Writer) error {
-	_, err := fmt.Fprint(writer, ",\n")
-	return err
+func (f *JsonClassifyResultsFormatter) Flush(writer io.Writer) error {
+	if f.headerWritten {
+		_, err := fmt.Fprint(writer, "]")
+		return err
+	}
+	return nil
 }
 
-func (f *JsonClassifyResultsFormatter) WriteFooter(writer io.Writer) error {
-	_, err := fmt.Fprint(writer, "]")
-	return err
+func (f *JsonClassifyResultsFormatter) Format() OutputFormat {
+	return Json
 }

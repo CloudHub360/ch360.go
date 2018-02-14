@@ -2,8 +2,9 @@ package formatters
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/ch360/results"
 	"io"
 	"path/filepath"
 )
@@ -11,20 +12,33 @@ import (
 type CSVClassifyResultsFormatter struct {
 }
 
+var _ (ResultsFormatter) = (*CSVClassifyResultsFormatter)(nil)
+
 func NewCSVClassifyResultsFormatter() *CSVClassifyResultsFormatter {
 	return &CSVClassifyResultsFormatter{}
 }
 
-func (f *CSVClassifyResultsFormatter) WriteHeader(writer io.Writer) error {
-	return nil
-}
+func (f *CSVClassifyResultsFormatter) WriteResult(writer io.Writer, filename string, result interface{}, options FormatOption) error {
+	classificationResult, ok := result.(*results.ClassificationResult)
 
-func (f *CSVClassifyResultsFormatter) WriteResult(writer io.Writer, filename string, result *types.ClassificationResult) error {
-	record := []string{filepath.FromSlash(filename), result.DocumentType, boolToString(result.IsConfident), fmt.Sprintf("%.3f", result.RelativeConfidence)}
+	if !ok {
+		return errors.New(fmt.Sprintf("Unexpected type: %T", result))
+	}
 
 	csvWriter := csv.NewWriter(writer)
 
-	if err := csvWriter.Write(record); err != nil {
+	if options&IncludeHeader == IncludeHeader {
+		csvWriter.Write([]string{"File", "Document Type", "Confident", "Relative Confidence"})
+	}
+
+	record := []string{filepath.FromSlash(filename),
+		classificationResult.DocumentType,
+		fmt.Sprintf("%v", classificationResult.IsConfident),
+		fmt.Sprintf("%.3f", classificationResult.RelativeConfidence)}
+
+	err := csvWriter.Write(record)
+
+	if err != nil {
 		return err
 	}
 
@@ -37,18 +51,10 @@ func (f *CSVClassifyResultsFormatter) WriteResult(writer io.Writer, filename str
 	return nil
 }
 
-func (f *CSVClassifyResultsFormatter) WriteSeparator(writer io.Writer) error {
+func (f *CSVClassifyResultsFormatter) Flush(writer io.Writer) error {
 	return nil
 }
 
-func (f *CSVClassifyResultsFormatter) WriteFooter(writer io.Writer) error {
-	return nil
-}
-
-func boolToString(val bool) string {
-	if val {
-		return "true"
-	} else {
-		return "false"
-	}
+func (f *CSVClassifyResultsFormatter) Format() OutputFormat {
+	return Csv
 }
