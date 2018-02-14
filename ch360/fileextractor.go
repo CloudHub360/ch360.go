@@ -1,0 +1,49 @@
+package ch360
+
+import (
+	"bytes"
+	"context"
+	"github.com/CloudHub360/ch360.go/ch360/results"
+	"io"
+)
+
+type FileExtractor struct {
+	docCreator   DocumentCreator
+	docExtractor DocumentExtractor
+	docDeleter   DocumentDeleter
+}
+
+func NewFileExtractor(creator DocumentCreator, extractor DocumentExtractor, deleter DocumentDeleter) *FileExtractor {
+	return &FileExtractor{
+		docCreator:   creator,
+		docExtractor: extractor,
+		docDeleter:   deleter,
+	}
+}
+
+func (f *FileExtractor) Extract(ctx context.Context, fileContents io.Reader, extractorName string) (*results.ExtractionResult, error) {
+	buf := bytes.Buffer{}
+	buf.ReadFrom(fileContents)
+
+	// Use a different context here so we don't cancel this req on ctrl-c. We need
+	// the docId result to perform cleanup
+	documentId, err := f.docCreator.Create(context.Background(), buf.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	result, extractErr := f.docExtractor.Extract(ctx, documentId, extractorName)
+
+	if documentId != "" {
+		// Always delete the document, even if Extract returned an error.
+		// Don't cancel on ctrl-c.
+		err = f.docDeleter.Delete(context.Background(), documentId)
+	}
+
+	// Return the extract err if we have one
+	if extractErr != nil {
+		return nil, extractErr
+	}
+
+	return result, nil
+}

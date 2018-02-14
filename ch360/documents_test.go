@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/ch360/results"
 	"github.com/CloudHub360/ch360.go/net/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
@@ -23,6 +23,7 @@ type DocumentsClientSuite struct {
 	fileContents   []byte
 	documentId     string
 	classifierName string
+	extractorName  string
 }
 
 var exampleCreateDocHttpResponse *http.Response
@@ -41,6 +42,7 @@ func (suite *DocumentsClientSuite) SetupTest() {
 	suite.fileContents = generators.Bytes()
 	suite.documentId = generators.String("documentId")
 	suite.classifierName = generators.String("classifierName")
+	suite.extractorName = generators.String("extractorName")
 }
 
 func TestDocumentsClientSuiteRunner(t *testing.T) {
@@ -67,10 +69,6 @@ func (suite *DocumentsClientSuite) AssertRequestHasBody(body []byte) {
 
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), body, buf.Bytes())
-}
-
-func (suite *DocumentsClientSuite) ClearExpectedCalls() {
-	suite.httpClient.ExpectedCalls = nil
 }
 
 func (suite *DocumentsClientSuite) Test_CreateDocument_Issues_Create_Document_Request_With_File_Contents() {
@@ -163,7 +161,6 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Indicates_Confidence_Of
 }
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_RelativeConfidence() {
-	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
 
 	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
@@ -173,7 +170,6 @@ func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_RelativeConfide
 }
 
 func (suite *DocumentsClientSuite) Test_ClassifyDocument_Returns_DocumentTypeScores() {
-	suite.ClearExpectedCalls()
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte(exampleClassifyDocumentResponse)), nil)
 
 	classificationResult, err := suite.sut.Classify(context.Background(), suite.documentId, suite.classifierName)
@@ -221,10 +217,44 @@ func (suite *DocumentsClientSuite) Test_GetAll_Documents_Returns_Error_From_Http
 }
 
 func (suite *DocumentsClientSuite) Test_GetAll_Documents_Returns_Error_If_Response_Cannot_Be_Parsed() {
-	expectedErr := errors.New("Could not parse response")
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte("<invalid-json>")), nil)
 
 	_, receivedErr := suite.sut.GetAll(context.Background())
+
+	assert.NotNil(suite.T(), receivedErr)
+}
+
+func (suite *DocumentsClientSuite) Test_Extract_Returns_Results() {
+	suite.httpClient.
+		On("Do", mock.Anything).
+		Return(AnHttpResponse([]byte(exampleExtractDocumentResponse)), nil)
+
+	extractionResult, err := suite.sut.Extract(context.Background(), suite.documentId, suite.extractorName)
+
+	assert.Nil(suite.T(), err)
+	require.Equal(suite.T(), 1, len(extractionResult.FieldResults))
+	fieldResult := extractionResult.FieldResults[0]
+	assert.Equal(suite.T(), "Amount", fieldResult.FieldName)
+	assert.Equal(suite.T(), "$5.50", fieldResult.Result.Text)
+}
+
+func (suite *DocumentsClientSuite) Test_Extract_Returns_Error_If_Response_Cannot_Be_Parsed() {
+	suite.httpClient.
+		On("Do", mock.Anything).
+		Return(AnHttpResponse([]byte("<invalid-json>")), nil)
+
+	_, err := suite.sut.Extract(context.Background(), suite.documentId, suite.extractorName)
+
+	assert.NotNil(suite.T(), err)
+}
+
+func (suite *DocumentsClientSuite) Test_Extract_Returns_Error_From_Http_Client() {
+	expectedErr := errors.New("simulated error")
+	suite.httpClient.
+		On("Do", mock.Anything).
+		Return(AnHttpResponse([]byte("")), expectedErr)
+
+	_, receivedErr := suite.sut.Extract(context.Background(), suite.documentId, suite.extractorName)
 
 	assert.Equal(suite.T(), expectedErr, receivedErr)
 }
@@ -266,24 +296,24 @@ var exampleClassifyDocumentResponse = `
 }
 `
 
-var exampleDocumentTypeScores = []types.DocumentTypeScore{ //Correspond to scores in the example response above
-	types.DocumentTypeScore{
+var exampleDocumentTypeScores = []results.DocumentTypeScore{ //Correspond to scores in the example response above
+	results.DocumentTypeScore{
 		DocumentType: "Assignment of Deed of Trust",
 		Score:        61.4187,
 	},
-	types.DocumentTypeScore{
+	results.DocumentTypeScore{
 		DocumentType: "Notice of Default",
 		Score:        32.94312,
 	},
-	types.DocumentTypeScore{
+	results.DocumentTypeScore{
 		DocumentType: "Correspondence",
 		Score:        28.2860489,
 	},
-	types.DocumentTypeScore{
+	results.DocumentTypeScore{
 		DocumentType: "Deed of Trust",
 		Score:        28.0011711,
 	},
-	types.DocumentTypeScore{
+	results.DocumentTypeScore{
 		DocumentType: "Notice of Lien",
 		Score:        27.9561481,
 	},
@@ -337,3 +367,44 @@ var exampleGetAllDocumentsResponse = `{
 		}
 	]
 }`
+
+var exampleExtractDocumentResponse = `{
+	"field_results": [
+		{
+			"field_name": "Amount",
+			"rejected": false,
+			"reject_reason": "None",
+			"result": {
+				"text": "$5.50",
+				"value": null,
+				"rejected": false,
+				"reject_reason": "None",
+				"proximity_score": 100.0,
+				"match_score": 100.0,
+				"text_score": 100.0,
+				"areas": [
+					{
+						"top": 558.7115,
+						"left": 276.48,
+						"bottom": 571.1989,
+						"right": 298.58,
+						"page_number": 1
+					}
+				]
+			},
+			"alternative_results": null,
+			"tabular_results": null
+		}
+	],
+	"page_sizes": {
+		"page_count": 1,
+		"pages": [
+			{
+				"page_number": 1,
+				"width": 611.0,
+				"height": 1008.0
+			}
+		]
+	}
+}
+`
