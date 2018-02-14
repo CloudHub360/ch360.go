@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/auth"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/docopt/docopt-go"
 	"io"
 )
 
@@ -19,13 +18,8 @@ type Login struct {
 	clientSecret   string
 }
 
-func NewLoginFromArgs(args docopt.Opts, out io.Writer, appDir config.ConfigurationWriter, tokenRetriever auth.TokenRetriever) *Login {
-	var (
-		clientId, _     = args.String("--client-id")
-		clientSecret, _ = args.String("--client-secret")
-	)
-
-	return NewLogin(out, appDir, tokenRetriever, clientId, clientSecret)
+func NewLoginFrom(runParams *config.RunParams, out io.Writer, appDir config.ConfigurationWriter, tokenRetriever auth.TokenRetriever) *Login {
+	return NewLogin(out, appDir, tokenRetriever, runParams.ClientId, runParams.ClientSecret)
 }
 
 func NewLogin(out io.Writer, appDir config.ConfigurationWriter, tokenRetriever auth.TokenRetriever, clientId string, clientSecret string) *Login {

@@ -5,12 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/ch360/results"
+	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/output/progress"
-	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/CloudHub360/ch360.go/pool"
-	"github.com/docopt/docopt-go"
-	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-zglob"
 	"io/ioutil"
 	"os"
@@ -24,21 +22,21 @@ type ClassifyCommand struct {
 	documentDeleter    ch360.DocumentDeleter
 	documentGetter     ch360.DocumentGetter
 	parallelWorkers    int
-	progressHandler    ClassifyProgressHandler
+	progressHandler    ProgressHandler
 
 	classifierName string
 	filesPattern   string
 }
 
-//go:generate mockery -name ClassifyProgressHandler
-type ClassifyProgressHandler interface {
-	Notify(filename string, result *types.ClassificationResult) error
+//go:generate mockery -name ProgressHandler
+type ProgressHandler interface {
+	Notify(filename string, result interface{}) error
 	NotifyErr(filename string, err error) error
 	NotifyStart(totalJobs int) error
 	NotifyFinish() error
 }
 
-func NewClassifyCommand(progressHandler ClassifyProgressHandler,
+func NewClassifyCommand(progressHandler ProgressHandler,
 	docClassifier ch360.DocumentClassifier,
 	docCreator ch360.DocumentCreator,
 	docDeleter ch360.DocumentDeleter,
@@ -75,7 +73,7 @@ func (cmd *ClassifyCommand) handlerFor(cancel context.CancelFunc, filename strin
 			// Don't process any more if there's an error
 			cancel()
 		} else {
-			classificationResult := value.(*types.ClassificationResult)
+			classificationResult := value.(*results.ClassificationResult)
 
 			if err = cmd.progressHandler.Notify(filename, classificationResult); err != nil {
 				cancel()
@@ -145,7 +143,7 @@ func (cmd *ClassifyCommand) Execute(ctx context.Context) error {
 	return nil
 }
 
-func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, classifierName string) (result *types.ClassificationResult, err error) {
+func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, classifierName string) (result *results.ClassificationResult, err error) {
 	fileContents, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
@@ -174,49 +172,21 @@ func (cmd *ClassifyCommand) processFile(ctx context.Context, filePath string, cl
 	return // named return params
 }
 
-func NewClassifyFilesCommandFromArgs(args docopt.Opts, client *ch360.ApiClient) (*ClassifyCommand, error) {
-	var (
-		outputFormat, _       = args.String("--output-format")
-		outputFilename, _     = args.String("--output-file")
-		filePattern, _        = args.String("<file>")
-		classifierName, _     = args.String("<classifier>")
-		writeMultipleFiles, _ = args.Bool("--multiple-files")
-		showProgress, _       = args.Bool("--progress")
-	)
-
-	builder := resultsWriters.NewResultsWriterBuilder(outputFormat,
-		writeMultipleFiles,
-		outputFilename)
-
-	resultsWriter, err := builder.Build()
+func NewClassifyFilesCommandFromArgs(runParams *config.RunParams, client *ch360.ApiClient) (*ClassifyCommand, error) {
+	progressHandler, err := progress.NewProgressHandlerFor(runParams, os.Stderr)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// Only show progress if stdout is being redirected
-	if !shouldShowProgressBar(writeMultipleFiles || outputFilename != "") {
-		showProgress = false
-	}
-
-	progressHandler := progress.NewClassifyProgressHandler(resultsWriter, showProgress, os.Stderr)
 	return NewClassifyCommand(progressHandler,
 		client.Documents,
 		client.Documents,
 		client.Documents,
 		client.Documents,
 		10,
-		filePattern,
-		classifierName), nil
-}
-
-func shouldShowProgressBar(writingToFile bool) bool {
-	return writingToFile || isRedirected(os.Stdout.Fd())
-}
-
-func isRedirected(fd uintptr) bool {
-	return !isatty.IsTerminal(fd) &&
-		!isatty.IsCygwinTerminal(fd)
+		runParams.FilePattern,
+		runParams.ClassifierName), nil
 }
 
 func (cmd ClassifyCommand) Usage() string {

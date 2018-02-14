@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/mocks"
-	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/ch360/results"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	cmdmocks "github.com/CloudHub360/ch360.go/cmd/surf/commands/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
@@ -28,18 +28,18 @@ type ClassifySuite struct {
 	documentGetter       *mocks.DocumentGetter
 	classifierName       string
 	documentId           string
-	classificationResult *types.ClassificationResult
+	classificationResult *results.ClassificationResult
 	testFilePath         string
 	testFilesPattern     string
 	output               *bytes.Buffer
-	progressHandler      *cmdmocks.ClassifyProgressHandler
+	progressHandler      *cmdmocks.ProgressHandler
 	ctx                  context.Context
 }
 
 func (suite *ClassifySuite) SetupTest() {
 	suite.classifierName = generators.String("classifiername")
 	suite.documentId = generators.String("documentId")
-	suite.classificationResult = &types.ClassificationResult{
+	suite.classificationResult = &results.ClassificationResult{
 		DocumentType: generators.String("documentType"),
 		IsConfident:  generators.Bool(),
 	}
@@ -58,7 +58,7 @@ func (suite *ClassifySuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
 	suite.ctx, _ = context.WithCancel(context.Background())
 
-	suite.progressHandler = new(cmdmocks.ClassifyProgressHandler)
+	suite.progressHandler = new(cmdmocks.ProgressHandler)
 
 	suite.progressHandler.On("NotifyStart", mock.Anything).Return(nil)
 	suite.progressHandler.On("Notify", mock.Anything, mock.Anything).Return(nil)
@@ -69,11 +69,11 @@ func (suite *ClassifySuite) SetupTest() {
 }
 
 func (suite *ClassifySuite) aClassifyCmd() *commands.ClassifyCommand {
-	return suite.aClassifyCmdWithFile(suite.testFilePath)
+	return suite.aClassifyCmdWith(suite.testFilePath)
 
 }
 
-func (suite *ClassifySuite) aClassifyCmdWithFile(filePattern string) *commands.ClassifyCommand {
+func (suite *ClassifySuite) aClassifyCmdWith(filePattern string) *commands.ClassifyCommand {
 	return commands.NewClassifyCommand(
 		suite.progressHandler,
 		suite.documentClassifier,
@@ -86,7 +86,7 @@ func (suite *ClassifySuite) aClassifyCmdWithFile(filePattern string) *commands.C
 }
 
 func (suite *ClassifySuite) aClassifyCmdWithFilePattern() *commands.ClassifyCommand {
-	return suite.aClassifyCmdWithFile(suite.testFilesPattern)
+	return suite.aClassifyCmdWith(suite.testFilesPattern)
 }
 
 func TestClassifySuiteRunner(t *testing.T) {
@@ -183,7 +183,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Returns_Specific_Error_If_File_Does
 
 	expectedErr := errors.New(fmt.Sprintf("File %s does not exist", nonExistentFile))
 
-	suite.sut = suite.aClassifyCmdWithFile(nonExistentFile)
+	suite.sut = suite.aClassifyCmdWith(nonExistentFile)
 	err := suite.sut.Execute(suite.ctx)
 
 	assert.Equal(suite.T(), expectedErr, err)
@@ -192,7 +192,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Returns_Specific_Error_If_File_Does
 
 func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_ReadFile_Fails() {
 	nonExistentFile := build.Default.GOPATH + "/non-existentfile.pdf"
-	suite.sut = suite.aClassifyCmdWithFile(nonExistentFile)
+	suite.sut = suite.aClassifyCmdWith(nonExistentFile)
 
 	err := suite.sut.Execute(suite.ctx)
 

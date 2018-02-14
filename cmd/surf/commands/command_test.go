@@ -2,6 +2,7 @@ package commands_test
 
 import (
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
+	"github.com/CloudHub360/ch360.go/config"
 	"github.com/docopt/docopt-go"
 	"github.com/stretchr/testify/assert"
 	"reflect"
@@ -57,8 +58,11 @@ func TestRunnerBuilder_RunnerFor_Returns_Correct_Type(t *testing.T) {
 			args[noun] = true
 		}
 
+		runParams := config.RunParams{}
+		args.Bind(&runParams)
+
 		// Act
-		receivedRunner, _ := commands.CommandFor(args)
+		receivedRunner, _ := commands.CommandFor(&runParams)
 
 		// Assert
 		assert.Equal(t, testCase.expectedRunnerType, reflect.TypeOf(receivedRunner))

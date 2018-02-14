@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/docopt/docopt-go"
+	"github.com/CloudHub360/ch360.go/config"
 	"io"
 )
 
@@ -24,14 +24,8 @@ func NewDeleteExtractor(extractorName string, writer io.Writer, client Extractor
 	}
 }
 
-func NewDeleteExtractorFromArgs(args docopt.Opts, client ExtractorDeleterGetter, writer io.Writer) (*DeleteExtractor, error) {
-	extractorName, err := args.String("<name>")
-
-	if err != nil {
-		return nil, err
-	}
-
-	return NewDeleteExtractor(extractorName, writer, client), nil
+func NewDeleteExtractorFromArgs(params *config.RunParams, client ExtractorDeleterGetter, writer io.Writer) (*DeleteExtractor, error) {
+	return NewDeleteExtractor(params.ExtractorName, writer, client), nil
 }
 
 func (cmd *DeleteExtractor) Execute(ctx context.Context) error {

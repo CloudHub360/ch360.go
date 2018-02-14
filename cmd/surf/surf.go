@@ -24,6 +24,7 @@ Usage:
   surf ` + commands.ListClassifiersCommand + ` [options]
   surf ` + commands.ListExtractorsCommand + ` [options]
   surf ` + commands.ClassifyFilesCommand + ` <file> <classifier> [options]
+  surf ` + commands.ExtractFilesCommand + ` <file> <extractor> [options]
   surf -h | --help
   surf -v | --version
 
@@ -52,7 +53,9 @@ Filename and glob pattern examples:
 	usage = usage + filepath.FromSlash(filenameExamples)
 
 	args, err := docopt.ParseArgs(usage, nil, ch360.Version)
+	exitOnErr(err)
 
+	runParams, err := config.NewRunParamsFromArgs(args)
 	exitOnErr(err)
 
 	ctx, canceller := context.WithCancel(context.Background())
@@ -64,9 +67,9 @@ Filename and glob pattern examples:
 	var cmd commands.Command
 	if login, _ := args.Bool("login"); login {
 		tokenRetriever := ch360.NewTokenRetriever(commands.DefaultHttpClient, ch360.ApiAddress)
-		cmd = commands.NewLoginFromArgs(args, os.Stdout, appDir, tokenRetriever)
+		cmd = commands.NewLoginFrom(runParams, os.Stdout, appDir, tokenRetriever)
 	} else {
-		cmd, err = commands.CommandFor(args)
+		cmd, err = commands.CommandFor(runParams)
 	}
 	exitOnErr(err)
 
