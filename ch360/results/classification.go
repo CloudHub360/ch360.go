@@ -1,4 +1,4 @@
-package types
+package results
 
 type ClassificationResult struct {
 	DocumentType       string
