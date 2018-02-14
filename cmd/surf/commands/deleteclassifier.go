@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/docopt/docopt-go"
+	"github.com/CloudHub360/ch360.go/config"
 	"io"
 )
 
@@ -40,17 +40,11 @@ func NewDeleteClassifier(classifierName string, writer io.Writer, client Classif
 	}
 }
 
-func NewDeleteClassifierFromArgs(args docopt.Opts, client ClassifierDeleterGetter, out io.Writer) (*DeleteClassifier, error) {
-	classifierName, err := args.String("<name>")
-
-	if err != nil {
-		return nil, err
-	}
-
+func NewDeleteClassifierFromArgs(params *config.RunParams, client ClassifierDeleterGetter, out io.Writer) (*DeleteClassifier, error) {
 	return &DeleteClassifier{
 		client:         client,
 		writer:         out,
-		classifierName: classifierName,
+		classifierName: params.ClassifierName,
 	}, nil
 }
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/docopt/docopt-go"
+	"github.com/CloudHub360/ch360.go/config"
 	"io"
 )
 
@@ -45,19 +45,15 @@ func NewCreateClassifier(writer io.Writer,
 	}
 }
 
-func NewCreateClassifierFromArgs(args docopt.Opts, client *ch360.ApiClient, out io.Writer) (*CreateClassifier, error) {
-	var (
-		classifierName, _ = args.String("<name>")
-		samplesPath, _    = args.String("<samples-zip>")
-	)
+func NewCreateClassifierFromArgs(params *config.RunParams, client *ch360.ApiClient, out io.Writer) (*CreateClassifier, error) {
 
 	return NewCreateClassifier(
 		out,
 		client.Classifiers,
 		client.Classifiers,
 		client.Classifiers,
-		classifierName,
-		samplesPath), nil
+		params.ClassifierName,
+		params.SamplesPath), nil
 }
 
 func (cmd *CreateClassifier) Execute(ctx context.Context) error {

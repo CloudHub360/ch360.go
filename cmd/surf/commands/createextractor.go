@@ -3,7 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
-	"github.com/docopt/docopt-go"
+	"github.com/CloudHub360/ch360.go/config"
 	"io"
 	"os"
 )
@@ -35,14 +35,10 @@ func NewCreateExtractor(writer io.Writer,
 	}
 }
 
-func NewCreateExtractorFromArgs(args docopt.Opts,
+func NewCreateExtractorFromArgs(params *config.RunParams,
 	client ExtractorCreator, out io.Writer) (*CreateExtractor, error) {
-	var (
-		extractorName, _ = args.String("<name>")
-		configPath, _    = args.String("<config-file>")
-	)
 
-	configFile, err := os.Open(configPath)
+	configFile, err := os.Open(params.ConfigPath)
 
 	if err != nil {
 		return nil, err
@@ -50,7 +46,7 @@ func NewCreateExtractorFromArgs(args docopt.Opts,
 
 	return NewCreateExtractor(out,
 		client,
-		extractorName,
+		params.ExtractorName,
 		configFile), nil
 }
 
