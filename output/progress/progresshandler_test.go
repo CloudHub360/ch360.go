@@ -2,7 +2,7 @@ package progress_test
 
 import (
 	"bytes"
-	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/ch360/results"
 	"github.com/CloudHub360/ch360.go/output/progress"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
@@ -16,7 +16,7 @@ import (
 
 type ClassifyProgressHandlerSuite struct {
 	suite.Suite
-	suts             []*progress.ClassifyProgressHandler
+	suts             []*progress.ProgressHandler
 	mockResultWriter *mocks.ResultsWriter
 	outBuffer        *bytes.Buffer
 }
@@ -28,9 +28,9 @@ func (suite *ClassifyProgressHandlerSuite) SetupTest() {
 
 	rand.Seed(time.Now().Unix())
 
-	suite.suts = []*progress.ClassifyProgressHandler{
-		progress.NewClassifyProgressHandler(suite.mockResultWriter, true, suite.outBuffer),
-		progress.NewClassifyProgressHandler(suite.mockResultWriter, false, suite.outBuffer),
+	suite.suts = []*progress.ProgressHandler{
+		progress.NewProgressHandler(suite.mockResultWriter, true, suite.outBuffer),
+		progress.NewProgressHandler(suite.mockResultWriter, false, suite.outBuffer),
 	}
 }
 
@@ -119,6 +119,6 @@ func (suite *ClassifyProgressHandlerSuite) Test_ClassifyProgressHandler_Returns_
 	}
 }
 
-func AClassificationResult() *types.ClassificationResult {
-	return &types.ClassificationResult{}
+func AClassificationResult() *results.ClassificationResult {
+	return &results.ClassificationResult{}
 }

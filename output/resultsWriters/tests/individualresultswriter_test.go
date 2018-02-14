@@ -2,7 +2,8 @@ package tests
 
 import (
 	"errors"
-	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/ch360/results"
+	"github.com/CloudHub360/ch360.go/output/formatters"
 	formatterMocks "github.com/CloudHub360/ch360.go/output/formatters/mocks"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	sinkMocks "github.com/CloudHub360/ch360.go/output/sinks/mocks"
@@ -18,9 +19,9 @@ type IndividualResultsWriterSuite struct {
 	sut                  *resultsWriters.IndividualResultsWriter
 	sink                 *sinkMocks.Sink
 	sinkFactory          *sinkMocks.SinkFactory
-	formatter            *formatterMocks.ClassifyResultsFormatter
+	formatter            *formatterMocks.ResultsFormatter
 	filename             string
-	classificationResult *types.ClassificationResult
+	classificationResult *results.ClassificationResult
 }
 
 func (suite *IndividualResultsWriterSuite) SetupTest() {
@@ -31,16 +32,14 @@ func (suite *IndividualResultsWriterSuite) SetupTest() {
 	suite.sinkFactory = new(sinkMocks.SinkFactory)
 	suite.sinkFactory.On("Sink", mock.Anything).Return(suite.sink, nil)
 
-	suite.formatter = new(formatterMocks.ClassifyResultsFormatter)
-	suite.formatter.On("WriteHeader", mock.Anything).Return(nil)
-	suite.formatter.On("WriteSeparator", mock.Anything).Return(nil)
-	suite.formatter.On("WriteResult", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	suite.formatter.On("WriteFooter", mock.Anything).Return(nil)
+	suite.formatter = new(formatterMocks.ResultsFormatter)
+	suite.formatter.On("WriteResult", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	suite.formatter.On("Flush", mock.Anything).Return(nil)
 
 	suite.sut = resultsWriters.NewIndividualResultsWriter(suite.sinkFactory, suite.formatter)
 
 	suite.filename = generators.String("filename")
-	suite.classificationResult = &types.ClassificationResult{
+	suite.classificationResult = &results.ClassificationResult{
 		DocumentType: generators.String("documentType"),
 		IsConfident:  generators.Bool(),
 	}
@@ -94,13 +93,17 @@ func (suite *IndividualResultsWriterSuite) TestWriteResults_Writes_Results() {
 	err := suite.sut.WriteResult(suite.filename, suite.classificationResult)
 
 	assert.Nil(suite.T(), err)
-	suite.formatter.AssertCalled(suite.T(), "WriteResult", suite.sink, suite.filename, suite.classificationResult)
+	suite.formatter.AssertCalled(suite.T(), "WriteResult",
+		suite.sink,
+		suite.filename,
+		suite.classificationResult,
+		formatters.IncludeHeader)
 }
 
 func (suite *IndividualResultsWriterSuite) TestWriteResults_Returns_Error_From_WriteResult() {
 	suite.formatter.ExpectedCalls = nil
 	expectedErr := errors.New("expectedError")
-	suite.formatter.On("WriteResult", mock.Anything, mock.Anything, mock.Anything).Return(expectedErr)
+	suite.formatter.On("WriteResult", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(expectedErr)
 
 	err := suite.sut.WriteResult(suite.filename, suite.classificationResult)
 	assert.Equal(suite.T(), expectedErr, err)

@@ -2,14 +2,14 @@ package progress
 
 import (
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/gosuri/uiprogress"
 	"github.com/pkg/errors"
 	"io"
 )
 
-type ClassifyProgressHandler struct {
+type ProgressHandler struct {
 	resultsWriter resultsWriters.ResultsWriter
 	showProgress  bool
 	progress      *uiprogress.Progress
@@ -18,10 +18,20 @@ type ClassifyProgressHandler struct {
 	started       bool
 }
 
-func NewClassifyProgressHandler(resultsWriter resultsWriters.ResultsWriter, showProgress bool, progressOut io.Writer) *ClassifyProgressHandler {
+func NewProgressHandlerFor(params *config.RunParams, progressOut io.Writer) (*ProgressHandler, error) {
+	resultsWriter, err := resultsWriters.NewResultsWriterFor(params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewProgressHandler(resultsWriter, params.ShowProgress, progressOut), nil
+}
+
+func NewProgressHandler(resultsWriter resultsWriters.ResultsWriter, showProgress bool, progressOut io.Writer) *ProgressHandler {
 	progress := uiprogress.New()
 	progress.SetOut(progressOut)
-	return &ClassifyProgressHandler{
+	return &ProgressHandler{
 		resultsWriter: resultsWriter,
 		showProgress:  showProgress,
 		progress:      progress,
@@ -29,37 +39,37 @@ func NewClassifyProgressHandler(resultsWriter resultsWriters.ResultsWriter, show
 	}
 }
 
-func (c *ClassifyProgressHandler) handleClassifyComplete() {
+func (c *ProgressHandler) updateProgressBar() {
 	if c.showProgress {
 		c.progressBar.Incr()
 	}
 }
 
-func (c *ClassifyProgressHandler) Notify(filename string, result *types.ClassificationResult) error {
+func (c *ProgressHandler) Notify(filename string, result interface{}) error {
 	if !c.started {
 		return errors.New("NotifyStart must be called before Notify")
 	}
-	c.handleClassifyComplete()
+	c.updateProgressBar()
 	return c.resultsWriter.WriteResult(filename, result)
 }
 
-func (c *ClassifyProgressHandler) NotifyErr(filename string, err error) error {
+func (c *ProgressHandler) NotifyErr(filename string, err error) error {
 	if !c.started {
 		return errors.New("NotifyStart must be called before NotifyErr")
 	}
-	c.handleClassifyComplete()
+	c.updateProgressBar()
 	fmt.Fprintln(c.out, err)
 	return nil
 }
 
-func (c *ClassifyProgressHandler) initProgressBar(total int) {
+func (c *ProgressHandler) initProgressBar(total int) {
 	c.progress.Start()
 	c.progressBar = c.progress.AddBar(total).PrependFunc(func(bar *uiprogress.Bar) string {
-		return fmt.Sprintf("Classifying file [%d/%d]", bar.Current(), bar.Total)
+		return fmt.Sprintf("Processing file [%d/%d]", bar.Current(), bar.Total)
 	})
 }
 
-func (c *ClassifyProgressHandler) NotifyStart(total int) error {
+func (c *ProgressHandler) NotifyStart(total int) error {
 	if c.showProgress {
 		c.initProgressBar(total)
 	}
@@ -67,7 +77,7 @@ func (c *ClassifyProgressHandler) NotifyStart(total int) error {
 	return c.resultsWriter.Start()
 }
 
-func (c *ClassifyProgressHandler) NotifyFinish() error {
+func (c *ProgressHandler) NotifyFinish() error {
 	if !c.started {
 		return errors.New("NotifyStart must be called before NotifyFinish")
 	}

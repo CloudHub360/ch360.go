@@ -1,66 +1,67 @@
 package resultsWriters
 
 import (
-	"fmt"
+	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/output/formatters"
 	"github.com/CloudHub360/ch360.go/output/sinks"
-	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"os"
 )
 
-type ResultsWriterBuilder struct {
-	outputFormat         string // "table" (default), "csv", "json"
-	writeToMultipleFiles bool   // If true, write results to a files "next to" each input file, with the specified extension
-	outputFilename       string // If not writing to multiple files and not "", write all results to this file
+var OutputFormatExtensions = map[formatters.OutputFormat]string{
+	formatters.Table: ".tab",
+	formatters.Json:  ".json",
+	formatters.Csv:   ".csv",
 }
 
-func NewResultsWriterBuilder(outputFormat string, writeToMultipleFiles bool, outputFilename string) *ResultsWriterBuilder {
-	return &ResultsWriterBuilder{
-		outputFormat:         outputFormat,
-		writeToMultipleFiles: writeToMultipleFiles,
-		outputFilename:       outputFilename,
+type OutputType int
+
+const (
+	MultipleFiles OutputType = iota
+	SingleFile
+	Stdout
+)
+
+func NewResultsWriterFor(params *config.RunParams) (ResultsWriter, error) {
+
+	formatter, err := formatters.NewResultsFormatterFor(params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if params.MultiFileOut {
+		// Write output to a file "next to" each input file, with the specified extension
+		return NewResultsWriter(MultipleFiles, "", formatter)
+	} else if params.OutputFile != "" {
+		// Write output to a single "combined results" file with the specified filename
+		return NewResultsWriter(SingleFile, params.OutputFile, formatter)
+	} else {
+		// Write output to the console
+		return NewResultsWriter(Stdout, "", formatter)
 	}
 }
 
-func (b *ResultsWriterBuilder) Build() (ResultsWriter, error) {
+func NewResultsWriter(outputType OutputType, outputFilename string, formatter formatters.ResultsFormatter) (ResultsWriter, error) {
 	var (
-		formatter           formatters.ClassifyResultsFormatter
 		outputFileExtension string
 		resultsWriter       ResultsWriter
 		writerFactory       sinks.SinkFactory
 	)
 
-	if b.writeToMultipleFiles && b.outputFilename != "" {
-		return nil, errors.New("The --multiple-files (-m) and --output-file (-o) options cannot be used together.")
-	}
+	outputFileExtension = OutputFormatExtensions[formatter.Format()]
 
-	switch b.outputFormat {
-	case "table":
-		formatter = formatters.NewTableClassifyResultsFormatter()
-		outputFileExtension = ".tab"
-	case "csv":
-		formatter = formatters.NewCSVClassifyResultsFormatter()
-		outputFileExtension = ".csv"
-	case "json":
-		formatter = formatters.NewJsonClassifyResultsFormatter()
-		outputFileExtension = ".json"
-	default:
-		// DocOpt doesn't do validation of these values for us, so we need to catch invalid values here
-		return nil, errors.New(fmt.Sprintf("Unknown output format '%s'. Allowed values are: csv, table, json.", b.outputFormat))
-	}
-
-	if b.writeToMultipleFiles {
+	switch outputType {
+	case MultipleFiles:
 		// Write output to a file "next to" each input file, with the specified extension
 		writerFactory = sinks.NewExtensionSwappingFileSinkFactory(outputFileExtension)
 		resultsWriter = NewIndividualResultsWriter(writerFactory, formatter)
-	} else if b.outputFilename != "" {
+	case SingleFile:
 		// Write output to a single "combined results" file with the specified filename
-		resultsWriter = NewCombinedResultsWriter(sinks.NewBasicFileSink(afero.NewOsFs(), b.outputFilename), formatter)
-	} else {
+		resultsWriter = NewCombinedResultsWriter(sinks.NewBasicFileSink(afero.NewOsFs(), outputFilename), formatter)
+	case Stdout:
 		// Write output to the console
 		resultsWriter = NewCombinedResultsWriter(sinks.NewBasicWriterSink(os.Stdout), formatter)
 	}
-
 	return resultsWriter, nil
 }

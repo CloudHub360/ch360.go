@@ -2,8 +2,9 @@ package tests
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360/types"
+	"github.com/CloudHub360/ch360.go/ch360/results"
 	"github.com/CloudHub360/ch360.go/output/formatters"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
@@ -14,72 +15,76 @@ import (
 	"testing"
 )
 
-type JsonResultsFormatterSuite struct {
+type JsonClassificationResultsFormatterSuite struct {
 	suite.Suite
 	output   *bytes.Buffer
 	sut      *formatters.JsonClassifyResultsFormatter
 	filename string
-	result   *types.ClassificationResult
+	result   *results.ClassificationResult
 }
 
-func (suite *JsonResultsFormatterSuite) SetupTest() {
+func (suite *JsonClassificationResultsFormatterSuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
 	suite.output = &bytes.Buffer{}
 	suite.sut = formatters.NewJsonClassifyResultsFormatter()
 
 	suite.filename = generators.String("filename")
-	suite.result = &types.ClassificationResult{
+	suite.result = &results.ClassificationResult{
 		DocumentType: generators.String("documenttype"),
 		IsConfident:  false,
 	}
 }
 
-func TestJsonTableResultsWriterRunner(t *testing.T) {
-	suite.Run(t, new(JsonResultsFormatterSuite))
+func TestJsonClassificationResultsWriterRunner(t *testing.T) {
+	suite.Run(t, new(JsonClassificationResultsFormatterSuite))
 }
 
-func (suite *JsonResultsFormatterSuite) TestWriteHeader_Writes_Header() {
-	suite.sut.WriteHeader(suite.output)
+func (suite *JsonClassificationResultsFormatterSuite) TestWriteResult_With_IncludeHeader_Option_Writes_Header() {
+	suite.sut.WriteResult(suite.output, exampleFilename, exampleResult, formatters.IncludeHeader)
 
-	assert.Equal(suite.T(), "[", suite.output.String())
+	assert.True(suite.T(), strings.HasPrefix(suite.output.String(), "["))
 }
 
-func (suite *JsonResultsFormatterSuite) TestWrites_ResultWithCorrectFormat() {
-	suite.sut.WriteHeader(suite.output)
-	err := suite.sut.WriteResult(suite.output, exampleFilename, exampleResult)
-	suite.sut.WriteFooter(suite.output)
+func (suite *JsonClassificationResultsFormatterSuite) TestWrites_ResultWithCorrectFormat_Without_Header() {
+	err := suite.sut.WriteResult(suite.output, exampleFilename, exampleResult, 0)
+	suite.sut.Flush(suite.output)
 
 	require.Nil(suite.T(), err)
-	assert.Equal(suite.T(), exampleOutput, suite.output.String())
+	assert.Equal(suite.T(), exampleOutputObject, suite.output.String())
 }
 
-func (suite *JsonResultsFormatterSuite) TestWrites_Filename() {
-	suite.sut.WriteHeader(suite.output)
-	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result)
+func (suite *JsonClassificationResultsFormatterSuite) TestWrites_ResultWithCorrectFormat_With_Header() {
+	err := suite.sut.WriteResult(suite.output, exampleFilename, exampleResult, formatters.IncludeHeader)
+	suite.sut.Flush(suite.output)
+
+	require.Nil(suite.T(), err)
+	assert.Equal(suite.T(), exampleOutputList, suite.output.String())
+}
+
+func (suite *JsonClassificationResultsFormatterSuite) TestWrites_Filename() {
+	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result, 0)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.filename))
 }
 
-func (suite *JsonResultsFormatterSuite) TestWrites_DocumentType() {
-	suite.sut.WriteHeader(suite.output)
-	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result)
+func (suite *JsonClassificationResultsFormatterSuite) TestWrites_DocumentType() {
+	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result, 0)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.result.DocumentType))
 }
 
-func (suite *JsonResultsFormatterSuite) TestWrites_False_For_Not_IsConfident() {
+func (suite *JsonClassificationResultsFormatterSuite) TestWrites_False_For_Not_IsConfident() {
 	suite.result.IsConfident = false
 
-	suite.sut.WriteHeader(suite.output)
-	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result)
+	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result, 0)
 
 	require.Nil(suite.T(), err)
 	assert.True(suite.T(), strings.Contains(suite.output.String(), "false"))
 }
 
-func (suite *JsonResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Has_Path() {
+func (suite *JsonClassificationResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Has_Path() {
 	var filename string
 	var expectedFilename string
 
@@ -91,8 +96,7 @@ func (suite *JsonResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Ha
 		expectedFilename = `/var/folder/document1.tif`
 	}
 
-	suite.sut.WriteHeader(suite.output)
-	err := suite.sut.WriteResult(suite.output, filename, suite.result)
+	err := suite.sut.WriteResult(suite.output, filename, suite.result, 0)
 
 	require.Nil(suite.T(), err)
 	containsFilenameWithPath := strings.Contains(suite.output.String(), expectedFilename)
@@ -104,29 +108,23 @@ func (suite *JsonResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Ha
 	}
 }
 
-func (suite *JsonResultsFormatterSuite) TestWriteFooter_Writes_Footer() {
-	suite.sut.WriteFooter(suite.output)
-
-	assert.Equal(suite.T(), "]", suite.output.String())
-}
-
 var exampleFilename = "document1.tif"
-var exampleResult = &types.ClassificationResult{
+var exampleResult = &results.ClassificationResult{
 	DocumentType:       "documenttype",
 	IsConfident:        true,
 	RelativeConfidence: 1.234567,
-	DocumentTypeScores: []types.DocumentTypeScore{
-		types.DocumentTypeScore{
+	DocumentTypeScores: []results.DocumentTypeScore{
+		results.DocumentTypeScore{
 			DocumentType: "documenttype",
 			Score:        1.23456,
 		},
-		types.DocumentTypeScore{
+		results.DocumentTypeScore{
 			DocumentType: "otherdocumenttype",
 			Score:        33.45678,
 		},
 	}}
 
-var exampleOutput = `[{
+var exampleOutputObject = `{
   "filename": "document1.tif",
   "classification_results": {
     "document_type": "documenttype",
@@ -143,4 +141,10 @@ var exampleOutput = `[{
       }
     ]
   }
-}]`
+}`
+var exampleOutputList = "[" + exampleOutputObject + "]"
+
+func IsJSON(str string) bool {
+	var js json.RawMessage
+	return json.Unmarshal([]byte(str), &js) == nil
+}

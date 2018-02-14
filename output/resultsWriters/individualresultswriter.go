@@ -1,19 +1,20 @@
 package resultsWriters
 
 import (
-	"github.com/CloudHub360/ch360.go/ch360/types"
 	"github.com/CloudHub360/ch360.go/output/formatters"
 	"github.com/CloudHub360/ch360.go/output/sinks"
 )
+
+var _ ResultsWriter = (*IndividualResultsWriter)(nil)
 
 // The IndividualResultsWriter writes each results it is passed to a new resultSink (an extensionSwappingFileWriter),
 // just using the WriteResult method provided by the formatter (no header, record separators or footer)
 type IndividualResultsWriter struct {
 	sinkFactory      sinks.SinkFactory
-	resultsFormatter formatters.ClassifyResultsFormatter
+	resultsFormatter formatters.ResultsFormatter
 }
 
-func NewIndividualResultsWriter(writerFactory sinks.SinkFactory, resultsFormatter formatters.ClassifyResultsFormatter) *IndividualResultsWriter {
+func NewIndividualResultsWriter(writerFactory sinks.SinkFactory, resultsFormatter formatters.ResultsFormatter) *IndividualResultsWriter {
 	return &IndividualResultsWriter{
 		sinkFactory:      writerFactory,
 		resultsFormatter: resultsFormatter,
@@ -24,7 +25,7 @@ func (c *IndividualResultsWriter) Start() error {
 	return nil
 }
 
-func (c *IndividualResultsWriter) WriteResult(filename string, result *types.ClassificationResult) error {
+func (c *IndividualResultsWriter) WriteResult(filename string, result interface{}) error {
 	resultSink, err := c.sinkFactory.Sink(
 		sinks.SinkParams{InputFilename: filename}) //Returns resultSink configured to write to destination file
 
@@ -32,15 +33,24 @@ func (c *IndividualResultsWriter) WriteResult(filename string, result *types.Cla
 		return err
 	}
 
-	if err = resultSink.Open(); err != nil {
+	err = resultSink.Open()
+	if err != nil {
 		return err
 	}
 
-	if err = c.resultsFormatter.WriteResult(resultSink, filename, result); err != nil {
+	err = c.resultsFormatter.WriteResult(resultSink, filename, result, formatters.IncludeHeader)
+	if err != nil {
 		return err
 	}
 
-	if err = resultSink.Close(); err != nil {
+	err = c.resultsFormatter.Flush(resultSink)
+	if err != nil {
+		return err
+	}
+
+	err = resultSink.Close()
+
+	if err != nil {
 		return err
 	}
 
