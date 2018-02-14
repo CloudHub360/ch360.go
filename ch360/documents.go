@@ -186,8 +186,6 @@ func (client *DocumentsClient) Extract(ctx context.Context, documentId string, e
 	}
 
 	defer func() {
-		// Json decoder could in theory not read the response body to the end, preventing
-		io.CopyN(ioutil.Discard, response.Body, 512)
 		response.Body.Close()
 	}()
 
