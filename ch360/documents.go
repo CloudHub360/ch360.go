@@ -7,8 +7,6 @@ import (
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360/results"
 	"github.com/CloudHub360/ch360.go/net"
-	"io"
-	"io/ioutil"
 	"net/http"
 )
 
