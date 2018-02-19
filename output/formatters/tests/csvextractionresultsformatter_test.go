@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"encoding/csv"
 	"github.com/CloudHub360/ch360.go/ch360/results"
 	"github.com/CloudHub360/ch360.go/output/formatters"
 	"github.com/CloudHub360/ch360.go/test/generators"
@@ -39,42 +40,39 @@ func (suite *CSVExtractionResultsFormatterSuite) TestWrites_Filename() {
 	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.filename))
 }
 
-//
-//func (suite *CSVExtractionResultsFormatterSuite) TestWrites_DocumentType() {
-//	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result, 0)
-//
-//	require.Nil(suite.T(), err)
-//	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.result.DocumentType))
-//}
-//
-//func (suite *CSVExtractionResultsFormatterSuite) TestWrites_False_For_Not_IsConfident() {
-//	suite.result.IsConfident = false
-//
-//	suite.sut.WriteHeader(suite.output)
-//	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result)
-//
-//	require.Nil(suite.T(), err)
-//	assert.True(suite.T(), strings.Contains(suite.output.String(), "false"))
-//}
-//
-//func (suite *CSVExtractionResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Has_Path() {
-//	filename := `C:\folder\document1.tif`
-//
-//	suite.sut.WriteHeader(suite.output)
-//	err := suite.sut.WriteResult(suite.output, filename, suite.result)
-//
-//	require.Nil(suite.T(), err)
-//	assert.Equal(suite.T(), filename, suite.output.String()[:len(filename)])
-//}
-//
-//func (suite *CSVExtractionResultsFormatterSuite) TestWriteFooter_Writes_Nothing() {
-//	suite.sut.WriteFooter(suite.output)
-//
-//	assert.Equal(suite.T(), "", suite.output.String())
-//}
-//
-//func (suite *CSVExtractionResultsFormatterSuite) TestWriteHeader_Writes_Nothing() {
-//	suite.sut.WriteHeader(suite.output)
-//
-//	assert.Equal(suite.T(), "", suite.output.String())
-//}
+func (suite *CSVExtractionResultsFormatterSuite) TestWrites_Column_Per_Field() {
+	expectedHeadings := []string{"Filename", "Amount", "Amount2"}
+
+	err := suite.sut.WriteResult(suite.output, suite.filename, anExtractionResultWith2Fields(), formatters.IncludeHeader)
+
+	require.Nil(suite.T(), err)
+	require.True(suite.T(), isCSV(suite.output.String()))
+	record, err := csvReaderFor(suite.output.String()).Read()
+	assert.Equal(suite.T(), expectedHeadings, record)
+}
+
+func (suite *CSVExtractionResultsFormatterSuite) TestWrites_Header_Row_When_Specified() {
+	expectedHeadings := []string{"Filename", "Amount"}
+	expectedData := []string{suite.filename, "$5.50"}
+	outputWithHeader := &bytes.Buffer{}
+	outputWithoutHeader := &bytes.Buffer{}
+
+	suite.sut.WriteResult(outputWithHeader, suite.filename, anExtractionResult(), formatters.IncludeHeader)
+	suite.sut.WriteResult(outputWithoutHeader, suite.filename, anExtractionResult(), 0)
+	headerRow, _ := csvReaderFor(outputWithHeader.String()).Read()
+	dataRow, _ := csvReaderFor(outputWithoutHeader.String()).Read()
+
+	assert.Equal(suite.T(), expectedHeadings, headerRow)
+	assert.Equal(suite.T(), expectedData, dataRow)
+}
+
+func isCSV(data string) bool {
+	csvReader := csvReaderFor(data)
+	_, err := csvReader.Read()
+
+	return err == nil
+}
+
+func csvReaderFor(data string) *csv.Reader {
+	return csv.NewReader(strings.NewReader(data))
+}
