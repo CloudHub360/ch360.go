@@ -52,7 +52,7 @@ func NewCreateClassifierFromArgs(params *config.RunParams, client *ch360.ApiClie
 		client.Classifiers,
 		client.Classifiers,
 		client.Classifiers,
-		params.ClassifierName,
+		params.Name,
 		params.SamplesPath), nil
 }
 

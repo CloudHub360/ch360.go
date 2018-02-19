@@ -25,7 +25,7 @@ func NewDeleteExtractor(extractorName string, writer io.Writer, client Extractor
 }
 
 func NewDeleteExtractorFromArgs(params *config.RunParams, client ExtractorDeleterGetter, writer io.Writer) (*DeleteExtractor, error) {
-	return NewDeleteExtractor(params.ExtractorName, writer, client), nil
+	return NewDeleteExtractor(params.Name, writer, client), nil
 }
 
 func (cmd *DeleteExtractor) Execute(ctx context.Context) error {
