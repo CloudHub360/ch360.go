@@ -27,7 +27,7 @@ func (f *JsonExtractionResultsFormatter) WriteResult(writer io.Writer, filename 
 		return errors.New(fmt.Sprintf("Unexpected type: %T", result))
 	}
 
-	if options&IncludeHeader == IncludeHeader || !f.resultsWritten {
+	if options&IncludeHeader == IncludeHeader {
 		f.headerWritten = true
 		fmt.Fprint(writer, "[") // header
 	} else if f.resultsWritten {

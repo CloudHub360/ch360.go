@@ -98,7 +98,7 @@ func (suite *JsonExtractionResultsFormatterSuite) TestResult_Param_Must_Be_Corre
 }
 
 func (suite *JsonExtractionResultsFormatterSuite) TestSeparator_Written_When_Outputting_Multiple_Results() {
-	suite.sut.WriteResult(suite.output, suite.filename, suite.result, 0)
+	suite.sut.WriteResult(suite.output, suite.filename, suite.result, formatters.IncludeHeader)
 	suite.sut.WriteResult(suite.output, suite.filename, suite.result, 0)
 	suite.sut.Flush(suite.output)
 
