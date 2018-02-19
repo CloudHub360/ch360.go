@@ -194,7 +194,7 @@ document1.pdf                        Notice of Lien                   true
 
         $results = Get-Content $outputFile | ConvertFrom-WaivesCsv
 
-        $results.length | Should -Be 2
+        $results.length | Should -Be 3
         $doc2result = ($results | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)})
         $doc2result | Should -Not -Be $null
 
