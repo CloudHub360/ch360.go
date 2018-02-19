@@ -46,7 +46,7 @@ func NewCreateExtractorFromArgs(params *config.RunParams,
 
 	return NewCreateExtractor(out,
 		client,
-		params.ExtractorName,
+		params.Name,
 		configFile), nil
 }
 

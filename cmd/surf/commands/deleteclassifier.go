@@ -44,7 +44,7 @@ func NewDeleteClassifierFromArgs(params *config.RunParams, client ClassifierDele
 	return &DeleteClassifier{
 		client:         client,
 		writer:         out,
-		classifierName: params.ClassifierName,
+		classifierName: params.Name,
 	}, nil
 }
 
