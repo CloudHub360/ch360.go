@@ -38,6 +38,7 @@ type RunParams struct {
 	args docopt.Opts
 }
 
+//go:generate stringer -type=Verb
 type Verb int
 
 const (
@@ -49,6 +50,7 @@ const (
 	Delete
 )
 
+//go:generate stringer -type=Noun
 type Noun int
 
 const (
