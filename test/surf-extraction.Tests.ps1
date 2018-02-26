@@ -5,7 +5,7 @@ param(
 
 . "test/common.ps1"
 
-$extractorName = "test-classifier"
+$extractorName = "test-extractor"
 
 function New-Extractor([string]$extractorName, [Io.FileInfo]$extractorDefinition) {
     Invoke-App create extractor $extractorName $extractorDefinition 2>&1
@@ -29,16 +29,38 @@ Describe "extractors" {
         Get-Extractors | Remove-Extractor
     }
 
-    It "should be created from a zip file of samples" {
+    It "should be created from an fpxlc definition file" {
+        $extractorDefinition = (Join-Path $PSScriptRoot "extract-amount.fpxlc")
+        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
+Creating extractor '$extractorName'... [OK]
+"@
+        $LASTEXITCODE | Should -Be 0
 
+        # Verify
+        Get-Extractors | Format-MultilineOutput | Should -Contain $extractorName
     }
 
-    It "should not be created from an invalid zip file of samples" {
+    It "should not be created from an invalid fpxlc definition file" {
+        $extractorDefinition = (Join-Path $PSScriptRoot "invalid.fpxlc")
+        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
+Creating extractor 'test-extractor'... [FAILED]
+The file supplied is not a valid extractor configuration file.
+"@
+        $LASTEXITCODE | Should -Be 1
 
+        # Verify
+        Get-Extractors | Format-MultilineOutput | Should -Not -Contain $extractorName
     }
 
-    It "should not be created from a non-existent zip file of samples" {
+    It "should not be created from a non-existent fpxlc definition file" {
+        $extractorDefinition = (Join-Path $PSScriptRoot "non-existent.fpxlc")
+        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
+open F:\code\go\src\github.com\CloudHub360\ch360.go\test\non-existent.fpxlc: The system cannot find the file specified.
+"@
+        $LASTEXITCODE | Should -Be 1
 
+        # Verify
+        Get-Extractors | Format-MultilineOutput | Should -Not -Contain $extractorName
     }
 
     AfterAll {
