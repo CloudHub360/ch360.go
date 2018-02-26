@@ -3,21 +3,9 @@ param(
     [String]$ClientSecret
 )
 
-$classifierName = "test-classifier"
-$applicationFolderPath = Join-Path -Path "~" -ChildPath ".surf"
-$applicationFolderPathBackup = "$applicationFolderPath" + "_backup"
-$configFilePath = Join-Path -Path $applicationFolderPath -ChildPath "config.yaml"
+. "test/common.ps1"
 
-function Invoke-App {
-    $ErrorActionPreference = "Continue"
-    try {
-        & surf $args
-    } catch [System.Management.Automation.RemoteException] {
-        # Catch exceptions for messages redirected from stderr and
-        # write out the messages to stdout
-        Write-Output $Error[0].Message
-    }
-}
+$classifierName = "test-classifier"
 
 function New-Classifier([string]$classifierName, [Io.FileInfo]$samples) {
     Invoke-App create classifier $classifierName $samples 2>&1
@@ -58,59 +46,9 @@ function Invoke-Classifier(
     }
 }
 
-function ConvertFrom-WaivesCsv([Parameter(ValueFromPipeline=$true)][PsObject[]]$InputObject) {
-    PROCESS {
-        $InputObject | ConvertFrom-Csv -Header "file","documenttype","confident","score"
-    }
-}
-
-function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){
-    $input -join [Environment]::NewLine
-}
-
-function String-Starting([string]$input) {
-    ([Regex]::Escape($input) + ".*")
-}
-
-function Backup-ApplicationFolder() {
-    if (!(Test-Path $applicationFolderPath)) {
-        return
-    }
-
-    Remove-Item $applicationFolderPathBackup -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Folder $applicationFolderPath $applicationFolderPathBackup
-    Remove-Item $applicationFolderPath -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Host "Backed up application folder"
-}
-
-function Restore-ApplicationFolder() {
-    if (!(Test-Path $applicationFolderPathBackup)) {
-        return
-    }
-
-    Remove-Item $applicationFolderPath -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Folder $applicationFolderPathBackup $applicationFolderPath
-    Remove-Item $applicationFolderPathBackup -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Host "Restored application folder"
-}
-
-function Copy-Folder($source, $destination) {
-    if (!(Test-Path $destination)) {
-        New-Item -ItemType Directory $destination
-    }
-    Get-ChildItem -Path $source | Copy-Item -Destination $destination -Recurse -Container
-}
-
 Describe "classifiers" {
     BeforeAll {
-        Backup-ApplicationFolder
-
-        surf login --client-id="$ClientId" --client-secret="$ClientSecret" | Should -Be "Logging in... [OK]"
-        $LASTEXITCODE | Should -Be 0
-
-        Get-Content -Path $configFilePath | Format-MultilineOutput | Should -BeLike "*clientId: $ClientId*"
-        Get-Content -Path $configFilePath | Format-MultilineOutput | Should -BeLike "*clientSecret: $ClientSecret*"
-        Write-Host "Ran surf login"
+        Login-Surf
     }
 
     BeforeEach {
