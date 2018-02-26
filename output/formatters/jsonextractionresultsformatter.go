@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/results"
 	"io"
+	"path/filepath"
 )
 
 type JsonExtractionResultsFormatter struct {
@@ -39,7 +40,7 @@ func (f *JsonExtractionResultsFormatter) WriteResult(writer io.Writer, filename 
 		Filename string `json:"filename"`
 		*results.ExtractionResult
 	}{
-		Filename:         filename,
+		Filename:         filepath.FromSlash(filename),
 		ExtractionResult: extractionResult,
 	}
 

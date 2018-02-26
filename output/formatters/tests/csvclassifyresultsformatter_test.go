@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -75,7 +74,7 @@ func (suite *CSVClassifyResultsFormatterSuite) TestWrites_False_For_Not_IsConfid
 }
 
 func (suite *CSVClassifyResultsFormatterSuite) TestWrites_Filename_With_Path_When_It_Has_Path() {
-	filename := filepath.ToSlash(`C:\folder\document1.tif`)
+	filename := `C:\\folder\\document1.tif`
 
 	err := suite.sut.WriteResult(suite.output, filename, suite.result, 0)
 
