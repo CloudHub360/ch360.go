@@ -43,8 +43,8 @@ func (suite *ClassifySuite) SetupTest() {
 		DocumentType: generators.String("documentType"),
 		IsConfident:  generators.Bool(),
 	}
-	suite.testFilePath = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/document1.pdf"
-	suite.testFilesPattern = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/**/*.pdf"
+	suite.testFilePath = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/classification/document1.pdf"
+	suite.testFilesPattern = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/classification/**/*.pdf"
 
 	suite.documentCreator = new(mocks.DocumentCreator)
 	suite.documentClassifier = new(mocks.DocumentClassifier)
