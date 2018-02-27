@@ -116,7 +116,7 @@ Describe "extraction" {
     It "should attempt to extract data from a document" {
         $document = (Join-Path $documentsPath "document1.pdf")
         Invoke-Extractor -File $document $extractorName | Format-MultilineOutput | Should -Be @"
-FILE                                Amount
+File                                Amount
 document1.pdf                       `$5.50
 "@
     }
