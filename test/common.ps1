@@ -9,12 +9,6 @@ function Invoke-App {
     }
 }
 
-function ConvertFrom-WaivesCsv([Parameter(ValueFromPipeline=$true)][PsObject[]]$InputObject) {
-    PROCESS {
-        $InputObject | ConvertFrom-Csv -Header "file","documenttype","confident","score"
-    }
-}
-
 function Format-MultilineOutput([Parameter(ValueFromPipeline=$true)]$input){
     $input -join [Environment]::NewLine
 }
