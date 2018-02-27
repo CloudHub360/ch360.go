@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"path/filepath"
+	"strings"
 )
 
 var _ ResultsFormatter = (*TableClassifyResultsFormatter)(nil)
@@ -24,7 +25,7 @@ func (f *TableExtractionResultsFormatter) writeHeaderFor(writer io.Writer, resul
 	fmt.Fprintf(writer, FileHeaderFmt, "FILE")
 
 	for _, fieldResult := range result.FieldResults {
-		fmt.Fprintf(writer, FieldColFmt, fieldResult.FieldName)
+		fmt.Fprint(writer, strings.TrimSpace(fmt.Sprintf(FieldColFmt, fieldResult.FieldName)))
 	}
 	_, err := fmt.Fprintln(writer)
 	return err
@@ -48,7 +49,7 @@ func (f *TableExtractionResultsFormatter) WriteResult(writer io.Writer, fullPath
 		filename)
 
 	for _, fieldResult := range extractionResult.FieldResults {
-		fmt.Fprintf(writer, FieldColFmt, fieldResult.Result.Text)
+		fmt.Fprint(writer, strings.TrimSpace(fmt.Sprintf(FieldColFmt, fieldResult.Result.Text)))
 	}
 
 	fmt.Fprintln(writer)

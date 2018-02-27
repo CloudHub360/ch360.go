@@ -57,6 +57,12 @@ Describe "classifiers" {
         Get-Classifiers | Remove-Classifier
     }
 
+    function ConvertFrom-ClassificationCsv([Parameter(ValueFromPipeline=$true)][PsObject[]]$InputObject) {
+        PROCESS {
+            $InputObject | ConvertFrom-Csv -Header "file","documenttype","confident","score"
+        }
+    }
+
     It "should be created from a zip file of samples" {
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Be @"
@@ -111,11 +117,11 @@ document1.pdf                        Notice of Lien                   true
 
         Invoke-Classifier $filePattern $classifierName -Format "csv"
 
-        Get-Content $document2OutputFile | ConvertFrom-WaivesCsv `
+        Get-Content $document2OutputFile | ConvertFrom-ClassificationCsv `
           | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)} `
           | Should -Not -Be $null
 
-        Get-Content $document3OutputFile | ConvertFrom-WaivesCsv `
+        Get-Content $document3OutputFile | ConvertFrom-ClassificationCsv `
           | where {($_.file -like "*document3.pdf" -and $_.documenttype -eq "Notice of Default" -and $_.score -eq 3.351 -and $_.confident)} `
           | Should -Not -Be $null
 
@@ -131,7 +137,7 @@ document1.pdf                        Notice of Lien                   true
         $outputFile = New-TemporaryFile
         Invoke-Classifier $filePattern $classifierName -OutputFile $outputFile -Format "csv"
 
-        $results = Get-Content $outputFile | ConvertFrom-WaivesCsv
+        $results = Get-Content $outputFile | ConvertFrom-ClassificationCsv
 
         $results.length | Should -Be 3
         $doc2result = ($results | where {($_.file -like "*document2.pdf" -and $_.documenttype -eq "Notice of Lien" -and $_.score -eq 1.177 -and $_.confident)})
@@ -153,8 +159,6 @@ document1.pdf                        Notice of Lien                   true
         Invoke-Classifier $filePattern $classifierName -OutputFile $outputFile -Format "json"
 
         $results = Get-Content -Path $outputFile | ConvertFrom-Json
-        Write-Host $results
-        Write-Host $results.file
 
         $results.filename | Should -BeLike "*document2.pdf"
         $results.classification_results.document_type | Should -Be "Notice of Lien"
