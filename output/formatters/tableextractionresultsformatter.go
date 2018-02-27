@@ -22,12 +22,12 @@ var FileHeaderFmt = "%-36.36s"
 var FieldColFmt = "%-32.32s"
 
 func (f *TableExtractionResultsFormatter) writeHeaderFor(writer io.Writer, result *results.ExtractionResult) error {
-	fmt.Fprintf(writer, FileHeaderFmt, "File")
+	var header = fmt.Sprintf(FileHeaderFmt, "File")
 
 	for _, fieldResult := range result.FieldResults {
-		fmt.Fprint(writer, strings.TrimSpace(fmt.Sprintf(FieldColFmt, fieldResult.FieldName)))
+		header = header + fmt.Sprintf(FieldColFmt, fieldResult.FieldName)
 	}
-	_, err := fmt.Fprintln(writer)
+	_, err := fmt.Fprintln(writer, strings.TrimSpace(header))
 	return err
 }
 
@@ -44,15 +44,13 @@ func (f *TableExtractionResultsFormatter) WriteResult(writer io.Writer, fullPath
 
 	filename := filepath.Base(fullPath)
 
-	fmt.Fprintf(writer,
-		FileHeaderFmt,
-		filename)
+	var row = fmt.Sprintf(FileHeaderFmt, filename)
 
 	for _, fieldResult := range extractionResult.FieldResults {
-		fmt.Fprint(writer, strings.TrimSpace(fmt.Sprintf(FieldColFmt, fieldResult.Result.Text)))
+		row = row + fmt.Sprintf(FieldColFmt, fieldResult.Result.Text)
 	}
 
-	fmt.Fprintln(writer)
+	fmt.Fprintln(writer, strings.TrimSpace(row))
 
 	return nil
 }
