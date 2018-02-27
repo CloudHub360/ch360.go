@@ -37,8 +37,8 @@ func (suite *ExtractFilesSuite) SetupTest() {
 	suite.classifierName = generators.String("classifiername")
 	suite.documentId = generators.String("documentId")
 	suite.extractionResult = &results.ExtractionResult{}
-	suite.testFilePath = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/document1.pdf"
-	suite.testFilesPattern = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/**/*.pdf"
+	suite.testFilePath = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/extraction/document1.pdf"
+	suite.testFilesPattern = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/extraction/**/*.pdf"
 
 	suite.fileExtractor = new(cmdmocks.FileExtractor)
 	suite.documentGetter = new(mocks.DocumentGetter)

@@ -6,6 +6,7 @@ param(
 . "test/common.ps1"
 
 $classifierName = "test-classifier"
+$documentsPath = (Join-Path $PSScriptRoot (Join-Path "documents" "classification"))
 
 function New-Classifier([string]$classifierName, [Io.FileInfo]$samples) {
     Invoke-App create classifier $classifierName $samples 2>&1
@@ -93,7 +94,7 @@ The file '$samples' could not be found.
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples
 
-        $document = (Join-Path $PSScriptRoot "documents/document1.pdf")
+        $document = Join-Path $documentsPath "document1.pdf"
         Invoke-Classifier -File $document $classifierName | Format-MultilineOutput | Should -Be @"
 FILE                                 DOCUMENT TYPE                    CONFIDENT
 document1.pdf                        Notice of Lien                   true
@@ -104,9 +105,9 @@ document1.pdf                        Notice of Lien                   true
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples
 
-        $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/*.pdf")
-        $document2OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.csv")
-        $document3OutputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document3.csv")
+        $filePattern = (Join-Path $documentsPath "subfolder1/*.pdf")
+        $document2OutputFile = (Join-Path $documentsPath "subfolder1/document2.csv")
+        $document3OutputFile = (Join-Path $documentsPath "subfolder1/document3.csv")
 
         Invoke-Classifier $filePattern $classifierName -Format "csv"
 
@@ -126,7 +127,7 @@ document1.pdf                        Notice of Lien                   true
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples
 
-        $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/*.pdf")
+        $filePattern = (Join-Path $documentsPath "subfolder1/*.pdf")
         $outputFile = New-TemporaryFile
         Invoke-Classifier $filePattern $classifierName -OutputFile $outputFile -Format "csv"
 
@@ -146,8 +147,8 @@ document1.pdf                        Notice of Lien                   true
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples
 
-        $filePattern = (Join-Path $PSScriptRoot "documents/subfolder1/document2.pdf")
-        $outputFile = (Join-Path $PSScriptRoot "documents/subfolder1/document2.json")
+        $filePattern = (Join-Path $documentsPath "subfolder1/document2.pdf")
+        $outputFile = (Join-Path $documentsPath "subfolder1/document2.json")
 
         Invoke-Classifier $filePattern $classifierName -OutputFile $outputFile -Format "json"
 
