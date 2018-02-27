@@ -54,9 +54,7 @@ The file supplied is not a valid extractor configuration file.
 
     It "should not be created from a non-existent fpxlc definition file" {
         $extractorDefinition = (Join-Path $PSScriptRoot "non-existent.fpxlc")
-        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
-open F:\code\go\src\github.com\CloudHub360\ch360.go\test\non-existent.fpxlc: The system cannot find the file specified.
-"@
+        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be "The file '$extractorDefinition' could not be found."
         $LASTEXITCODE | Should -Be 1
 
         # Verify

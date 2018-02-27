@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/config"
 	"io"
@@ -39,9 +40,8 @@ func NewCreateExtractorFromArgs(params *config.RunParams,
 	client ExtractorCreator, out io.Writer) (*CreateExtractor, error) {
 
 	configFile, err := os.Open(params.ConfigPath)
-
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("The file '%s' could not be found.", params.ConfigPath))
 	}
 
 	return NewCreateExtractor(out,
