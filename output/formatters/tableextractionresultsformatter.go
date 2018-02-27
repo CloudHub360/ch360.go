@@ -22,7 +22,7 @@ var FileHeaderFmt = "%-36.36s"
 var FieldColFmt = "%-32.32s"
 
 func (f *TableExtractionResultsFormatter) writeHeaderFor(writer io.Writer, result *results.ExtractionResult) error {
-	fmt.Fprintf(writer, FileHeaderFmt, "FILE")
+	fmt.Fprintf(writer, FileHeaderFmt, "File")
 
 	for _, fieldResult := range result.FieldResults {
 		fmt.Fprint(writer, strings.TrimSpace(fmt.Sprintf(FieldColFmt, fieldResult.FieldName)))
