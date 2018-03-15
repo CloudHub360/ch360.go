@@ -87,7 +87,3 @@ func (f *JsonClassifyResultsFormatter) Flush(writer io.Writer) error {
 	}
 	return nil
 }
-
-func (f *JsonClassifyResultsFormatter) Format() OutputFormat {
-	return Json
-}

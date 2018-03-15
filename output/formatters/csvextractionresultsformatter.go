@@ -69,7 +69,3 @@ func (f *CSVExtractionResultsFormatter) WriteResult(writer io.Writer, filename s
 func (f *CSVExtractionResultsFormatter) Flush(writer io.Writer) error {
 	return nil
 }
-
-func (f *CSVExtractionResultsFormatter) Format() OutputFormat {
-	return Csv
-}

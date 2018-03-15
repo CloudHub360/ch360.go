@@ -26,10 +26,13 @@ const (
 type ResultsFormatter interface {
 	WriteResult(writer io.Writer, filename string, result interface{}, options FormatOption) error
 	Flush(writer io.Writer) error
-	Format() OutputFormat
 }
 
 func NewResultsFormatterFor(params *config.RunParams) (ResultsFormatter, error) {
+	if params.Read {
+		return NewReadResultsFormatter(), nil
+	}
+
 	var formatter ResultsFormatter
 	switch OutputFormat(params.OutputFormat) {
 	case Table:

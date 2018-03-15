@@ -64,7 +64,3 @@ func (f *JsonExtractionResultsFormatter) Flush(writer io.Writer) error {
 	}
 	return nil
 }
-
-func (f *JsonExtractionResultsFormatter) Format() OutputFormat {
-	return Json
-}

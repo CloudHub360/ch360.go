@@ -54,7 +54,3 @@ func (f *CSVClassifyResultsFormatter) WriteResult(writer io.Writer, filename str
 func (f *CSVClassifyResultsFormatter) Flush(writer io.Writer) error {
 	return nil
 }
-
-func (f *CSVClassifyResultsFormatter) Format() OutputFormat {
-	return Csv
-}

@@ -44,7 +44,3 @@ func (f *TableClassifyResultsFormatter) WriteResult(writer io.Writer, fullPath s
 func (f *TableClassifyResultsFormatter) Flush(writer io.Writer) error {
 	return nil
 }
-
-func (f *TableClassifyResultsFormatter) Format() OutputFormat {
-	return Table
-}

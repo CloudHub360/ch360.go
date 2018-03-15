@@ -14,6 +14,7 @@ type RunParams struct {
 	Create   bool
 	Delete   bool
 	List     bool
+	Read     bool
 
 	Extractor   bool
 	Classifier  bool
@@ -35,6 +36,9 @@ type RunParams struct {
 	FilePattern string `docopt:"<file>"`
 	Name        string `docopt:"<name>"`
 
+	ReadPDF  bool `docopt:"pdf"`
+	ReadText bool `docopt:"txt"`
+
 	args docopt.Opts
 }
 
@@ -48,6 +52,7 @@ const (
 	List
 	Create
 	Delete
+	Read
 )
 
 //go:generate stringer -type=Noun
@@ -71,6 +76,8 @@ func (r RunParams) Verb() Verb {
 		return Classify
 	} else if r.Extract {
 		return Extract
+	} else if r.Read {
+		return Read
 	}
 
 	return -1
