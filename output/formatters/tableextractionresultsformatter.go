@@ -58,7 +58,3 @@ func (f *TableExtractionResultsFormatter) WriteResult(writer io.Writer, fullPath
 func (f *TableExtractionResultsFormatter) Flush(writer io.Writer) error {
 	return nil
 }
-
-func (f *TableExtractionResultsFormatter) Format() OutputFormat {
-	return Table
-}

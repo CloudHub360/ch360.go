@@ -8,20 +8,6 @@ import (
 	"os"
 )
 
-var OutputFormatExtensions = map[formatters.OutputFormat]string{
-	formatters.Table: ".tab",
-	formatters.Json:  ".json",
-	formatters.Csv:   ".csv",
-}
-
-type OutputType int
-
-const (
-	MultipleFiles OutputType = iota
-	SingleFile
-	Stdout
-)
-
 func NewResultsWriterFor(params *config.RunParams) (ResultsWriter, error) {
 
 	formatter, err := formatters.NewResultsFormatterFor(params)
@@ -32,36 +18,31 @@ func NewResultsWriterFor(params *config.RunParams) (ResultsWriter, error) {
 
 	if params.MultiFileOut {
 		// Write output to a file "next to" each input file, with the specified extension
-		return NewResultsWriter(MultipleFiles, "", formatter)
+		outputFileExtension := fileExtensionFor(params)
+		writerFactory := sinks.NewExtensionSwappingFileSinkFactory(outputFileExtension)
+		return NewIndividualResultsWriter(writerFactory, formatter), nil
 	} else if params.OutputFile != "" {
 		// Write output to a single "combined results" file with the specified filename
-		return NewResultsWriter(SingleFile, params.OutputFile, formatter)
+		return NewCombinedResultsWriter(sinks.NewBasicFileSink(afero.NewOsFs(), params.OutputFile), formatter), nil
 	} else {
 		// Write output to the console
-		return NewResultsWriter(Stdout, "", formatter)
+		return NewCombinedResultsWriter(sinks.NewBasicWriterSink(os.Stdout), formatter), nil
 	}
 }
 
-func NewResultsWriter(outputType OutputType, outputFilename string, formatter formatters.ResultsFormatter) (ResultsWriter, error) {
-	var (
-		outputFileExtension string
-		resultsWriter       ResultsWriter
-		writerFactory       sinks.SinkFactory
-	)
-
-	outputFileExtension = OutputFormatExtensions[formatter.Format()]
-
-	switch outputType {
-	case MultipleFiles:
-		// Write output to a file "next to" each input file, with the specified extension
-		writerFactory = sinks.NewExtensionSwappingFileSinkFactory(outputFileExtension)
-		resultsWriter = NewIndividualResultsWriter(writerFactory, formatter)
-	case SingleFile:
-		// Write output to a single "combined results" file with the specified filename
-		resultsWriter = NewCombinedResultsWriter(sinks.NewBasicFileSink(afero.NewOsFs(), outputFilename), formatter)
-	case Stdout:
-		// Write output to the console
-		resultsWriter = NewCombinedResultsWriter(sinks.NewBasicWriterSink(os.Stdout), formatter)
+func fileExtensionFor(params *config.RunParams) string {
+	if params.Verb() == config.Read {
+		if params.ReadPDF {
+			return ".ocr.pdf"
+		} else {
+			return ".ocr.txt"
+		}
 	}
-	return resultsWriter, nil
+
+	var outputFormatExtensions = map[formatters.OutputFormat]string{
+		formatters.Table: ".tab",
+		formatters.Json:  ".json",
+		formatters.Csv:   ".csv",
+	}
+	return outputFormatExtensions[formatters.OutputFormat(params.OutputFormat)]
 }
