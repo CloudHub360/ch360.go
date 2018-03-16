@@ -20,7 +20,7 @@ type ProcessorFuncFactory interface {
 
 //go:generate mockery -name "HandlerFuncFactory"
 type HandlerFuncFactory interface {
-	HandlerFor(cancel context.CancelFunc, filename string, progressHandler ProgressHandler, errs *[]error) pool.HandlerFunc
+	HandlerFor(cancel context.CancelFunc, filename string) pool.HandlerFunc
 }
 
 func (p *ParallelFilesProcessor) RunWithGlob(ctx context.Context,
@@ -59,7 +59,19 @@ func (p *ParallelFilesProcessor) Run(ctx context.Context,
 
 		processFileJob := pool.NewJob(
 			processorFuncFactory.ProcessorFor(ctx, filename),
-			handlerFuncFactory.HandlerFor(cancel, filename, p.ProgressHandler, &errs))
+			func(result interface{}, e error) {
+				if e != nil {
+					errs = append(errs, e)
+					p.ProgressHandler.NotifyErr(filename, e)
+				} else {
+					if e = p.ProgressHandler.Notify(filename, result); e != nil {
+						// An error occurred while writing output
+						errs = append(errs, e)
+					}
+				}
+				externalHandler := handlerFuncFactory.HandlerFor(cancel, filename)
+				externalHandler(result, e)
+			})
 
 		processFileJobs = append(processFileJobs, processFileJob)
 	}

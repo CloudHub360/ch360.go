@@ -47,7 +47,7 @@ func (suite *ParallelFilesProcessorSuite) SetupTest() {
 	}
 
 	suite.handlerFactory.
-		On("HandlerFor", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		On("HandlerFor", mock.Anything, mock.Anything).
 		Return(suite.handlerFunc)
 
 	suite.processorFactory.
