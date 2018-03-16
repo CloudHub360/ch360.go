@@ -24,20 +24,6 @@ func (_m *ResultsFormatter) Flush(writer io.Writer) error {
 	return r0
 }
 
-// Format provides a mock function with given fields:
-func (_m *ResultsFormatter) Format() formatters.OutputFormat {
-	ret := _m.Called()
-
-	var r0 formatters.OutputFormat
-	if rf, ok := ret.Get(0).(func() formatters.OutputFormat); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(formatters.OutputFormat)
-	}
-
-	return r0
-}
-
 // WriteResult provides a mock function with given fields: writer, filename, result, options
 func (_m *ResultsFormatter) WriteResult(writer io.Writer, filename string, result interface{}, options formatters.FormatOption) error {
 	ret := _m.Called(writer, filename, result, options)
