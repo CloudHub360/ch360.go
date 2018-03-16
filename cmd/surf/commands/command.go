@@ -30,6 +30,9 @@ func CommandFor(runParams *config.RunParams) (Command, error) {
 	} else if runParams.Verb() == config.Extract {
 		return NewExtractFilesCommandFromArgs(runParams, apiClient)
 
+	} else if runParams.Verb() == config.Read {
+		return NewReadFilesCommandFromArgs(runParams, apiClient)
+
 	} else if runParams.Noun() == config.Classifier {
 		switch runParams.Verb() {
 		case config.Create:
