@@ -17,14 +17,15 @@ func main() {
 
 Usage:
   surf login [options]
-  surf ` + commands.CreateClassifierCommand + ` <name> <samples-zip> [options]
-  surf ` + commands.CreateExtractorCommand + ` <name> <config-file> [options]
-  surf ` + commands.DeleteClassifierCommand + ` <name> [options]
-  surf ` + commands.DeleteExtractorCommand + ` <name> [options]
-  surf ` + commands.ListClassifiersCommand + ` [options]
-  surf ` + commands.ListExtractorsCommand + ` [options]
-  surf ` + commands.ClassifyFilesCommand + ` <file> <classifier> [options]
-  surf ` + commands.ExtractFilesCommand + ` <file> <extractor> [options]
+  surf ` + new(commands.CreateClassifier).Usage() + ` <name> <samples-zip> [options]
+  surf ` + new(commands.CreateExtractor).Usage() + ` <name> <config-file> [options]
+  surf ` + new(commands.DeleteClassifier).Usage() + ` <name> [options]
+  surf ` + new(commands.DeleteExtractor).Usage() + ` <name> [options]
+  surf ` + new(commands.ListClassifiers).Usage() + ` [options]
+  surf ` + new(commands.ListExtractors).Usage() + ` [options]
+  surf ` + new(commands.ClassifyCommand).Usage() + ` <file> <classifier> [options]
+  surf ` + new(commands.Extract).Usage() + ` <file> <extractor> [options]
+  surf ` + new(commands.Read).Usage() + ` <file> (pdf|txt) [options]
   surf -h | --help
   surf -v | --version
 
@@ -33,7 +34,8 @@ Options:
   -v, --version                    : Show application version
   -i, --client-id <id>             : Client ID
   -s, --client-secret <secret>     : Client secret
-  -f, --output-format <format>     : Output format for classification results. Allowed values: table, csv, json [default: table]
+  -f, --output-format <format>     : Output format for classification and extraction results.        
+                                     Allowed values: table, csv, json [default: table]
   -o, --output-file <file>         : Write all results to the specified file
   -m, --multiple-files             : Write results output to multiple files with the same
                                    : basename as the input
