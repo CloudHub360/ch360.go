@@ -58,7 +58,6 @@ func (c *ProgressHandler) NotifyErr(filename string, err error) error {
 		return errors.New("NotifyStart must be called before NotifyErr")
 	}
 	c.updateProgressBar()
-	fmt.Fprintln(c.out, err)
 	return nil
 }
 
