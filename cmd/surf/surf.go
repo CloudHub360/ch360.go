@@ -25,7 +25,7 @@ Usage:
   surf ` + new(commands.ListExtractors).Usage() + ` [options]
   surf ` + new(commands.ClassifyCommand).Usage() + ` <file> <classifier> [options]
   surf ` + new(commands.Extract).Usage() + ` <file> <extractor> [options]
-  surf ` + new(commands.Read).Usage() + ` <file> (pdf|txt) [options]
+  surf ` + new(commands.Read).Usage() + ` <file> (pdf|txt|wvdoc) (-o <file>|-m) [options]
   surf -h | --help
   surf -v | --version
 

@@ -37,11 +37,13 @@ type ReadMode int
 const (
 	ReadPDF ReadMode = iota
 	ReadText
+	ReadWvdoc
 )
 
 var readModeHeaders = map[ReadMode]string{
-	ReadPDF:  "application/pdf",
-	ReadText: "text/plain",
+	ReadPDF:   "application/pdf",
+	ReadText:  "text/plain",
+	ReadWvdoc: "application/vnd.waives.resultformats.read+zip",
 }
 
 func (client *DocumentsClient) ReadResult(ctx context.Context,
