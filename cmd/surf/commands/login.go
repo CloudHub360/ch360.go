@@ -34,7 +34,7 @@ func NewLogin(out io.Writer, appDir config.ConfigurationWriter, tokenRetriever a
 
 func (cmd *Login) Execute(ctx context.Context) error {
 
-	fmt.Fprint(cmd.writer, "Logging in... ")
+	fmt.Fprintln(cmd.writer, "Logging in... ")
 
 	err := cmd.execute()
 
