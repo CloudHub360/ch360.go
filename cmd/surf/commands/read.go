@@ -99,6 +99,8 @@ func NewReadFilesCommandFromArgs(params *config.RunParams, client *ch360.ApiClie
 	var readMode = ch360.ReadText
 	if params.ReadPDF {
 		readMode = ch360.ReadPDF
+	} else if params.ReadWvdoc {
+		readMode = ch360.ReadWvdoc
 	}
 
 	return &Read{

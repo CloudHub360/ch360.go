@@ -36,8 +36,9 @@ type RunParams struct {
 	FilePattern string `docopt:"<file>"`
 	Name        string `docopt:"<name>"`
 
-	ReadPDF  bool `docopt:"pdf"`
-	ReadText bool `docopt:"txt"`
+	ReadPDF   bool `docopt:"pdf"`
+	ReadText  bool `docopt:"txt"`
+	ReadWvdoc bool `docopt:"wvdoc"`
 
 	args docopt.Opts
 }

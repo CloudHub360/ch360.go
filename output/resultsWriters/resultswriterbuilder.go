@@ -34,8 +34,10 @@ func fileExtensionFor(params *config.RunParams) string {
 	if params.Verb() == config.Read {
 		if params.ReadPDF {
 			return ".ocr.pdf"
-		} else {
+		} else if params.ReadText {
 			return ".ocr.txt"
+		} else {
+			return ".ocr.wvdoc"
 		}
 	}
 
