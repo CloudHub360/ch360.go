@@ -18,16 +18,10 @@ type ProcessorFuncFactory interface {
 	ProcessorFor(ctx context.Context, filename string) pool.ProcessorFunc
 }
 
-//go:generate mockery -name "HandlerFuncFactory"
-type HandlerFuncFactory interface {
-	HandlerFor(cancel context.CancelFunc, filename string) pool.HandlerFunc
-}
-
 func (p *ParallelFilesProcessor) RunWithGlob(ctx context.Context,
 	filesPattern string,
 	parallelism int,
-	processorFuncFactory ProcessorFuncFactory,
-	handlerFuncFactory HandlerFuncFactory) error {
+	processorFuncFactory ProcessorFuncFactory) error {
 
 	files, _ := zglob.Glob(filesPattern)
 	fileCount := len(files)
@@ -35,14 +29,13 @@ func (p *ParallelFilesProcessor) RunWithGlob(ctx context.Context,
 		return ErrGlobMatchesNoFiles
 	}
 
-	return p.Run(ctx, files, parallelism, processorFuncFactory, handlerFuncFactory)
+	return p.Run(ctx, files, parallelism, processorFuncFactory)
 }
 
 func (p *ParallelFilesProcessor) Run(ctx context.Context,
 	files []string,
 	parallelism int,
-	processorFuncFactory ProcessorFuncFactory,
-	handlerFuncFactory HandlerFuncFactory) error {
+	processorFuncFactory ProcessorFuncFactory) error {
 
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -63,14 +56,14 @@ func (p *ParallelFilesProcessor) Run(ctx context.Context,
 				if e != nil {
 					errs = append(errs, e)
 					p.ProgressHandler.NotifyErr(filename, e)
+					cancel()
 				} else {
 					if e = p.ProgressHandler.Notify(filename, result); e != nil {
 						// An error occurred while writing output
 						errs = append(errs, e)
+						cancel()
 					}
 				}
-				externalHandler := handlerFuncFactory.HandlerFor(cancel, filename)
-				externalHandler(result, e)
 			})
 
 		processFileJobs = append(processFileJobs, processFileJob)

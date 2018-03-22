@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-const TotalDocumentSlots = 10
+var TotalDocumentSlots = 10
 
 //go:generate mockery -name "DocumentCreator|DocumentDeleter|DocumentClassifier|DocumentGetter|DocumentExtractor"
 type DocumentCreator interface {

@@ -21,7 +21,6 @@ type ParallelFilesProcessorSuite struct {
 	sut              *commands.ParallelFilesProcessor
 	progressHandler  *mocks.ProgressHandler
 	processorFactory *mocks.ProcessorFuncFactory
-	handlerFactory   *mocks.HandlerFuncFactory
 
 	processorFunc pool.ProcessorFunc
 	handlerFunc   pool.HandlerFunc
@@ -31,7 +30,6 @@ type ParallelFilesProcessorSuite struct {
 
 func (suite *ParallelFilesProcessorSuite) SetupTest() {
 	suite.processorFactory = new(mocks.ProcessorFuncFactory)
-	suite.handlerFactory = new(mocks.HandlerFuncFactory)
 
 	suite.progressHandler = new(mocks.ProgressHandler)
 
@@ -45,10 +43,6 @@ func (suite *ParallelFilesProcessorSuite) SetupTest() {
 	}
 	suite.handlerFunc = func(value interface{}, e error) {
 	}
-
-	suite.handlerFactory.
-		On("HandlerFor", mock.Anything, mock.Anything).
-		Return(suite.handlerFunc)
 
 	suite.processorFactory.
 		On("ProcessorFor", mock.Anything, mock.Anything).
@@ -67,14 +61,14 @@ func TestParallelFilesProcessorSuiteRunner(t *testing.T) {
 }
 
 func (suite *ParallelFilesProcessorSuite) Test_Err_Returned_When_Files_Glob_Matches_No_Files() {
-	err := suite.sut.RunWithGlob(suite.ctx, "not-present/*.pdf", rand.Int(), suite.processorFactory, suite.handlerFactory)
+	err := suite.sut.RunWithGlob(suite.ctx, "not-present/*.pdf", rand.Int(), suite.processorFactory)
 
 	suite.Assert().Equal(commands.ErrGlobMatchesNoFiles, err)
 }
 
 func (suite *ParallelFilesProcessorSuite) Test_Err_Returned_When_File_Is_Not_Present() {
 
-	err := suite.sut.RunWithGlob(suite.ctx, "not-present.pdf", rand.Int(), suite.processorFactory, suite.handlerFactory)
+	err := suite.sut.RunWithGlob(suite.ctx, "not-present.pdf", rand.Int(), suite.processorFactory)
 
 	suite.Assert().Equal(commands.ErrGlobMatchesNoFiles, err)
 }
@@ -89,7 +83,7 @@ func (suite *ParallelFilesProcessorSuite) Test_ProcessorFunc_Called_Once_Per_Fil
 	defer deleteFiles(files)
 
 	// Act
-	suite.sut.Run(suite.ctx, files, 1, processorFactory, suite.handlerFactory)
+	suite.sut.Run(suite.ctx, files, 1, processorFactory)
 
 	// Assert
 	suite.Assert().Equal(expectedProcessCalls, processorFactory.processorCalls)
@@ -112,7 +106,7 @@ func (suite *ParallelFilesProcessorSuite) Test_ProcessorFunc_Called_In_Parallel(
 
 	// Act
 	start := time.Now()
-	suite.sut.Run(suite.ctx, files, parallelism, processorFactory, suite.handlerFactory)
+	suite.sut.Run(suite.ctx, files, parallelism, processorFactory)
 	parallelDuration := time.Since(start)
 
 	// Assert
@@ -125,7 +119,7 @@ func (suite *ParallelFilesProcessorSuite) Test_ProgressHandler_NotifyStart_And_N
 		files      = someTempFiles(filesCount)
 	)
 	defer deleteFiles(files)
-	suite.sut.Run(suite.ctx, files, rand.Int(), suite.processorFactory, suite.handlerFactory)
+	suite.sut.Run(suite.ctx, files, rand.Int(), suite.processorFactory)
 
 	suite.progressHandler.AssertCalled(suite.T(), "NotifyStart", filesCount)
 	suite.progressHandler.AssertCalled(suite.T(), "NotifyFinish")
@@ -142,7 +136,7 @@ func (suite *ParallelFilesProcessorSuite) Test_First_Error_From_Processor_Func_R
 	defer deleteFiles(files)
 
 	// Act
-	receivedErr := suite.sut.Run(suite.ctx, files, 1, processorFactory, suite.handlerFactory)
+	receivedErr := suite.sut.Run(suite.ctx, files, 1, processorFactory)
 
 	// Assert
 	suite.Assert().Equal(expectedErr, receivedErr)

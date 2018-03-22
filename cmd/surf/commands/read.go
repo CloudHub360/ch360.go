@@ -24,8 +24,7 @@ type FilesProcessor interface {
 	RunWithGlob(ctx context.Context,
 		filesPattern string,
 		parallelism int,
-		processorFuncFactory ProcessorFuncFactory,
-		handlerFuncFactory HandlerFuncFactory) error
+		processorFuncFactory ProcessorFuncFactory) error
 }
 
 type Read struct {
@@ -35,15 +34,6 @@ type Read struct {
 	filesProcessor  FilesProcessor
 	mode            ch360.ReadMode
 	filesPattern    string
-}
-
-func (cmd *Read) HandlerFor(cancel context.CancelFunc, filename string) pool.HandlerFunc {
-	return func(value interface{}, err error) {
-		if err != nil {
-			// Don't process any more if there's an error
-			cancel()
-		}
-	}
 }
 
 func (cmd *Read) ProcessorFor(ctx context.Context, filename string) pool.ProcessorFunc {
