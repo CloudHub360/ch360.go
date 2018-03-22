@@ -34,7 +34,7 @@ func NewLogin(out io.Writer, appDir config.ConfigurationWriter, tokenRetriever a
 
 func (cmd *Login) Execute(ctx context.Context) error {
 
-	fmt.Fprintln(cmd.writer, "Logging in... ")
+	fmt.Fprint(cmd.writer, "Logging in... ")
 
 	err := cmd.execute()
 
@@ -52,7 +52,7 @@ func (cmd *Login) execute() error {
 	)
 
 	if cmd.clientId == "" {
-		fmt.Print("Client Id: ")
+		fmt.Print("\nClient Id: ")
 		cmd.clientId, err = cmd.readSecretFromConsole()
 		if err != nil {
 			return err
