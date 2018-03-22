@@ -14,7 +14,7 @@ import (
 
 const ReadFilesCommand = "read"
 
-//go:generate mockery -name "FileReader"
+//go:generate mockery -name "FileReader|FilesProcessor"
 
 type FileReader interface {
 	Read(ctx context.Context, fileContent io.Reader, mode ch360.ReadMode) (io.ReadCloser, error)
@@ -70,8 +70,23 @@ func (cmd *Read) Execute(ctx context.Context) error {
 	return cmd.filesProcessor.RunWithGlob(ctx,
 		cmd.filesPattern,
 		parallelWorkers,
-		cmd,
 		cmd)
+}
+
+func NewReadFilesCommand(reader FileReader,
+	processor FilesProcessor,
+	mode ch360.ReadMode,
+	filesPattern string,
+	parallelWorkers int,
+	getter ch360.DocumentGetter) *Read {
+	return &Read{
+		filesProcessor:  processor,
+		fileReader:      reader,
+		documentGetter:  getter,
+		parallelWorkers: parallelWorkers,
+		filesPattern:    filesPattern,
+		mode:            mode,
+	}
 }
 
 func NewReadFilesCommandFromArgs(params *config.RunParams, client *ch360.ApiClient) (*Read, error) {
@@ -93,14 +108,14 @@ func NewReadFilesCommandFromArgs(params *config.RunParams, client *ch360.ApiClie
 		readMode = ch360.ReadWvdoc
 	}
 
-	return &Read{
-		filesProcessor:  filesProcessor,
-		fileReader:      ch360.NewFileReader(client.Documents, client.Documents, client.Documents),
-		documentGetter:  client.Documents,
-		parallelWorkers: 10,
-		filesPattern:    params.FilePattern,
-		mode:            readMode,
-	}, nil
+	fileReader := ch360.NewFileReader(client.Documents, client.Documents, client.Documents)
+	return NewReadFilesCommand(fileReader,
+		filesProcessor,
+		readMode,
+		params.FilePattern,
+		10,
+		client.Documents), nil
+
 }
 
 func (cmd Read) Usage() string {
