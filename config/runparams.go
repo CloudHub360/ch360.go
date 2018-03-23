@@ -132,10 +132,11 @@ func (r RunParams) Args() docopt.Opts {
 }
 
 func shouldShowProgressBar(writingToFile bool) bool {
-	return writingToFile || isRedirected(os.Stdout.Fd())
+	return writingToFile || IsOutputRedirected()
 }
 
-func isRedirected(fd uintptr) bool {
+func IsOutputRedirected() bool {
+	fd := os.Stdout.Fd()
 	return !isatty.IsTerminal(fd) &&
 		!isatty.IsCygwinTerminal(fd)
 }

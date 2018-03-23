@@ -1,6 +1,7 @@
 function Invoke-App {
     $ErrorActionPreference = "Continue"
     try {
+        Write-Information "Running: surf $args"
         & surf $args
     } catch [System.Management.Automation.RemoteException] {
         # Catch exceptions for messages redirected from stderr and
