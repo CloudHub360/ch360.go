@@ -108,6 +108,11 @@ func NewReadFilesCommandFromArgs(params *config.RunParams, client *ch360.ApiClie
 		readMode = ch360.ReadWvdoc
 	}
 
+	// ensure we're not printing binary data to the console
+	if !config.IsOutputRedirected() && readMode.IsBinary() {
+		return nil, errors.New("Not printing binary data to the console. Did you mean to use '-o'?")
+	}
+
 	fileReader := ch360.NewFileReader(client.Documents, client.Documents, client.Documents)
 	return NewReadFilesCommand(fileReader,
 		filesProcessor,

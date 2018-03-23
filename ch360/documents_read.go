@@ -40,6 +40,10 @@ const (
 	ReadWvdoc
 )
 
+func (mode ReadMode) IsBinary() bool {
+	return mode != ReadText
+}
+
 var readModeHeaders = map[ReadMode]string{
 	ReadPDF:   "application/pdf",
 	ReadText:  "text/plain",
