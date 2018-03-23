@@ -17,7 +17,12 @@ function Get-Extractors {
 }
 
 function Remove-Extractor([Parameter(ValueFromPipeline=$true)]$extractorName) {
+    Write-Debug "Deleting extractor: $extractorName"
     Invoke-App delete extractor $extractorName 2>&1
+}
+
+function Remove-UserExtractors() {
+    Get-Extractors | Where-Object { !$_.StartsWith("waives.") } | Remove-Extractor
 }
 
 Describe "extractors" {
@@ -26,7 +31,7 @@ Describe "extractors" {
     }
 
     BeforeEach {
-        Get-Extractors | Remove-Extractor
+        Remove-UserExtractors
     }
 
     It "should be created from an fpxlc definition file" {
@@ -37,7 +42,7 @@ Creating extractor '$extractorName'... [OK]
         $LASTEXITCODE | Should -Be 0
 
         # Verify
-        Get-Extractors | Format-MultilineOutput | Should -Contain $extractorName
+        Get-Extractors | Format-MultilineOutput | Should -Match $extractorName
     }
 
     It "should not be created from an invalid fpxlc definition file" {
@@ -49,7 +54,7 @@ The file supplied is not a valid extractor configuration file.
         $LASTEXITCODE | Should -Be 1
 
         # Verify
-        Get-Extractors | Format-MultilineOutput | Should -Not -Contain $extractorName
+        Get-Extractors | Format-MultilineOutput | Should -Not -Match $extractorName
     }
 
     It "should not be created from a non-existent fpxlc definition file" {
@@ -58,11 +63,11 @@ The file supplied is not a valid extractor configuration file.
         $LASTEXITCODE | Should -Be 1
 
         # Verify
-        Get-Extractors | Format-MultilineOutput | Should -Not -Contain $extractorName
+        Get-Extractors | Format-MultilineOutput | Should -Not -Match $extractorName
     }
 
     AfterAll {
-        Get-Extractors | Remove-Extractor
+        Remove-UserExtractors
         Restore-ApplicationFolder
     }
 }
@@ -73,7 +78,7 @@ Describe "extraction" {
     }
 
     BeforeEach {
-        Get-Extractors | Remove-Extractor
+        Remove-UserExtractors
 
         $extractorDefinition = (Join-Path $PSScriptRoot "extract-amount.fpxlc")
         New-Extractor $extractorName $extractorDefinition
@@ -172,7 +177,7 @@ document1.pdf                       `$5.50
     }
 
     AfterAll {
-        Get-Extractors | Remove-Extractor
+        Remove-UserExtractors
         Restore-ApplicationFolder
     }
 }
