@@ -109,7 +109,10 @@ func NewReadFilesCommandFromArgs(params *config.RunParams, client *ch360.ApiClie
 	}
 
 	// ensure we're not printing binary data to the console
-	if !config.IsOutputRedirected() && readMode.IsBinary() {
+	if !config.IsOutputRedirected() &&
+		readMode.IsBinary() &&
+		params.OutputFile == "" &&
+		!params.MultiFileOut {
 		return nil, errors.New("Not printing binary data to the console. Did you mean to use '-o'?")
 	}
 
