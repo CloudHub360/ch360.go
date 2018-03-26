@@ -112,7 +112,8 @@ func NewReadFilesCommandFromArgs(params *config.RunParams, client *ch360.ApiClie
 	if !config.IsOutputRedirected() &&
 		readMode.IsBinary() &&
 		!params.IsOutputSpecified() {
-		return nil, errors.New("Not printing binary data to the console. Did you mean to use '-o'?")
+		return nil, errors.New("You must use '-o' or '-m' or redirect stdout when the output " +
+			"file format is pdf.")
 	}
 
 	fileReader := ch360.NewFileReader(client.Documents, client.Documents, client.Documents)
