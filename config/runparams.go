@@ -140,3 +140,7 @@ func IsOutputRedirected() bool {
 	return !isatty.IsTerminal(fd) &&
 		!isatty.IsCygwinTerminal(fd)
 }
+
+func (r *RunParams) IsOutputSpecified() bool {
+	return r.OutputFile != "" || r.MultiFileOut
+}
