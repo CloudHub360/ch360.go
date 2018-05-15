@@ -76,5 +76,5 @@ func initSurf(params *config.RunParams) (*ch360.ApiClient, error) {
 		return nil, err
 	}
 
-	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret), nil
+	return ch360.NewApiClient(DefaultHttpClient, params.ApiURL, clientId, clientSecret), nil
 }

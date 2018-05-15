@@ -42,6 +42,8 @@ Options:
                                    : basename as the input
   -p, --progress                   : Show progress when classifying files. Only visible when
                                      redirecting stdout or in conjunction with -m or -o.
+  --api <url>                      : The URL of the waives.io service to use 
+                                     [default: ` + ch360.ApiAddress + `]
 `
 
 	filenameExamples := `
@@ -69,7 +71,7 @@ Filename and glob pattern examples:
 
 	var cmd commands.Command
 	if login, _ := args.Bool("login"); login {
-		tokenRetriever := ch360.NewTokenRetriever(commands.DefaultHttpClient, ch360.ApiAddress)
+		tokenRetriever := ch360.NewTokenRetriever(commands.DefaultHttpClient, runParams.ApiURL)
 		cmd = commands.NewLoginFrom(runParams, os.Stdout, appDir, tokenRetriever)
 	} else {
 		cmd, err = commands.CommandFor(runParams)

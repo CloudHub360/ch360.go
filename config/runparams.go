@@ -42,6 +42,8 @@ type RunParams struct {
 	ReadText  bool `docopt:"txt"`
 	ReadWvdoc bool `docopt:"wvdoc"`
 
+	ApiURL string `docopt:"--api"`
+
 	args docopt.Opts
 }
 
