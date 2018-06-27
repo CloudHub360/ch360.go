@@ -238,6 +238,23 @@ func (suite *DocumentsClientSuite) Test_Extract_Returns_Results() {
 	assert.Equal(suite.T(), "$5.50", fieldResult.Result.Text)
 }
 
+func (suite *DocumentsClientSuite) Test_Extract_Deserialises_Null_Result_Property_To_Nil_Field_Result() {
+	// This is a regression test for issue #85
+	// If a field in the extraction response is empty and has a null result (i.e. "result": null)
+	// then when it is deserialised to a FieldResult, check its Result property is nil rather than
+	// an empty struct.
+	suite.httpClient.
+		On("Do", mock.Anything).
+		Return(AnHttpResponse([]byte(exampleExtractDocumentResponseWithNullResult)), nil)
+
+	extractionResult, err := suite.sut.Extract(context.Background(), suite.documentId, suite.extractorName)
+
+	assert.Nil(suite.T(), err)
+	require.Equal(suite.T(), 1, len(extractionResult.FieldResults))
+	fieldResult := extractionResult.FieldResults[0]
+	assert.Nil(suite.T(), fieldResult.Result)
+}
+
 func (suite *DocumentsClientSuite) Test_Extract_Returns_Error_If_Response_Cannot_Be_Parsed() {
 	suite.httpClient.
 		On("Do", mock.Anything).
@@ -392,6 +409,30 @@ var exampleExtractDocumentResponse = `{
 					}
 				]
 			},
+			"alternative_results": null,
+			"tabular_results": null
+		}
+	],
+	"page_sizes": {
+		"page_count": 1,
+		"pages": [
+			{
+				"page_number": 1,
+				"width": 611.0,
+				"height": 1008.0
+			}
+		]
+	}
+}
+`
+
+var exampleExtractDocumentResponseWithNullResult = `{
+	"field_results": [
+		{
+			"field_name": "Amount",
+			"rejected": false,
+			"reject_reason": "Empty",
+			"result": null,
 			"alternative_results": null,
 			"tabular_results": null
 		}
