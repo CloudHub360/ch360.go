@@ -4,7 +4,7 @@ type FieldResult struct {
 	FieldName    string `json:"field_name"`
 	Rejected     bool   `json:"rejected"`
 	RejectReason string `json:"reject_reason"`
-	Result       struct {
+	Result       *struct {
 		Text           string      `json:"text"`
 		Value          interface{} `json:"value"`
 		Rejected       bool        `json:"rejected"`
