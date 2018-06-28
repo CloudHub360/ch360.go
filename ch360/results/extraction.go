@@ -24,7 +24,7 @@ type FieldResult struct {
 	TabularResults     interface{} `json:"tabular_results"`
 }
 
-type PageSizes struct {
+type Document struct {
 	PageCount int `json:"page_count"`
 	Pages     []struct {
 		PageNumber int     `json:"page_number"`
@@ -35,5 +35,5 @@ type PageSizes struct {
 
 type ExtractionResult struct {
 	FieldResults []FieldResult `json:"field_results"`
-	PageSizes    PageSizes     `json:"document"`
+	Document     Document      `json:"document"`
 }
