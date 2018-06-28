@@ -20,7 +20,7 @@ type FieldResult struct {
 			PageNumber int     `json:"page_number"`
 		} `json:"areas"`
 	} `json:"result"`
-	AlternativeResults interface{} `json:"alternative_results"`
+	AlternativeResults interface{} `json:"alternatives"`
 	TabularResults     interface{} `json:"tabular_results"`
 }
 
@@ -35,5 +35,5 @@ type PageSizes struct {
 
 type ExtractionResult struct {
 	FieldResults []FieldResult `json:"field_results"`
-	PageSizes    PageSizes     `json:"page_sizes"`
+	PageSizes    PageSizes     `json:"document"`
 }
