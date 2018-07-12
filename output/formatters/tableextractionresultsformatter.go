@@ -18,14 +18,17 @@ func NewTableExtractionResultsFormatter() *TableExtractionResultsFormatter {
 	return &TableExtractionResultsFormatter{}
 }
 
-var FileHeaderFmt = "%-36.36s"
-var FieldColFmt = "%-32.32s"
+var FileColumnWidth = 36
+var FieldColumnWidth = 32
+var FileColumnFmt = fmt.Sprintf("%%-%d.%ds", FileColumnWidth, FileColumnWidth)
+var FieldColumnFmt = fmt.Sprintf("%%-%d.%ds", FieldColumnWidth, FieldColumnWidth)
+var NoResultText = "(no result)"
 
 func (f *TableExtractionResultsFormatter) writeHeaderFor(writer io.Writer, result *results.ExtractionResult) error {
-	var header = fmt.Sprintf(FileHeaderFmt, "File")
+	var header = fmt.Sprintf(FileColumnFmt, "File")
 
 	for _, fieldResult := range result.FieldResults {
-		header = header + fmt.Sprintf(FieldColFmt, fieldResult.FieldName)
+		header = header + fmt.Sprintf(FieldColumnFmt, fieldResult.FieldName)
 	}
 	_, err := fmt.Fprintln(writer, strings.TrimSpace(header))
 	return err
@@ -44,10 +47,14 @@ func (f *TableExtractionResultsFormatter) WriteResult(writer io.Writer, fullPath
 
 	filename := filepath.Base(fullPath)
 
-	var row = fmt.Sprintf(FileHeaderFmt, filename)
+	var row = fmt.Sprintf(FileColumnFmt, filename)
 
 	for _, fieldResult := range extractionResult.FieldResults {
-		row = row + fmt.Sprintf(FieldColFmt, fieldResult.Result.Text)
+		resultText := NoResultText
+		if fieldResult.Result != nil {
+			resultText = fieldResult.Result.Text
+		}
+		row = row + fmt.Sprintf(FieldColumnFmt, resultText)
 	}
 
 	fmt.Fprintln(writer, strings.TrimSpace(row))

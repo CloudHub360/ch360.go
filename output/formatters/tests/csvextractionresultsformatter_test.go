@@ -37,7 +37,7 @@ func (suite *CSVExtractionResultsFormatterSuite) TestWrites_Filename() {
 	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result, 0)
 
 	require.Nil(suite.T(), err)
-	assert.True(suite.T(), strings.Contains(suite.output.String(), suite.filename))
+	suite.assertRecordFieldContent(suite.output.String(), []string{suite.filename, "$5.50"})
 }
 
 func (suite *CSVExtractionResultsFormatterSuite) TestWrites_Column_Per_Field() {
@@ -59,11 +59,26 @@ func (suite *CSVExtractionResultsFormatterSuite) TestWrites_Header_Row_When_Spec
 
 	suite.sut.WriteResult(outputWithHeader, suite.filename, anExtractionResult(), formatters.IncludeHeader)
 	suite.sut.WriteResult(outputWithoutHeader, suite.filename, anExtractionResult(), 0)
-	headerRow, _ := csvReaderFor(outputWithHeader.String()).Read()
-	dataRow, _ := csvReaderFor(outputWithoutHeader.String()).Read()
 
-	assert.Equal(suite.T(), expectedHeadings, headerRow)
-	assert.Equal(suite.T(), expectedData, dataRow)
+	suite.assertRecordFieldContent(outputWithHeader.String(), expectedHeadings)
+	suite.assertRecordFieldContent(outputWithoutHeader.String(), expectedData)
+}
+
+func (suite *CSVExtractionResultsFormatterSuite) TestWrites_Empty_String_On_Null_Result() {
+	result := anExtractionResult()
+	result.FieldResults[0].Result = nil // remove field result
+	expectedValues := []string{suite.filename, ""}
+
+	err := suite.sut.WriteResult(suite.output, suite.filename, result, 0)
+
+	require.Nil(suite.T(), err)
+	suite.assertRecordFieldContent(suite.output.String(), expectedValues)
+}
+
+func (suite *CSVExtractionResultsFormatterSuite) assertRecordFieldContent(recordStr string, content []string) {
+	csvReader := csvReaderFor(recordStr)
+	record, _ := csvReader.Read()
+	suite.Assert().Equal(content, record)
 }
 
 func isCSV(data string) bool {
