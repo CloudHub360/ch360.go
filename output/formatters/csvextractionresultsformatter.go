@@ -60,7 +60,11 @@ func (f *CSVExtractionResultsFormatter) WriteResult(writer io.Writer, filename s
 	record := []string{filepath.FromSlash(filename)}
 
 	for _, field := range extractionResult.FieldResults {
-		record = append(record, field.Result.Text)
+		resultText := ""
+		if field.Result != nil {
+			resultText = field.Result.Text
+		}
+		record = append(record, resultText)
 	}
 
 	return f.writeRecord(writer, record)
