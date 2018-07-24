@@ -20,6 +20,7 @@ type CreateExtractorSuite struct {
 	sut           *commands.CreateExtractor
 	config        *bytes.Buffer
 	extractorName string
+	ctx           context.Context
 }
 
 func (suite *CreateExtractorSuite) SetupTest() {
@@ -34,7 +35,8 @@ func (suite *CreateExtractorSuite) SetupTest() {
 		suite.extractorName,
 		suite.config)
 
-	suite.creator.On("Create", mock.Anything, mock.Anything).Return(nil)
+	suite.creator.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	suite.ctx = context.Background()
 }
 
 func TestCreateExtractorSuiteRunner(t *testing.T) {
@@ -48,13 +50,13 @@ func (suite *CreateExtractorSuite) ClearExpectedCalls() {
 func (suite *CreateExtractorSuite) TestCreateExtractor_Execute_Calls_Client_With_Correct_Args() {
 	suite.sut.Execute(context.Background())
 
-	suite.creator.AssertCalled(suite.T(), "Create", suite.extractorName, suite.config)
+	suite.creator.AssertCalled(suite.T(), "Create", suite.ctx, suite.extractorName, suite.config)
 }
 
 func (suite *CreateExtractorSuite) TestCreateExtractor_Execute_Returns_Error_If_The_Extractor_Cannot_Be_Created() {
 	expectedErr := errors.New("Error message")
 	suite.ClearExpectedCalls()
-	suite.creator.On("Create", mock.Anything, mock.Anything).Return(expectedErr)
+	suite.creator.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(expectedErr)
 
 	receivedErr := suite.sut.Execute(context.Background())
 

@@ -12,11 +12,11 @@ import (
 const ListExtractorsCommand = "list extractors"
 
 type ExtractorDeleter interface {
-	Delete(name string) error
+	Delete(ctx context.Context, name string) error
 }
 
 type ExtractorGetter interface {
-	GetAll() (ch360.ExtractorList, error)
+	GetAll(ctx context.Context) (ch360.ExtractorList, error)
 }
 
 type ExtractorDeleterGetter interface {
@@ -37,7 +37,7 @@ func NewListExtractors(client ExtractorGetter, out io.Writer) *ListExtractors {
 }
 
 func (cmd *ListExtractors) Execute(ctx context.Context) error {
-	extractors, err := cmd.client.GetAll()
+	extractors, err := cmd.client.GetAll(ctx)
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err

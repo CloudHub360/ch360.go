@@ -18,6 +18,7 @@ type ListExtractorSuite struct {
 	sut    *commands.ListExtractors
 	client *mocks.ExtractorGetter
 	output *bytes.Buffer
+	ctx    context.Context
 }
 
 func (suite *ListExtractorSuite) SetupTest() {
@@ -25,6 +26,7 @@ func (suite *ListExtractorSuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
 
 	suite.sut = commands.NewListExtractors(suite.client, suite.output)
+	suite.ctx = context.Background()
 }
 
 func TestListExtractorSuiteRunner(t *testing.T) {
@@ -35,9 +37,9 @@ func (suite *ListExtractorSuite) TestGetAllExtractors_Execute_Calls_The_Client()
 	expectedExtractors := AListOfExtractors("charlie", "jo", "chris").(ch360.ExtractorList)
 	suite.client.On("GetAll", mock.Anything).Return(expectedExtractors, nil)
 
-	suite.sut.Execute(context.Background())
+	suite.sut.Execute(suite.ctx)
 
-	suite.client.AssertCalled(suite.T(), "GetAll")
+	suite.client.AssertCalled(suite.T(), "GetAll", suite.ctx)
 }
 
 func (suite *ListExtractorSuite) TestGetAllExtractors_Execute_Returns_An_Error_If_The_Extractors_Cannot_Be_Retrieved() {
