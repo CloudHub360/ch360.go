@@ -2,6 +2,7 @@ package ch360
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/CloudHub360/ch360.go/net"
 	"io"
@@ -26,30 +27,32 @@ type Extractor struct {
 
 type ExtractorList []Extractor
 
-func (client *ExtractorsClient) issueRequest(method string, extractorName string) (*http.Response, error) {
-	return client.issueRequestWithBody(method, extractorName, nil)
+func (client *ExtractorsClient) issueRequest(ctx context.Context, method string, suffix string) (*http.Response, error) {
+	return client.issueRequestWithBody(ctx, method, suffix, nil)
 }
 
-func (client *ExtractorsClient) issueRequestWithBody(method, extractorName string, body io.Reader) (*http.Response, error) {
+func (client *ExtractorsClient) issueRequestWithBody(ctx context.Context, method, suffix string, body io.Reader) (*http.Response, error) {
 	request, err := http.NewRequest(method,
-		client.baseUrl+"/extractors/"+extractorName,
+		client.baseUrl+"/extractors/"+suffix,
 		body)
 
 	if err != nil {
 		return nil, err
 	}
 
+	request = request.WithContext(ctx)
+
 	return client.requestSender.Do(request)
 }
 
-func (client *ExtractorsClient) Create(name string, config io.Reader) error {
-	_, err := client.issueRequestWithBody("POST", name, config)
+func (client *ExtractorsClient) Create(ctx context.Context, name string, config io.Reader) error {
+	_, err := client.issueRequestWithBody(ctx, "POST", name, config)
 
 	return err
 }
 
-func (client *ExtractorsClient) Delete(name string) error {
-	_, err := client.issueRequest("DELETE", name)
+func (client *ExtractorsClient) Delete(ctx context.Context, name string) error {
+	_, err := client.issueRequest(ctx, "DELETE", name)
 
 	if err != nil {
 		return err
@@ -58,9 +61,9 @@ func (client *ExtractorsClient) Delete(name string) error {
 	return nil
 }
 
-func (client *ExtractorsClient) GetAll() (ExtractorList, error) {
+func (client *ExtractorsClient) GetAll(ctx context.Context) (ExtractorList, error) {
 
-	response, err := client.issueRequest("GET", "")
+	response, err := client.issueRequest(ctx, "GET", "")
 
 	if err != nil {
 		return nil, err

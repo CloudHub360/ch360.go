@@ -2,6 +2,7 @@ package ch360_test
 
 import (
 	"bytes"
+	"context"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/net/mocks"
 	"github.com/stretchr/testify/assert"
@@ -18,6 +19,7 @@ type ExtractorsClientSuite struct {
 	httpClient      *mocks.HttpDoer
 	extractorName   string
 	extractorConfig *bytes.Buffer
+	ctx             context.Context
 }
 
 func (suite *ExtractorsClientSuite) SetupTest() {
@@ -27,6 +29,7 @@ func (suite *ExtractorsClientSuite) SetupTest() {
 	suite.sut = ch360.NewExtractorsClient(apiUrl, suite.httpClient)
 	suite.extractorName = "extractor-name"
 	suite.extractorConfig = &bytes.Buffer{}
+	suite.ctx = context.Background()
 }
 
 func TestExtractorsClientSuiteRunner(t *testing.T) {
@@ -45,6 +48,7 @@ func (suite *ExtractorsClientSuite) request() *http.Request {
 func (suite *ExtractorsClientSuite) AssertRequestIssued(method string, urlPath string) {
 	assert.Equal(suite.T(), method, suite.request().Method)
 	assert.Equal(suite.T(), urlPath, suite.request().URL.Path)
+	assert.Equal(suite.T(), suite.ctx, suite.request().Context())
 }
 
 func (suite *ExtractorsClientSuite) ClearExpectedCalls() {
@@ -57,7 +61,7 @@ func (suite *ExtractorsClientSuite) Test_CreateExtractor_Issues_Create_Extractor
 	suite.extractorConfig.Reset()
 
 	// Act
-	suite.sut.Create(suite.extractorName, suite.extractorConfig)
+	suite.sut.Create(suite.ctx, suite.extractorName, suite.extractorConfig)
 
 	// Assert
 	suite.AssertRequestIssued("POST", apiUrl+"/extractors/"+suite.extractorName)
@@ -65,7 +69,7 @@ func (suite *ExtractorsClientSuite) Test_CreateExtractor_Issues_Create_Extractor
 
 func (suite *ExtractorsClientSuite) Test_DeleteExtractor_Issues_Delete_Extractor_Request() {
 	// Act
-	suite.sut.Delete(suite.extractorName)
+	suite.sut.Delete(suite.ctx, suite.extractorName)
 
 	// Assert
 	suite.AssertRequestIssued("DELETE", apiUrl+"/extractors/"+suite.extractorName)
@@ -79,7 +83,7 @@ func (suite *ExtractorsClientSuite) Test_GetAll_Issues_Get_All_Extractors_Reques
 		nil)
 
 	// Act
-	suite.sut.GetAll()
+	suite.sut.GetAll(suite.ctx)
 
 	// Assert
 	suite.AssertRequestIssued("GET", apiUrl+"/extractors/")
@@ -93,7 +97,7 @@ func (suite *ExtractorsClientSuite) Test_GetAll_Returns_List_Of_Extractors() {
 		nil)
 
 	// Act
-	extractors, _ := suite.sut.GetAll()
+	extractors, _ := suite.sut.GetAll(suite.ctx)
 
 	// Assert
 	assert.Equal(suite.T(), AListOfExtractors("my-extractor", "amount"), extractors)
