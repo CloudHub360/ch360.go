@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/net"
+	"io"
 	"net/http"
 	"os"
 )
@@ -29,12 +30,24 @@ type Classifier struct {
 type ClassifierList []Classifier
 
 func (client *ClassifiersClient) issueRequest(method string, classifierName string) (*http.Response, error) {
+	return client.issueRequestWith(method, classifierName, nil, nil)
+}
+
+func (client *ClassifiersClient) issueRequestWith(method string,
+	classifierName string,
+	body io.Reader,
+	headers map[string]string) (*http.Response, error) {
+
 	request, err := http.NewRequest(method,
 		client.baseUrl+"/classifiers/"+classifierName,
-		nil)
+		body)
 
 	if err != nil {
 		return nil, err
+	}
+
+	for k, v := range headers {
+		request.Header.Add(k, v)
 	}
 
 	return client.requestSender.Do(request)
@@ -42,6 +55,15 @@ func (client *ClassifiersClient) issueRequest(method string, classifierName stri
 
 func (client *ClassifiersClient) Create(name string) error {
 	_, err := client.issueRequest("POST", name)
+
+	return err
+}
+
+func (client *ClassifiersClient) Upload(name string, contents io.Reader) error {
+	headers := map[string]string{
+		"Content-Type": "application/vnd.waives.classifier+zip",
+	}
+	_, err := client.issueRequestWith("POST", name, contents, headers)
 
 	return err
 }

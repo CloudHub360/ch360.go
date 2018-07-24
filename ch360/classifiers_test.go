@@ -9,8 +9,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go/build"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 )
 
@@ -19,6 +21,7 @@ type ClassifiersClientSuite struct {
 	sut            *ch360.ClassifiersClient
 	httpClient     *mocks.HttpDoer
 	classifierName string
+	classifierFile io.Reader
 }
 
 const apiUrl = "baseUrl"
@@ -29,6 +32,7 @@ func (suite *ClassifiersClientSuite) SetupTest() {
 
 	suite.sut = ch360.NewClassifiersClient(apiUrl, suite.httpClient)
 	suite.classifierName = "classifier-name"
+	suite.classifierFile, _ = os.Open("testdata/emptyclassifier.clf")
 }
 
 func TestClassifiersClientSuiteRunner(t *testing.T) {
@@ -47,6 +51,20 @@ func (suite *ClassifiersClientSuite) request() *http.Request {
 func (suite *ClassifiersClientSuite) AssertRequestIssued(method string, urlPath string) {
 	assert.Equal(suite.T(), method, suite.request().Method)
 	assert.Equal(suite.T(), urlPath, suite.request().URL.Path)
+
+}
+
+func (suite *ClassifiersClientSuite) AssertRequestIssuedWith(method string, urlPath string, expectedBody io.Reader, headers map[string]string) {
+	suite.AssertRequestIssued(method, urlPath)
+
+	assert.Equal(suite.T(), expectedBody, suite.request().Body)
+
+	for k, expectedValue := range headers {
+		actualValue, ok := suite.request().Header[k]
+
+		assert.True(suite.T(), ok)
+		assert.Contains(suite.T(), actualValue, expectedValue)
+	}
 }
 
 func (suite *ClassifiersClientSuite) ClearExpectedCalls() {
@@ -59,6 +77,21 @@ func (suite *ClassifiersClientSuite) Test_CreateClassifier_Issues_Create_Classif
 
 	// Assert
 	suite.AssertRequestIssued("POST", apiUrl+"/classifiers/"+suite.classifierName)
+
+}
+
+func (suite *ClassifiersClientSuite) Test_UploadClassifier_Issues_Create_Classifier_Request() {
+	// Act
+	suite.sut.Upload(suite.classifierName, suite.classifierFile)
+	expectedHeaders := map[string]string{
+		"Content-Type": "application/vnd.waives.classifier+zip",
+	}
+
+	// Assert
+	suite.AssertRequestIssuedWith("POST",
+		apiUrl+"/classifiers/"+suite.classifierName,
+		suite.classifierFile,
+		expectedHeaders)
 
 }
 
