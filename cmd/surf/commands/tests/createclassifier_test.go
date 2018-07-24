@@ -10,8 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"io"
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -23,7 +22,7 @@ type CreateClassifierSuite struct {
 	creator        *mocks.ClassifierCreator
 	sut            *commands.CreateClassifier
 	classifierName string
-	samplesArchive io.ReadCloser
+	samplesArchive *os.File
 	ctx            context.Context
 }
 
@@ -34,7 +33,7 @@ func (suite *CreateClassifierSuite) SetupTest() {
 	suite.creator = new(mocks.ClassifierCreator)
 
 	suite.classifierName = generators.String("classifier-name")
-	suite.samplesArchive = ioutil.NopCloser(&bytes.Buffer{})
+	suite.samplesArchive, _ = os.Open("testdata/samples.zip")
 
 	suite.sut = suite.aClassifierCommandWithSamplesArchive(suite.samplesArchive)
 
@@ -44,13 +43,13 @@ func (suite *CreateClassifierSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *CreateClassifierSuite) aClassifierCommandWithSamplesArchive(samplesPath io.ReadCloser) *commands.CreateClassifier {
+func (suite *CreateClassifierSuite) aClassifierCommandWithSamplesArchive(samplesArchive *os.File) *commands.CreateClassifier {
 	return commands.NewCreateClassifier(suite.output,
 		suite.creator,
 		suite.trainer,
 		suite.deleter,
 		suite.classifierName,
-		samplesPath)
+		samplesArchive)
 }
 
 func TestCreateClassifierSuiteRunner(t *testing.T) {
