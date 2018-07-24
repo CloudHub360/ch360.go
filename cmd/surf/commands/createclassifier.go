@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 )
@@ -50,7 +51,7 @@ func NewCreateClassifierFromArgs(params *config.RunParams, client *ch360.ApiClie
 	samplesArchive, err := os.Open(params.SamplesPath)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("The file '%s' could not be found.", params.SamplesPath))
 	}
 
 	return NewCreateClassifier(
@@ -75,7 +76,7 @@ func (cmd *CreateClassifier) Execute(ctx context.Context) error {
 
 	fmt.Fprintln(cmd.writer, "[OK]")
 
-	fmt.Fprintf(cmd.writer, "Adding samples from file '%s'... ", cmd.samplesArchive)
+	fmt.Fprintf(cmd.writer, "Adding samples... ")
 	err = cmd.trainer.Train(ctx, cmd.classifierName, cmd.samplesArchive)
 
 	if err != nil {

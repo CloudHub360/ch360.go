@@ -67,7 +67,7 @@ Describe "classifiers" {
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Be @"
 Creating classifier '$classifierName'... [OK]
-Adding samples from file '$samples'... [OK]
+Adding samples... [OK]
 "@
         $LASTEXITCODE | Should -Be 0
 
@@ -79,7 +79,7 @@ Adding samples from file '$samples'... [OK]
         $samples = (Join-Path $PSScriptRoot "invalid.zip")
         New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Match (String-Starting @"
 Creating classifier '$classifierName'... [OK]
-Adding samples from file '$samples'... [FAILED]
+Adding samples... [FAILED]
 "@)
 
         $LASTEXITCODE | Should -Be 1
@@ -88,8 +88,6 @@ Adding samples from file '$samples'... [FAILED]
     It "should not be created from a non-existent zip file of samples" {
         $samples = (Join-Path $PSScriptRoot "non-existent.zip")
         New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Be @"
-Creating classifier '$classifierName'... [OK]
-Adding samples from file '$samples'... [FAILED]
 The file '$samples' could not be found.
 "@
 
