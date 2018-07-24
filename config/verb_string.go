@@ -4,9 +4,9 @@ package config
 
 import "strconv"
 
-const _Verb_name = "ExtractClassifyLoginListCreateDeleteRead"
+const _Verb_name = "ExtractClassifyLoginListCreateDeleteUploadRead"
 
-var _Verb_index = [...]uint8{0, 7, 15, 20, 24, 30, 36, 40}
+var _Verb_index = [...]uint8{0, 7, 15, 20, 24, 30, 36, 42, 46}
 
 func (i Verb) String() string {
 	if i < 0 || i >= Verb(len(_Verb_index)-1) {

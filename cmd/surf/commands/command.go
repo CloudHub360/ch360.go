@@ -37,6 +37,8 @@ func CommandFor(runParams *config.RunParams) (Command, error) {
 		switch runParams.Verb() {
 		case config.Create:
 			return NewCreateClassifierFromArgs(runParams, apiClient, out)
+		case config.Upload:
+			return NewUploadClassifierFromArgs(runParams, apiClient, out)
 		case config.Delete:
 			return NewDeleteClassifierFromArgs(runParams, apiClient.Classifiers, out)
 		case config.List:

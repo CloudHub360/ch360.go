@@ -12,6 +12,7 @@ type RunParams struct {
 	Classify bool
 	Extract  bool
 	Create   bool
+	Upload   bool
 	Delete   bool
 	List     bool
 	Read     bool
@@ -31,10 +32,11 @@ type RunParams struct {
 	ClientId     string `docopt:"-i,--client-id"`
 	ClientSecret string `docopt:"-s,--client-secret"`
 
-	ConfigPath  string `docopt:"<config-file>"`
-	SamplesPath string `docopt:"<samples-zip>"`
-	FilePattern string `docopt:"<file>"`
-	Name        string `docopt:"<name>"`
+	ConfigPath     string `docopt:"<config-file>"`
+	SamplesPath    string `docopt:"<samples-zip>"`
+	ClassifierPath string `docopt:"<classifier-file>"`
+	FilePattern    string `docopt:"<file>"`
+	Name           string `docopt:"<name>"`
 
 	ReadPDF   bool `docopt:"pdf"`
 	ReadText  bool `docopt:"txt"`
@@ -53,6 +55,7 @@ const (
 	List
 	Create
 	Delete
+	Upload
 	Read
 )
 
@@ -75,6 +78,8 @@ func (r RunParams) Verb() Verb {
 		return Login
 	} else if r.Classify {
 		return Classify
+	} else if r.Upload {
+		return Upload
 	} else if r.Extract {
 		return Extract
 	} else if r.Read {

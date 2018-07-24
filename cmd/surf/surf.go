@@ -17,6 +17,7 @@ func main() {
 
 Usage:
   surf login [options]
+  surf ` + new(commands.UploadClassifier).Usage() + ` <name> <classifier-file> [options]
   surf ` + new(commands.CreateClassifier).Usage() + ` <name> <samples-zip> [options]
   surf ` + new(commands.CreateExtractor).Usage() + ` <name> <config-file> [options]
   surf ` + new(commands.DeleteClassifier).Usage() + ` <name> [options]
