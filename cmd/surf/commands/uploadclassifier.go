@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
@@ -41,7 +42,7 @@ func NewUploadClassifierFromArgs(params *config.RunParams, client *ch360.ApiClie
 	classifierFile, err := os.Open(params.ClassifierPath)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("The file '%s' could not be found.", params.ClassifierPath))
 	}
 
 	return NewUploadClassifier(
