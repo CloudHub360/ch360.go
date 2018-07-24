@@ -2,13 +2,11 @@ package ch360
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/CloudHub360/ch360.go/net"
 	"io"
 	"net/http"
-	"os"
 )
 
 type ClassifiersClient struct {
@@ -29,22 +27,24 @@ type Classifier struct {
 
 type ClassifierList []Classifier
 
-func (client *ClassifiersClient) issueRequest(method string, classifierName string) (*http.Response, error) {
-	return client.issueRequestWith(method, classifierName, nil, nil)
+func (client *ClassifiersClient) issueRequest(ctx context.Context, method string, classifierName string) (*http.Response, error) {
+	return client.issueRequestWith(ctx, method, classifierName, nil, nil)
 }
 
-func (client *ClassifiersClient) issueRequestWith(method string,
-	classifierName string,
+func (client *ClassifiersClient) issueRequestWith(ctx context.Context, method string,
+	suffix string,
 	body io.Reader,
 	headers map[string]string) (*http.Response, error) {
 
 	request, err := http.NewRequest(method,
-		client.baseUrl+"/classifiers/"+classifierName,
+		client.baseUrl+"/classifiers/"+suffix,
 		body)
 
 	if err != nil {
 		return nil, err
 	}
+
+	request = request.WithContext(ctx)
 
 	for k, v := range headers {
 		request.Header.Add(k, v)
@@ -53,29 +53,25 @@ func (client *ClassifiersClient) issueRequestWith(method string,
 	return client.requestSender.Do(request)
 }
 
-func (client *ClassifiersClient) Create(name string) error {
-	_, err := client.issueRequest("POST", name)
+func (client *ClassifiersClient) Create(ctx context.Context, name string) error {
+	_, err := client.issueRequest(ctx, "POST", name)
 
 	return err
 }
 
-func (client *ClassifiersClient) Upload(name string, contents io.Reader) error {
+func (client *ClassifiersClient) Upload(ctx context.Context, name string, contents io.Reader) error {
 	headers := map[string]string{
 		"Content-Type": "application/vnd.waives.classifier+zip",
 	}
-	_, err := client.issueRequestWith("POST", name, contents, headers)
+	_, err := client.issueRequestWith(ctx, "POST", name, contents, headers)
 
 	return err
 }
 
-func (client *ClassifiersClient) Delete(name string) error {
-	_, err := client.issueRequest("DELETE", name)
+func (client *ClassifiersClient) Delete(ctx context.Context, name string) error {
+	_, err := client.issueRequest(ctx, "DELETE", name)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 type TrainClassifierRequest struct {
@@ -83,43 +79,18 @@ type TrainClassifierRequest struct {
 	SamplesFile    string
 }
 
-func (_req *TrainClassifierRequest) Issue(client *ClassifiersClient) error {
-	zip, err := os.Open(_req.SamplesFile)
-	if err != nil {
-		return errors.New(fmt.Sprintf("The file '%s' could not be found.", _req.SamplesFile))
+func (client *ClassifiersClient) Train(ctx context.Context, name string, samplesArchive io.Reader) error {
+	headers := map[string]string{
+		"Content-Type": "application/zip",
 	}
+	_, err := client.issueRequestWith(ctx, "POST", name+"/samples", samplesArchive, headers)
 
-	request, err := http.NewRequest("POST",
-		client.baseUrl+"/classifiers/"+_req.ClassifierName+"/samples",
-		zip)
-
-	request.Header.Set("Content-Type", "application/zip")
-
-	if err != nil {
-		return err
-	}
-
-	_, err = client.requestSender.Do(request)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
-func (client *ClassifiersClient) Train(name string, samplesPath string) error {
-	request := &TrainClassifierRequest{
-		ClassifierName: name,
-		SamplesFile:    samplesPath,
-	}
+func (client *ClassifiersClient) GetAll(ctx context.Context) (ClassifierList, error) {
 
-	return request.Issue(client)
-}
-
-func (client *ClassifiersClient) GetAll() (ClassifierList, error) {
-
-	response, err := client.issueRequest("GET", "")
+	response, err := client.issueRequest(ctx, "GET", "")
 
 	if err != nil {
 		return nil, err

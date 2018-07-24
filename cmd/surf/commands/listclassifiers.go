@@ -21,7 +21,7 @@ func NewListClassifiers(client ClassifierGetter, out io.Writer) *ListClassifiers
 }
 
 func (cmd *ListClassifiers) Execute(ctx context.Context) error {
-	classifiers, err := cmd.client.GetAll()
+	classifiers, err := cmd.client.GetAll(ctx)
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err

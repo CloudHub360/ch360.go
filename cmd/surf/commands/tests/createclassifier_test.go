@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"io"
+	"io/ioutil"
 	"testing"
 )
 
@@ -21,7 +23,8 @@ type CreateClassifierSuite struct {
 	creator        *mocks.ClassifierCreator
 	sut            *commands.CreateClassifier
 	classifierName string
-	samplesPath    string
+	samplesArchive io.ReadCloser
+	ctx            context.Context
 }
 
 func (suite *CreateClassifierSuite) SetupTest() {
@@ -31,16 +34,17 @@ func (suite *CreateClassifierSuite) SetupTest() {
 	suite.creator = new(mocks.ClassifierCreator)
 
 	suite.classifierName = generators.String("classifier-name")
-	suite.samplesPath = "samples.zip"
+	suite.samplesArchive = ioutil.NopCloser(&bytes.Buffer{})
 
-	suite.sut = suite.aClassifierCommandWithSamplesPath(suite.samplesPath)
+	suite.sut = suite.aClassifierCommandWithSamplesArchive(suite.samplesArchive)
 
-	suite.creator.On("Create", mock.Anything).Return(nil)
-	suite.trainer.On("Train", mock.Anything, mock.Anything).Return(nil)
-	suite.deleter.On("Delete", mock.Anything).Return(nil)
+	suite.creator.On("Create", mock.Anything, mock.Anything).Return(nil)
+	suite.trainer.On("Train", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	suite.deleter.On("Delete", mock.Anything, mock.Anything).Return(nil)
+	suite.ctx = context.Background()
 }
 
-func (suite *CreateClassifierSuite) aClassifierCommandWithSamplesPath(samplesPath string) *commands.CreateClassifier {
+func (suite *CreateClassifierSuite) aClassifierCommandWithSamplesArchive(samplesPath io.ReadCloser) *commands.CreateClassifier {
 	return commands.NewCreateClassifier(suite.output,
 		suite.creator,
 		suite.trainer,
@@ -68,33 +72,33 @@ func (suite *CreateClassifierSuite) ClearExpectedCalls(creator, trainer, deleter
 }
 
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Creates_The_Named_Classifier() {
-	suite.sut.Execute(context.Background())
+	suite.sut.Execute(suite.ctx)
 
-	suite.creator.AssertCalled(suite.T(), "Create", suite.classifierName)
+	suite.creator.AssertCalled(suite.T(), "Create", suite.ctx, suite.classifierName)
 }
 
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Trains_The_New_Classifier() {
-	suite.sut.Execute(context.Background())
+	suite.sut.Execute(suite.ctx)
 
-	suite.trainer.AssertCalled(suite.T(), "Train", suite.classifierName, "samples.zip")
+	suite.trainer.AssertCalled(suite.T(), "Train", suite.ctx, suite.classifierName, suite.samplesArchive)
 }
 
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Returns_An_Error_If_The_Classifier_Cannot_Be_Created() {
 	expected := errors.New("Failed")
 	suite.ClearExpectedCalls(true, false, false)
-	suite.creator.On("Create", mock.Anything).Return(expected)
+	suite.creator.On("Create", mock.Anything, mock.Anything).Return(expected)
 
 	err := suite.sut.Execute(context.Background())
 
 	assert.NotNil(suite.T(), err)
-	suite.creator.AssertCalled(suite.T(), "Create", suite.classifierName)
-	suite.trainer.AssertNotCalled(suite.T(), "Train", suite.classifierName, "samples.zip")
+	suite.creator.AssertCalled(suite.T(), "Create", suite.ctx, suite.classifierName)
+	suite.trainer.AssertNotCalled(suite.T(), "Train", suite.ctx, suite.classifierName, suite.samplesArchive)
 }
 
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Returns_Error_If_The_Classifier_Cannot_Be_Created() {
 	expectedErr := errors.New("Error message")
 	suite.ClearExpectedCalls(true, false, false)
-	suite.creator.On("Create", mock.Anything).Return(expectedErr)
+	suite.creator.On("Create", mock.Anything, mock.Anything).Return(expectedErr)
 
 	receivedErr := suite.sut.Execute(context.Background())
 
@@ -104,9 +108,9 @@ func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Returns_Error_I
 func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Returns_Error_If_The_Classifier_Cannot_Be_Trained() {
 	expectedErr := errors.New("Error message")
 	suite.ClearExpectedCalls(true, true, true)
-	suite.creator.On("Create", mock.Anything).Return(nil)
-	suite.trainer.On("Train", mock.Anything, mock.Anything).Return(expectedErr)
-	suite.deleter.On("Delete", mock.Anything).Return(nil)
+	suite.creator.On("Create", mock.Anything, mock.Anything).Return(nil)
+	suite.trainer.On("Train", mock.Anything, mock.Anything, mock.Anything).Return(expectedErr)
+	suite.deleter.On("Delete", mock.Anything, mock.Anything).Return(nil)
 
 	receivedErr := suite.sut.Execute(context.Background())
 
@@ -117,12 +121,10 @@ func (suite *CreateClassifierSuite) TestCreateClassifier_Execute_Deletes_The_Cla
 	suite.deleter.On("Execute", mock.Anything).Return(nil)
 	expected := errors.New("Failed")
 	suite.ClearExpectedCalls(true, true, false)
-	suite.creator.On("Create", mock.Anything).Return(nil)
-	suite.trainer.On("Train", mock.Anything, mock.Anything).Return(expected)
-
-	suite.sut = suite.aClassifierCommandWithSamplesPath("non-existent.zip")
+	suite.creator.On("Create", mock.Anything, mock.Anything).Return(nil)
+	suite.trainer.On("Train", mock.Anything, mock.Anything, mock.Anything).Return(expected)
 
 	suite.sut.Execute(context.Background())
 
-	suite.deleter.AssertCalled(suite.T(), "Delete", suite.classifierName)
+	suite.deleter.AssertCalled(suite.T(), "Delete", suite.ctx, suite.classifierName)
 }

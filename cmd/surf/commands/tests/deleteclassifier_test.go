@@ -19,6 +19,7 @@ type DeleteClassifierSuite struct {
 	output         *bytes.Buffer
 	client         *mocks.ClassifierDeleterGetter
 	classifierName string
+	ctx            context.Context
 }
 
 func (suite *DeleteClassifierSuite) SetupTest() {
@@ -26,11 +27,12 @@ func (suite *DeleteClassifierSuite) SetupTest() {
 	suite.client.On("GetAll", mock.Anything).Return(
 		AListOfClassifiers("charlie", "jo", "chris"), nil)
 
-	suite.client.On("Delete", mock.Anything).Return(nil)
+	suite.client.On("Delete", mock.Anything, mock.Anything).Return(nil)
 	suite.output = &bytes.Buffer{}
 
 	suite.classifierName = "charlie"
 	suite.sut = commands.NewDeleteClassifier(suite.classifierName, suite.output, suite.client)
+	suite.ctx = context.Background()
 }
 
 func TestDeleteClassifierSuiteRunner(t *testing.T) {
@@ -38,23 +40,23 @@ func TestDeleteClassifierSuiteRunner(t *testing.T) {
 }
 
 func (suite *DeleteClassifierSuite) TestDeleteClassifier_Execute_Deletes_The_Named_Classifier_When_It_Exists() {
-	suite.sut.Execute(context.Background())
+	suite.sut.Execute(suite.ctx)
 
-	suite.client.AssertCalled(suite.T(), "GetAll")
-	suite.client.AssertCalled(suite.T(), "Delete", suite.classifierName)
+	suite.client.AssertCalled(suite.T(), "GetAll", suite.ctx)
+	suite.client.AssertCalled(suite.T(), "Delete", suite.ctx, suite.classifierName)
 }
 
 func (suite *DeleteClassifierSuite) TestDeleteClassifier_Execute_Does_Not_Delete_The_Named_Classifier_When_It_Does_Not_Exist() {
-	suite.sut.Execute(context.Background())
+	suite.sut.Execute(suite.ctx)
 
-	suite.client.AssertCalled(suite.T(), "GetAll")
-	suite.client.AssertNotCalled(suite.T(), "Delete")
+	suite.client.AssertCalled(suite.T(), "GetAll", suite.ctx)
+	suite.client.AssertNotCalled(suite.T(), "Delete", suite.ctx)
 }
 
 func (suite *DeleteClassifierSuite) TestDeleteClassifier_Execute_Returns_An_Error_If_The_Classifiers_Cannot_Be_Retrieved() {
 	suite.client.ExpectedCalls = nil
 	expected := errors.New("Failed")
-	suite.client.On("GetAll", mock.Anything).Return(nil, expected)
+	suite.client.On("GetAll", mock.Anything, mock.Anything).Return(nil, expected)
 
 	actual := suite.sut.Execute(context.Background())
 
@@ -64,11 +66,11 @@ func (suite *DeleteClassifierSuite) TestDeleteClassifier_Execute_Returns_An_Erro
 
 func (suite *DeleteClassifierSuite) TestDeleteClassifier_Execute_Returns_An_Error_If_The_Classifier_Cannot_Be_Deleted() {
 	suite.client.ExpectedCalls = nil
-	suite.client.On("GetAll", mock.Anything).Return(
+	suite.client.On("GetAll", mock.Anything, mock.Anything).Return(
 		AListOfClassifiers("charlie", "jo", "chris"), nil)
 
 	expected := errors.New("Failed")
-	suite.client.On("Delete", mock.Anything).Return(expected)
+	suite.client.On("Delete", mock.Anything, mock.Anything).Return(expected)
 
 	actual := suite.sut.Execute(context.Background())
 

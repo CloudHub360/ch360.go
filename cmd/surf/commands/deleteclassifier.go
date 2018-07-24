@@ -14,11 +14,11 @@ import (
 const DeleteClassifierCommand = "delete classifier"
 
 type ClassifierDeleter interface {
-	Delete(name string) error
+	Delete(ctx context.Context, name string) error
 }
 
 type ClassifierGetter interface {
-	GetAll() (ch360.ClassifierList, error)
+	GetAll(ctx context.Context) (ch360.ClassifierList, error)
 }
 
 type ClassifierDeleterGetter interface {
@@ -51,7 +51,7 @@ func NewDeleteClassifierFromArgs(params *config.RunParams, client ClassifierDele
 func (cmd *DeleteClassifier) Execute(ctx context.Context) error {
 	fmt.Fprintf(cmd.writer, "Deleting classifier '%s'... ", cmd.classifierName)
 
-	classifiers, err := cmd.client.GetAll()
+	classifiers, err := cmd.client.GetAll(ctx)
 
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
@@ -63,7 +63,7 @@ func (cmd *DeleteClassifier) Execute(ctx context.Context) error {
 		return errors.New("There is no classifier named '" + cmd.classifierName + "'")
 	}
 
-	err = cmd.client.Delete(cmd.classifierName)
+	err = cmd.client.Delete(ctx, cmd.classifierName)
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err
