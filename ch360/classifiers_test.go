@@ -2,7 +2,7 @@ package ch360_test
 
 import (
 	"bytes"
-	"errors"
+	"context"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/net/mocks"
 	"github.com/stretchr/testify/assert"
@@ -22,6 +22,7 @@ type ClassifiersClientSuite struct {
 	httpClient     *mocks.HttpDoer
 	classifierName string
 	classifierFile io.Reader
+	ctx            context.Context
 }
 
 const apiUrl = "baseUrl"
@@ -33,6 +34,8 @@ func (suite *ClassifiersClientSuite) SetupTest() {
 	suite.sut = ch360.NewClassifiersClient(apiUrl, suite.httpClient)
 	suite.classifierName = "classifier-name"
 	suite.classifierFile, _ = os.Open("testdata/emptyclassifier.clf")
+
+	suite.ctx = context.Background()
 }
 
 func TestClassifiersClientSuiteRunner(t *testing.T) {
@@ -73,7 +76,7 @@ func (suite *ClassifiersClientSuite) ClearExpectedCalls() {
 
 func (suite *ClassifiersClientSuite) Test_CreateClassifier_Issues_Create_Classifier_Request() {
 	// Act
-	suite.sut.Create(suite.classifierName)
+	suite.sut.Create(suite.ctx, suite.classifierName)
 
 	// Assert
 	suite.AssertRequestIssued("POST", apiUrl+"/classifiers/"+suite.classifierName)
@@ -82,7 +85,7 @@ func (suite *ClassifiersClientSuite) Test_CreateClassifier_Issues_Create_Classif
 
 func (suite *ClassifiersClientSuite) Test_UploadClassifier_Issues_Create_Classifier_Request() {
 	// Act
-	suite.sut.Upload(suite.classifierName, suite.classifierFile)
+	suite.sut.Upload(suite.ctx, suite.classifierName, suite.classifierFile)
 	expectedHeaders := map[string]string{
 		"Content-Type": "application/vnd.waives.classifier+zip",
 	}
@@ -97,7 +100,7 @@ func (suite *ClassifiersClientSuite) Test_UploadClassifier_Issues_Create_Classif
 
 func (suite *ClassifiersClientSuite) Test_DeleteClassifier_Issues_Delete_Classifier_Request() {
 	// Act
-	suite.sut.Delete(suite.classifierName)
+	suite.sut.Delete(suite.ctx, suite.classifierName)
 
 	// Assert
 	suite.AssertRequestIssued("DELETE", apiUrl+"/classifiers/"+suite.classifierName)
@@ -111,7 +114,7 @@ func (suite *ClassifiersClientSuite) Test_GetAll_Issues_Get_All_Classifiers_Requ
 		nil)
 
 	// Act
-	suite.sut.GetAll()
+	suite.sut.GetAll(suite.ctx)
 
 	// Assert
 	suite.AssertRequestIssued("GET", apiUrl+"/classifiers/")
@@ -125,7 +128,7 @@ func (suite *ClassifiersClientSuite) Test_GetAll_Returns_List_Of_Classifiers() {
 		nil)
 
 	// Act
-	classifiers, _ := suite.sut.GetAll()
+	classifiers, _ := suite.sut.GetAll(suite.ctx)
 
 	// Assert
 	assert.Equal(suite.T(), AListOfClassifiers("classifier1", "classifier2"), classifiers)
@@ -133,24 +136,15 @@ func (suite *ClassifiersClientSuite) Test_GetAll_Returns_List_Of_Classifiers() {
 
 func (suite *ClassifiersClientSuite) Test_Train_Issues_Add_Samples_Request() {
 	// Act
-	err := suite.sut.Train(
+	body, _ := os.Open(build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/samples.zip")
+	err := suite.sut.Train(suite.ctx,
 		suite.classifierName,
-		build.Default.GOPATH+"/src/github.com/CloudHub360/ch360.go/test/samples.zip")
+		body)
+	defer body.Close()
 
 	// Assert
 	assert.Nil(suite.T(), err)
 	suite.AssertRequestIssued("POST", apiUrl+"/classifiers/"+suite.classifierName+"/samples")
-}
-
-func (suite *ClassifiersClientSuite) Test_Train_Returns_An_Error_If_The_Sample_Path_Is_Invalid() {
-	// Act
-	samplesPath := build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/non-existent.zip"
-	err := suite.sut.Train(
-		suite.classifierName,
-		samplesPath)
-
-	// Assert
-	assert.Equal(suite.T(), errors.New("The file '"+samplesPath+"' could not be found."), err)
 }
 
 func AListOfClassifiers(names ...string) ch360.ClassifierList {

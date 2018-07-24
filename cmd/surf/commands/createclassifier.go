@@ -6,6 +6,7 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
 	"io"
+	"os"
 )
 
 //go:generate mockery -name "ClassifierCreator|ClassifierTrainer|ClassifierClient"
@@ -13,11 +14,11 @@ import (
 const CreateClassifierCommand = "create classifier"
 
 type ClassifierCreator interface {
-	Create(name string) error
+	Create(ctx context.Context, name string) error
 }
 
 type ClassifierTrainer interface {
-	Train(name string, samplesPath string) error
+	Train(ctx context.Context, name string, samplesArchive io.Reader) error
 }
 
 type CreateClassifier struct {
@@ -26,7 +27,7 @@ type CreateClassifier struct {
 	deleter        ClassifierDeleter
 	trainer        ClassifierTrainer
 	classifierName string
-	samplesPath    string
+	samplesArchive io.ReadCloser
 }
 
 func NewCreateClassifier(writer io.Writer,
@@ -34,18 +35,23 @@ func NewCreateClassifier(writer io.Writer,
 	trainer ClassifierTrainer,
 	deleter ClassifierDeleter,
 	classifierName string,
-	samplesPath string) *CreateClassifier {
+	samplesArchive io.ReadCloser) *CreateClassifier {
 	return &CreateClassifier{
 		writer:         writer,
 		creator:        creator,
 		deleter:        deleter,
 		trainer:        trainer,
 		classifierName: classifierName,
-		samplesPath:    samplesPath,
+		samplesArchive: samplesArchive,
 	}
 }
 
 func NewCreateClassifierFromArgs(params *config.RunParams, client *ch360.ApiClient, out io.Writer) (*CreateClassifier, error) {
+	samplesArchive, err := os.Open(params.SamplesPath)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return NewCreateClassifier(
 		out,
@@ -53,13 +59,15 @@ func NewCreateClassifierFromArgs(params *config.RunParams, client *ch360.ApiClie
 		client.Classifiers,
 		client.Classifiers,
 		params.Name,
-		params.SamplesPath), nil
+		samplesArchive), nil
 }
 
 func (cmd *CreateClassifier) Execute(ctx context.Context) error {
+	defer cmd.samplesArchive.Close()
+
 	fmt.Fprintf(cmd.writer, "Creating classifier '%s'... ", cmd.classifierName)
 
-	err := cmd.creator.Create(cmd.classifierName)
+	err := cmd.creator.Create(ctx, cmd.classifierName)
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err
@@ -67,12 +75,12 @@ func (cmd *CreateClassifier) Execute(ctx context.Context) error {
 
 	fmt.Fprintln(cmd.writer, "[OK]")
 
-	fmt.Fprintf(cmd.writer, "Adding samples from file '%s'... ", cmd.samplesPath)
-	err = cmd.trainer.Train(cmd.classifierName, cmd.samplesPath)
+	fmt.Fprintf(cmd.writer, "Adding samples from file '%s'... ", cmd.samplesArchive)
+	err = cmd.trainer.Train(ctx, cmd.classifierName, cmd.samplesArchive)
 
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
-		cmd.deleter.Delete(cmd.classifierName)
+		cmd.deleter.Delete(ctx, cmd.classifierName)
 		return err
 	}
 

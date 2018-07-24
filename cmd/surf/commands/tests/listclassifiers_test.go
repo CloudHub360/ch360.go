@@ -18,6 +18,7 @@ type ListClassifierSuite struct {
 	sut    *commands.ListClassifiers
 	client *mocks.ClassifierGetter
 	output *bytes.Buffer
+	ctx    context.Context
 }
 
 func (suite *ListClassifierSuite) SetupTest() {
@@ -35,9 +36,9 @@ func (suite *ListClassifierSuite) TestGetAllClassifiers_Execute_Calls_Client() {
 	expectedClassifiers := AListOfClassifiers("charlie", "jo", "chris").(ch360.ClassifierList)
 	suite.client.On("GetAll", mock.Anything).Return(expectedClassifiers, nil)
 
-	suite.sut.Execute(context.Background())
+	suite.sut.Execute(suite.ctx)
 
-	suite.client.AssertCalled(suite.T(), "GetAll")
+	suite.client.AssertCalled(suite.T(), "GetAll", suite.ctx)
 }
 
 func (suite *ListClassifierSuite) TestGetAllClassifiers_Execute_Returns_Error_From_Client() {
@@ -45,7 +46,7 @@ func (suite *ListClassifierSuite) TestGetAllClassifiers_Execute_Returns_Error_Fr
 	expectedErr := errors.New("simulated err")
 	suite.client.On("GetAll", mock.Anything).Return(expectedClassifiers, expectedErr)
 
-	receivedErr := suite.sut.Execute(context.Background())
+	receivedErr := suite.sut.Execute(suite.ctx)
 
 	assert.Equal(suite.T(), expectedErr, receivedErr)
 }

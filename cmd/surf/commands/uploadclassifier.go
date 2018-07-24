@@ -14,7 +14,7 @@ import (
 const UploadClassifierCommand = "upload classifier"
 
 type ClassifierUploader interface {
-	Upload(name string, contents io.Reader) error
+	Upload(ctx context.Context, name string, contents io.Reader) error
 }
 
 type UploadClassifier struct {
@@ -56,7 +56,7 @@ func (cmd *UploadClassifier) Execute(ctx context.Context) error {
 
 	fmt.Fprintf(cmd.writer, "Creating classifier '%s'... ", cmd.classifierName)
 
-	err := cmd.uploader.Upload(cmd.classifierName, cmd.classifierFile)
+	err := cmd.uploader.Upload(ctx, cmd.classifierName, cmd.classifierFile)
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err

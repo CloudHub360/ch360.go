@@ -88,7 +88,7 @@ func handleInterrupt(canceller context.CancelFunc) {
 }
 
 func exitOnErr(err error) {
-	if err != nil {
+	if err != nil && err != context.Canceled {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

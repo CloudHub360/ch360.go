@@ -22,6 +22,7 @@ type UploadClassifierSuite struct {
 	sut            *commands.UploadClassifier
 	classifierName string
 	classifierFile io.ReadCloser
+	ctx            context.Context
 }
 
 func (suite *UploadClassifierSuite) SetupTest() {
@@ -33,7 +34,8 @@ func (suite *UploadClassifierSuite) SetupTest() {
 
 	suite.sut = suite.anUploadClassifierCommandWithFile(suite.classifierFile)
 
-	suite.uploader.On("Upload", mock.Anything, mock.Anything).Return(nil)
+	suite.uploader.On("Upload", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	suite.ctx = context.Background()
 }
 
 func (suite *UploadClassifierSuite) anUploadClassifierCommandWithFile(classifierFile io.ReadCloser) *commands.UploadClassifier {
@@ -54,16 +56,16 @@ func (suite *UploadClassifierSuite) ClearExpectedCalls() {
 func (suite *UploadClassifierSuite) TestUploadClassifier_Execute_Uploads_The_Named_Classifier() {
 	suite.sut.Execute(context.Background())
 
-	suite.uploader.AssertCalled(suite.T(), "Upload", suite.classifierName, suite.classifierFile)
+	suite.uploader.AssertCalled(suite.T(), "Upload", suite.ctx, suite.classifierName, suite.classifierFile)
 }
 
 func (suite *UploadClassifierSuite) TestUploadClassifier_Execute_Returns_An_Error_If_The_Classifier_Cannot_Be_Uploaded() {
 	expected := errors.New("Failed")
 	suite.ClearExpectedCalls()
-	suite.uploader.On("Upload", mock.Anything, mock.Anything).Return(expected)
+	suite.uploader.On("Upload", mock.Anything, mock.Anything, mock.Anything).Return(expected)
 
-	err := suite.sut.Execute(context.Background())
+	err := suite.sut.Execute(suite.ctx)
 
 	assert.NotNil(suite.T(), err)
-	suite.uploader.AssertCalled(suite.T(), "Upload", suite.classifierName, suite.classifierFile)
+	suite.uploader.AssertCalled(suite.T(), "Upload", suite.ctx, suite.classifierName, suite.classifierFile)
 }
