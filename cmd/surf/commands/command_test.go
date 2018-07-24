@@ -23,6 +23,10 @@ var expectedRunnerTypes = []struct {
 		expectedRunnerType: reflect.TypeOf(&commands.CreateClassifier{}),
 	},
 	{
+		cmd:                new(commands.UploadClassifier).Usage(),
+		expectedRunnerType: reflect.TypeOf(&commands.UploadClassifier{}),
+	},
+	{
 		cmd:                new(commands.CreateExtractor).Usage(),
 		expectedRunnerType: reflect.TypeOf(&commands.CreateExtractor{}),
 	},
