@@ -14,7 +14,7 @@ import (
 const CreateExtractorCommand = "create extractor"
 
 type ExtractorCreator interface {
-	Create(name string, config io.Reader) error
+	Create(ctx context.Context, name string, config io.Reader) error
 }
 
 type CreateExtractor struct {
@@ -53,7 +53,7 @@ func NewCreateExtractorFromArgs(params *config.RunParams,
 func (cmd *CreateExtractor) Execute(ctx context.Context) error {
 	fmt.Fprintf(cmd.writer, "Creating extractor '%s'... ", cmd.extractorName)
 
-	err := cmd.creator.Create(cmd.extractorName, cmd.config)
+	err := cmd.creator.Create(ctx, cmd.extractorName, cmd.config)
 
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")

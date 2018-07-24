@@ -31,7 +31,7 @@ func NewDeleteExtractorFromArgs(params *config.RunParams, client ExtractorDelete
 func (cmd *DeleteExtractor) Execute(ctx context.Context) error {
 	fmt.Fprintf(cmd.writer, "Deleting extractor '%s'... ", cmd.extractorName)
 
-	extractors, err := cmd.client.GetAll()
+	extractors, err := cmd.client.GetAll(ctx)
 
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
@@ -43,7 +43,7 @@ func (cmd *DeleteExtractor) Execute(ctx context.Context) error {
 		return errors.New("There is no extractor named '" + cmd.extractorName + "'")
 	}
 
-	err = cmd.client.Delete(cmd.extractorName)
+	err = cmd.client.Delete(ctx, cmd.extractorName)
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err
