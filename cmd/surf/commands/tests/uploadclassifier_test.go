@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"io"
 	"os"
 	"testing"
 )
@@ -21,7 +20,7 @@ type UploadClassifierSuite struct {
 	uploader       *mocks.ClassifierUploader
 	sut            *commands.UploadClassifier
 	classifierName string
-	classifierFile io.ReadCloser
+	classifierFile *os.File
 	ctx            context.Context
 }
 
@@ -30,7 +29,7 @@ func (suite *UploadClassifierSuite) SetupTest() {
 	suite.uploader = new(mocks.ClassifierUploader)
 
 	suite.classifierName = generators.String("classifier-name")
-	suite.classifierFile, _ = os.Open("classifier.clf")
+	suite.classifierFile, _ = os.Open("testdata/emptyclassifier.clf")
 
 	suite.sut = suite.anUploadClassifierCommandWithFile(suite.classifierFile)
 
@@ -38,7 +37,7 @@ func (suite *UploadClassifierSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *UploadClassifierSuite) anUploadClassifierCommandWithFile(classifierFile io.ReadCloser) *commands.UploadClassifier {
+func (suite *UploadClassifierSuite) anUploadClassifierCommandWithFile(classifierFile *os.File) *commands.UploadClassifier {
 	return commands.NewUploadClassifier(suite.output,
 		suite.uploader,
 		suite.classifierName,

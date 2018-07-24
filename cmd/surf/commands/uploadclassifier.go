@@ -23,13 +23,13 @@ type UploadClassifier struct {
 	uploader       ClassifierUploader
 	deleter        ClassifierDeleter
 	classifierName string
-	classifierFile io.ReadCloser
+	classifierFile *os.File
 }
 
 func NewUploadClassifier(writer io.Writer,
 	uploader ClassifierUploader,
 	classifierName string,
-	classifierFile io.ReadCloser) *UploadClassifier {
+	classifierFile *os.File) *UploadClassifier {
 	return &UploadClassifier{
 		writer:         writer,
 		uploader:       uploader,
@@ -55,7 +55,7 @@ func NewUploadClassifierFromArgs(params *config.RunParams, client *ch360.ApiClie
 func (cmd *UploadClassifier) Execute(ctx context.Context) error {
 	defer cmd.classifierFile.Close()
 
-	fmt.Fprintf(cmd.writer, "Creating classifier '%s'... ", cmd.classifierName)
+	fmt.Fprintf(cmd.writer, "Creating classifier '%s' from '%s'... ", cmd.classifierName, cmd.classifierFile.Name())
 
 	err := cmd.uploader.Upload(ctx, cmd.classifierName, cmd.classifierFile)
 	if err != nil {

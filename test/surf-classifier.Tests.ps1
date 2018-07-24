@@ -67,7 +67,7 @@ Describe "classifiers" {
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Be @"
 Creating classifier '$classifierName'... [OK]
-Adding samples... [OK]
+Adding samples from file '$samples'... [OK]
 "@
         $LASTEXITCODE | Should -Be 0
 
@@ -79,7 +79,7 @@ Adding samples... [OK]
         $samples = (Join-Path $PSScriptRoot "invalid.zip")
         New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Match (String-Starting @"
 Creating classifier '$classifierName'... [OK]
-Adding samples... [FAILED]
+Adding samples from file '$samples'... [FAILED]
 "@)
 
         $LASTEXITCODE | Should -Be 1

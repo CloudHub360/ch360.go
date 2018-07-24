@@ -33,8 +33,7 @@ func (suite *ClassifiersClientSuite) SetupTest() {
 
 	suite.sut = ch360.NewClassifiersClient(apiUrl, suite.httpClient)
 	suite.classifierName = "classifier-name"
-	suite.classifierFile, _ = os.Open("testdata/emptyclassifier.clf")
-
+	suite.classifierFile = ioutil.NopCloser(bytes.NewBuffer([]byte{1, 2, 3, 4}))
 	suite.ctx = context.Background()
 }
 

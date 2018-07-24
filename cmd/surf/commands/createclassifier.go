@@ -28,7 +28,7 @@ type CreateClassifier struct {
 	deleter        ClassifierDeleter
 	trainer        ClassifierTrainer
 	classifierName string
-	samplesArchive io.ReadCloser
+	samplesArchive *os.File
 }
 
 func NewCreateClassifier(writer io.Writer,
@@ -36,7 +36,7 @@ func NewCreateClassifier(writer io.Writer,
 	trainer ClassifierTrainer,
 	deleter ClassifierDeleter,
 	classifierName string,
-	samplesArchive io.ReadCloser) *CreateClassifier {
+	samplesArchive *os.File) *CreateClassifier {
 	return &CreateClassifier{
 		writer:         writer,
 		creator:        creator,
@@ -76,7 +76,7 @@ func (cmd *CreateClassifier) Execute(ctx context.Context) error {
 
 	fmt.Fprintln(cmd.writer, "[OK]")
 
-	fmt.Fprintf(cmd.writer, "Adding samples... ")
+	fmt.Fprintf(cmd.writer, "Adding samples from file '%s'... ", cmd.samplesArchive.Name())
 	err = cmd.trainer.Train(ctx, cmd.classifierName, cmd.samplesArchive)
 
 	if err != nil {
