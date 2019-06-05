@@ -161,7 +161,7 @@ document1.pdf                        Notice of Lien                   true
         $results.filename | Should -BeLike "*document2.pdf"
         $results.classification_results.document_type | Should -Be "Notice of Lien"
         $results.classification_results.is_confident | Should -Be True
-        $results.classification_results.relative_confidence | Should -Be 1.17683673
+        $results.classification_results.relative_confidence | Should -Be 1.1768367290496826
 
         Remove-Item -Path $outputFile
     }
