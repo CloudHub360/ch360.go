@@ -20,7 +20,8 @@ Task PackageRestore {
 Task GenerateMocks {
   try {
     pushd $RootDir
-    exec { go get github.com/vektra/mockery/.../ }
+    exec { go get github.com/vektra/mockery/cmd/mockery }
+    exec { go get golang.org/x/tools/cmd/stringer }
     exec { go generate ./... }
   } finally {
     popd
