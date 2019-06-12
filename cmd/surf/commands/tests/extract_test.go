@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"go/build"
 	"testing"
 )
 
@@ -37,8 +36,8 @@ func (suite *ExtractFilesSuite) SetupTest() {
 	suite.classifierName = generators.String("classifiername")
 	suite.documentId = generators.String("documentId")
 	suite.extractionResult = &results.ExtractionResult{}
-	suite.testFilePath = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/extraction/document1.pdf"
-	suite.testFilesPattern = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/extraction/**/*.pdf"
+	suite.testFilePath = "../../../../test/documents/extraction/document1.pdf"
+	suite.testFilesPattern = "../../../../test/documents/extraction/**/*.pdf"
 
 	suite.fileExtractor = new(cmdmocks.FileExtractor)
 	suite.documentGetter = new(mocks.DocumentGetter)
@@ -129,7 +128,7 @@ func (suite *ExtractFilesSuite) TestExtract_Command_Execute_Return_Nil_On_Succes
 }
 
 func (suite *ExtractFilesSuite) TestExtract_Command_Returns_Specific_Error_If_File_Does_Not_Exist() {
-	nonExistentFile := build.Default.GOPATH + "/non-existentfile.pdf"
+	nonExistentFile := "non-existentfile.pdf"
 
 	expectedErr := errors.New(fmt.Sprintf("File %s does not exist", nonExistentFile))
 
@@ -141,7 +140,7 @@ func (suite *ExtractFilesSuite) TestExtract_Command_Returns_Specific_Error_If_Fi
 }
 
 func (suite *ExtractFilesSuite) TestExtract_Command_Returns_Error_If_ReadFile_Fails() {
-	nonExistentFile := build.Default.GOPATH + "/non-existentfile.pdf"
+	nonExistentFile := "non-existentfile.pdf"
 	suite.sut = suite.aExtractCmdWith(nonExistentFile)
 
 	err := suite.sut.Execute(suite.ctx)

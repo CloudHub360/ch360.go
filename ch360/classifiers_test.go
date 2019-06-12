@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"go/build"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -135,7 +134,7 @@ func (suite *ClassifiersClientSuite) Test_GetAll_Returns_List_Of_Classifiers() {
 
 func (suite *ClassifiersClientSuite) Test_Train_Issues_Add_Samples_Request() {
 	// Act
-	body, _ := os.Open(build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/samples.zip")
+	body, _ := os.Open("../../test/samples.zip")
 	err := suite.sut.Train(suite.ctx,
 		suite.classifierName,
 		body)

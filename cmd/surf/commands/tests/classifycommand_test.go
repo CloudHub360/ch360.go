@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"go/build"
 	"io/ioutil"
 	"testing"
 )
@@ -43,8 +42,8 @@ func (suite *ClassifySuite) SetupTest() {
 		DocumentType: generators.String("documentType"),
 		IsConfident:  generators.Bool(),
 	}
-	suite.testFilePath = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/classification/document1.pdf"
-	suite.testFilesPattern = build.Default.GOPATH + "/src/github.com/CloudHub360/ch360.go/test/documents/classification/**/*.pdf"
+	suite.testFilePath = "../../../../test/documents/classification/document1.pdf"
+	suite.testFilesPattern = "../../../../test/documents/classification/**/*.pdf"
 
 	suite.documentCreator = new(mocks.DocumentCreator)
 	suite.documentClassifier = new(mocks.DocumentClassifier)
@@ -179,7 +178,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Execute_Return_Nil_On_Success() {
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Returns_Specific_Error_If_File_Does_Not_Exist() {
-	nonExistentFile := build.Default.GOPATH + "/non-existentfile.pdf"
+	nonExistentFile := "non-existentfile.pdf"
 
 	expectedErr := errors.New(fmt.Sprintf("File %s does not exist", nonExistentFile))
 
@@ -191,7 +190,7 @@ func (suite *ClassifySuite) TestClassifyDoer_Returns_Specific_Error_If_File_Does
 }
 
 func (suite *ClassifySuite) TestClassifyDoer_Returns_Error_If_ReadFile_Fails() {
-	nonExistentFile := build.Default.GOPATH + "/non-existentfile.pdf"
+	nonExistentFile := "non-existentfile.pdf"
 	suite.sut = suite.aClassifyCmdWith(nonExistentFile)
 
 	err := suite.sut.Execute(suite.ctx)
