@@ -2,7 +2,6 @@ package response
 
 import (
 	"bytes"
-	"errors"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -22,7 +21,7 @@ func Test_Returns_Error_With_Correct_Message_When_Check_Fails(t *testing.T) {
 
 			err := sut.CheckForErrors(&response)
 
-			assert.Equal(t, errors.New(errorResponseData.expectedErr), err)
+			assert.EqualError(t, err, errorResponseData.expectedErr)
 		}()
 	}
 }

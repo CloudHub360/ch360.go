@@ -15,6 +15,7 @@ const CreateExtractorCommand = "create extractor"
 
 type ExtractorCreator interface {
 	Create(ctx context.Context, name string, config io.Reader) error
+	CreateFromModules(ctx context.Context, name string, config io.Reader) error
 }
 
 type CreateExtractor struct {

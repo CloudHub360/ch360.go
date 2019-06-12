@@ -19,7 +19,7 @@ type ExtractorsClientSuite struct {
 	httpClient      *mocks.HttpDoer
 	extractorName   string
 	extractorConfig *bytes.Buffer
-	modulesTemplate string
+	modulesTemplate *bytes.Buffer
 	ctx             context.Context
 }
 
@@ -73,14 +73,14 @@ func (suite *ExtractorsClientSuite) Test_CreateExtractor_Issues_Create_Extractor
 
 func (suite *ExtractorsClientSuite) Test_CreateExtractorFromModules_Issues_Create_Extractor_Request() {
 	// Arrange
-	suite.modulesTemplate = "some bytes"
+	suite.modulesTemplate = bytes.NewBufferString("some bytes")
 
 	// Act
 	suite.sut.CreateFromModules(suite.ctx, suite.extractorName, suite.modulesTemplate)
 
 	// Assert
 	suite.AssertRequestIssued("POST", apiUrl+"/extractors/"+suite.extractorName).
-		WithBody(suite.T(), []byte(suite.modulesTemplate)).
+		WithBody(suite.T(), suite.modulesTemplate.Bytes()).
 		WithHeaders(suite.T(), map[string][]string{
 			"Content-Type": {"application/json"},
 		})
@@ -167,6 +167,7 @@ var exampleGetExtractorsResponse = `{
 	]
 }`
 
+// helper type used to assert on various bits of the http request
 type requestAssertion struct {
 	request *http.Request
 }

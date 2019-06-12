@@ -1,9 +1,9 @@
 package config
 
 import (
-	"errors"
 	"github.com/docopt/docopt-go"
 	"github.com/mattn/go-isatty"
+	"github.com/pkg/errors"
 	"os"
 )
 
@@ -31,6 +31,8 @@ type RunParams struct {
 	ShowProgress bool   `docopt:"-p,--progress"`
 	ClientId     string `docopt:"-i,--client-id"`
 	ClientSecret string `docopt:"-s,--client-secret"`
+
+	ModulesTemplate string `docopt:"--from-template"`
 
 	ConfigPath     string `docopt:"<config-file>"`
 	SamplesPath    string `docopt:"<samples-zip>"`
