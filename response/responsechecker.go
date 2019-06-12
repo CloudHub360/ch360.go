@@ -1,7 +1,6 @@
 package response
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -32,7 +31,7 @@ func (c *ErrorChecker) CheckForErrors(response *http.Response) error {
 
 	// We've read from the response body, and it can't be rewound, so 'recreate' it as a new io.Reader
 	// which will read from the start of the underlying byte array of 'buf'.
-	response.Body = ioutil.NopCloser(bufio.NewReader(&buf))
+	response.Body = ioutil.NopCloser(&buf)
 
 	// Check status code
 	if response.StatusCode < 300 {
