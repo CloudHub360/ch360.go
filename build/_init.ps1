@@ -3,7 +3,7 @@
 $global:ErrorActionPreference = "Stop"
 $global:ProgressPreference = 'SilentlyContinue' # Hide progress bars
 
-$env:PATH += "$([Io.Path]::PathSeparator)$($env:GOPATH)$([Io.Path]::DirectorySeparatorChar)bin"
+$env:PATH += "$([Io.Path]::PathSeparator)$((& go env GOPATH))$([Io.Path]::DirectorySeparatorChar)bin"
 
 function global:Test-CommandVersion([string]$command, [string]$commandVersion) {
   $oldErrorPreference = $ErrorActionPreference
