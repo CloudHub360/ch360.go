@@ -4,6 +4,20 @@ package config
 
 import "strconv"
 
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[Extract-0]
+	_ = x[Classify-1]
+	_ = x[Login-2]
+	_ = x[List-3]
+	_ = x[Create-4]
+	_ = x[Delete-5]
+	_ = x[Upload-6]
+	_ = x[Read-7]
+}
+
 const _Verb_name = "ExtractClassifyLoginListCreateDeleteUploadRead"
 
 var _Verb_index = [...]uint8{0, 7, 15, 20, 24, 30, 36, 42, 46}
