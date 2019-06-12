@@ -6,23 +6,15 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
-	"net/http"
 	"os"
-	"time"
 )
 
 type Command interface {
 	Execute(ctx context.Context) error
 }
 
-func CommandFor(runParams *config.RunParams) (Command, error) {
+func CommandFor(runParams *config.RunParams, apiClient *ch360.ApiClient) (Command, error) {
 	out := os.Stdout
-
-	apiClient, err := initSurf(runParams)
-
-	if err != nil {
-		return nil, err
-	}
 
 	if runParams.Verb() == config.Classify {
 		return NewClassifyFilesCommandFromArgs(runParams, apiClient)
@@ -60,24 +52,4 @@ func CommandFor(runParams *config.RunParams) (Command, error) {
 	}
 
 	return nil, errors.New(fmt.Sprintf("Unknown command: %s %s", runParams.Verb(), runParams.Noun()))
-}
-
-var DefaultHttpClient = &http.Client{Timeout: time.Minute * 5}
-
-func initSurf(params *config.RunParams) (*ch360.ApiClient, error) {
-
-	appDir, err := config.NewAppDirectory()
-	if err != nil {
-		return nil, err
-	}
-
-	credentialsResolver := &CredentialsResolver{}
-
-	clientId, clientSecret, err := credentialsResolver.ResolveFromArgs(params.Args(), appDir)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret), nil
 }
