@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 )
@@ -24,7 +24,11 @@ func (c *ErrorChecker) CheckForErrors(response *http.Response) error {
 	}
 
 	buf := bytes.Buffer{}
-	buf.ReadFrom(response.Body)
+	_, err := buf.ReadFrom(response.Body)
+
+	if err != nil {
+		return errors.WithMessage(err, "Unable to read from HTTP response body")
+	}
 
 	// We've read from the response body, and it can't be rewound, so 'recreate' it as a new io.Reader
 	// which will read from the start of the underlying byte array of 'buf'.
@@ -36,7 +40,7 @@ func (c *ErrorChecker) CheckForErrors(response *http.Response) error {
 	}
 
 	errResponse := errorResponse{}
-	err := json.Unmarshal(buf.Bytes(), &errResponse)
+	err = json.Unmarshal(buf.Bytes(), &errResponse)
 
 	if err == nil && len(errResponse.Message) > 0 {
 		return errors.New(errResponse.Message)
