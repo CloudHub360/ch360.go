@@ -48,6 +48,9 @@ func CommandFor(runParams *config.RunParams) (Command, error) {
 	} else if runParams.Noun() == config.Extractor {
 		switch runParams.Verb() {
 		case config.Create:
+			if runParams.ModulesTemplate != "" {
+				return NewCreateExtractorFromModulesWithArgs(runParams, apiClient.Extractors, out)
+			}
 			return NewCreateExtractorFromArgs(runParams, apiClient.Extractors, out)
 		case config.Delete:
 			return NewDeleteExtractorFromArgs(runParams, apiClient.Extractors, out)

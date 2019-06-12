@@ -55,14 +55,12 @@ func (client *ExtractorsClient) Create(ctx context.Context, name string, config 
 	return err
 }
 
-func (client *ExtractorsClient) CreateFromModules(ctx context.Context, name, jsonTemplate string) error {
+func (client *ExtractorsClient) CreateFromModules(ctx context.Context, name string, jsonTemplate io.Reader) error {
 	headers := map[string]string{
 		"Content-Type": "application/json",
 	}
 
-	body := bytes.NewBufferString(jsonTemplate)
-
-	_, err := client.issueRequestWith(ctx, "POST", name, body, headers)
+	_, err := client.issueRequestWith(ctx, "POST", name, jsonTemplate, headers)
 
 	return err
 }
