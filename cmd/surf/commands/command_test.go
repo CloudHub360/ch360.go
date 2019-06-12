@@ -1,6 +1,7 @@
 package commands_test
 
 import (
+	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/docopt/docopt-go"
@@ -66,7 +67,7 @@ func TestRunnerBuilder_RunnerFor_Returns_Correct_Type(t *testing.T) {
 		args.Bind(&runParams)
 
 		// Act
-		receivedRunner, _ := commands.CommandFor(&runParams)
+		receivedRunner, _ := commands.CommandFor(&runParams, &ch360.ApiClient{})
 
 		// Assert
 		assert.Equal(t, testCase.expectedRunnerType, reflect.TypeOf(receivedRunner))

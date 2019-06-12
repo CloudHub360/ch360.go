@@ -7,9 +7,11 @@ import (
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/docopt/docopt-go"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"time"
 )
 
 func main() {
@@ -70,10 +72,12 @@ Filename and glob pattern examples:
 
 	var cmd commands.Command
 	if login, _ := args.Bool("login"); login {
-		tokenRetriever := ch360.NewTokenRetriever(commands.DefaultHttpClient, ch360.ApiAddress)
+		tokenRetriever := ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
 		cmd = commands.NewLoginFrom(runParams, os.Stdout, appDir, tokenRetriever)
 	} else {
-		cmd, err = commands.CommandFor(runParams)
+		apiClient, err := initSurf(runParams)
+		exitOnErr(err)
+		cmd, err = commands.CommandFor(runParams, apiClient)
 	}
 	exitOnErr(err)
 
@@ -94,3 +98,23 @@ func exitOnErr(err error) {
 		os.Exit(1)
 	}
 }
+
+func initSurf(params *config.RunParams) (*ch360.ApiClient, error) {
+
+	appDir, err := config.NewAppDirectory()
+	if err != nil {
+		return nil, err
+	}
+
+	credentialsResolver := &commands.CredentialsResolver{}
+
+	clientId, clientSecret, err := credentialsResolver.ResolveFromArgs(params.Args(), appDir)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret), nil
+}
+
+var DefaultHttpClient = &http.Client{Timeout: time.Minute * 5}
