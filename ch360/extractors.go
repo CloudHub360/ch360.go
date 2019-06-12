@@ -28,10 +28,10 @@ type Extractor struct {
 type ExtractorList []Extractor
 
 func (client *ExtractorsClient) issueRequest(ctx context.Context, method string, suffix string) (*http.Response, error) {
-	return client.issueRequestWithBody(ctx, method, suffix, nil)
+	return client.issueRequestWith(ctx, method, suffix, nil, nil)
 }
 
-func (client *ExtractorsClient) issueRequestWithBody(ctx context.Context, method, suffix string, body io.Reader) (*http.Response, error) {
+func (client *ExtractorsClient) issueRequestWith(ctx context.Context, method, suffix string, body io.Reader, headers map[string]string) (*http.Response, error) {
 	request, err := http.NewRequest(method,
 		client.baseUrl+"/extractors/"+suffix,
 		body)
@@ -42,11 +42,27 @@ func (client *ExtractorsClient) issueRequestWithBody(ctx context.Context, method
 
 	request = request.WithContext(ctx)
 
+	for k, v := range headers {
+		request.Header.Add(k, v)
+	}
+
 	return client.requestSender.Do(request)
 }
 
 func (client *ExtractorsClient) Create(ctx context.Context, name string, config io.Reader) error {
-	_, err := client.issueRequestWithBody(ctx, "POST", name, config)
+	_, err := client.issueRequestWith(ctx, "POST", name, config, nil)
+
+	return err
+}
+
+func (client *ExtractorsClient) CreateFromModules(ctx context.Context, name, jsonTemplate string) error {
+	headers := map[string]string{
+		"Content-Type": "application/json",
+	}
+
+	body := bytes.NewBufferString(jsonTemplate)
+
+	_, err := client.issueRequestWith(ctx, "POST", name, body, headers)
 
 	return err
 }

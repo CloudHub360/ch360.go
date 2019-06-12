@@ -19,6 +19,7 @@ type ExtractorsClientSuite struct {
 	httpClient      *mocks.HttpDoer
 	extractorName   string
 	extractorConfig *bytes.Buffer
+	modulesTemplate string
 	ctx             context.Context
 }
 
@@ -45,10 +46,14 @@ func (suite *ExtractorsClientSuite) request() *http.Request {
 	return (call.Arguments[0]).(*http.Request)
 }
 
-func (suite *ExtractorsClientSuite) AssertRequestIssued(method string, urlPath string) {
+func (suite *ExtractorsClientSuite) AssertRequestIssued(method string, urlPath string) requestAssertion {
 	assert.Equal(suite.T(), method, suite.request().Method)
 	assert.Equal(suite.T(), urlPath, suite.request().URL.Path)
 	assert.Equal(suite.T(), suite.ctx, suite.request().Context())
+
+	return requestAssertion{
+		request: suite.request(),
+	}
 }
 
 func (suite *ExtractorsClientSuite) ClearExpectedCalls() {
@@ -58,13 +63,28 @@ func (suite *ExtractorsClientSuite) ClearExpectedCalls() {
 func (suite *ExtractorsClientSuite) Test_CreateExtractor_Issues_Create_Extractor_Request() {
 	// Arrange
 	suite.extractorConfig.Write([]byte("some bytes"))
-	suite.extractorConfig.Reset()
 
 	// Act
 	suite.sut.Create(suite.ctx, suite.extractorName, suite.extractorConfig)
 
 	// Assert
 	suite.AssertRequestIssued("POST", apiUrl+"/extractors/"+suite.extractorName)
+}
+
+func (suite *ExtractorsClientSuite) Test_CreateExtractorFromModules_Issues_Create_Extractor_Request() {
+	// Arrange
+	suite.modulesTemplate = "some bytes"
+
+	// Act
+	suite.sut.CreateFromModules(suite.ctx, suite.extractorName, suite.modulesTemplate)
+
+	// Assert
+	suite.AssertRequestIssued("POST", apiUrl+"/extractors/"+suite.extractorName).
+		WithBody(suite.T(), []byte(suite.modulesTemplate)).
+		WithHeaders(suite.T(), map[string][]string{
+			"Content-Type": {"application/json"},
+		})
+
 }
 
 func (suite *ExtractorsClientSuite) Test_DeleteExtractor_Issues_Delete_Extractor_Request() {
@@ -146,3 +166,27 @@ var exampleGetExtractorsResponse = `{
 		}
 	]
 }`
+
+type requestAssertion struct {
+	request *http.Request
+}
+
+func (r requestAssertion) WithBody(t *testing.T, expectedBody []byte) requestAssertion {
+	actualBody := bytes.Buffer{}
+	_, _ = actualBody.ReadFrom(r.request.Body)
+	assert.Equal(t, expectedBody, actualBody.Bytes())
+	return r
+}
+
+func (r requestAssertion) WithHeaders(t *testing.T, headers map[string][]string) requestAssertion {
+
+	for expectedHeader, expectedHeaderValue := range headers {
+
+		actualHeaderValue, ok := r.request.Header[expectedHeader]
+
+		assert.True(t, ok)
+		assert.Equal(t, expectedHeaderValue, actualHeaderValue)
+	}
+
+	return r
+}
