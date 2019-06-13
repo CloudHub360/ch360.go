@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
+	"github.com/olekukonko/tablewriter"
 	"io"
 )
 
@@ -28,19 +29,29 @@ func NewListModules(client ModuleGetter, out io.Writer) *ListModules {
 }
 
 func (cmd *ListModules) Execute(ctx context.Context) error {
-	Modules, err := cmd.client.GetAll(ctx)
+	modules, err := cmd.client.GetAll(ctx)
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err
 	}
 
-	if len(Modules) == 0 {
+	if len(modules) == 0 {
 		fmt.Fprintln(cmd.writer, "No modules found.")
+		return nil
 	}
 
-	for _, Module := range Modules {
-		fmt.Fprintln(cmd.writer, Module.ID)
+	table := tablewriter.NewWriter(cmd.writer)
+	table.SetHeader([]string{"Name", "ID", "Description"})
+	table.SetBorder(false)
+	table.SetAutoFormatHeaders(false)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetCenterSeparator("-")
+	table.SetAutoWrapText(false)
+	table.SetColumnSeparator("")
+	for _, module := range modules {
+		table.Append([]string{module.Name, module.ID, module.Description})
 	}
+	table.Render()
 
 	return nil
 }
