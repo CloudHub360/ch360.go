@@ -3,7 +3,6 @@ package ch360
 import (
 	"context"
 	"io"
-	"net/http"
 )
 
 //go:generate mockery -name "DocumentReader"
@@ -14,19 +13,13 @@ type DocumentReader interface {
 }
 
 func (client *DocumentsClient) Read(ctx context.Context, documentId string) error {
-	request, err := http.NewRequest("PUT",
-		client.baseUrl+"/documents/"+documentId+"/reads",
-		nil)
-	request = request.WithContext(ctx)
+	response, err := newRequest(ctx, "PUT", client.baseUrl+"/documents/"+documentId+"/reads", nil).
+		issue(client.requestSender)
 
 	if err != nil {
 		return err
 	}
 
-	response, err := client.requestSender.Do(request)
-	if err != nil {
-		return err
-	}
 	response.Body.Close()
 
 	return nil
@@ -52,18 +45,14 @@ var readModeHeaders = map[ReadMode]string{
 
 func (client *DocumentsClient) ReadResult(ctx context.Context,
 	documentId string, mode ReadMode) (io.ReadCloser, error) {
-
-	request, err := http.NewRequest("GET",
-		client.baseUrl+"/documents/"+documentId+"/reads",
-		nil)
-	request.Header.Add("Accept", readModeHeaders[mode])
-	request = request.WithContext(ctx)
-
-	if err != nil {
-		return nil, err
+	headers := map[string]string{
+		"Accept": readModeHeaders[mode],
 	}
 
-	response, err := client.requestSender.Do(request)
+	response, err := newRequest(ctx, "GET", client.baseUrl+"/documents/"+documentId+"/reads", nil).
+		withHeaders(headers).
+		issue(client.requestSender)
+
 	if err != nil {
 		return nil, err
 	}
