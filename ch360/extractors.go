@@ -33,12 +33,39 @@ func (client *ExtractorsClient) Create(ctx context.Context, name string, config 
 	return err
 }
 
-func (client *ExtractorsClient) CreateFromModules(ctx context.Context, name string, jsonTemplate io.Reader) error {
+func (client *ExtractorsClient) CreateFromJson(ctx context.Context, name string, jsonTemplate io.Reader) error {
+	var template ModulesTemplate
+
+	err := json.NewDecoder(jsonTemplate).Decode(&template)
+
+	if err != nil {
+		return err
+	}
+
+	return client.CreateFromModules(ctx, name, template)
+}
+
+type ModulesTemplate struct {
+	Modules []ModuleTemplate `json:"modules"`
+}
+
+type ModuleTemplate struct {
+	ID        string                 `json:"id"`
+	Arguments map[string]interface{} `json:"arguments,omitempty"`
+}
+
+func (client *ExtractorsClient) CreateFromModules(ctx context.Context, name string, modules ModulesTemplate) error {
 	headers := map[string]string{
 		"Content-Type": "application/json",
 	}
 
-	_, err := newRequest(ctx, "POST", client.baseUrl+"/extractors/"+name, jsonTemplate).
+	jsonTemplate, err := json.Marshal(modules)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = newRequest(ctx, "POST", client.baseUrl+"/extractors/"+name, bytes.NewBuffer(jsonTemplate)).
 		withHeaders(headers).
 		issue(client.requestSender)
 

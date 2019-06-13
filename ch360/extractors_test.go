@@ -76,7 +76,7 @@ func (suite *ExtractorsClientSuite) Test_CreateExtractorFromModules_Issues_Creat
 	suite.modulesTemplate = bytes.NewBufferString("some bytes")
 
 	// Act
-	suite.sut.CreateFromModules(suite.ctx, suite.extractorName, suite.modulesTemplate)
+	suite.sut.CreateFromJson(suite.ctx, suite.extractorName, suite.modulesTemplate)
 
 	// Assert
 	suite.AssertRequestIssued("POST", apiUrl+"/extractors/"+suite.extractorName).
