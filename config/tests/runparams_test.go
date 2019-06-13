@@ -26,6 +26,8 @@ func Test_RunParams_Noun(t *testing.T) {
 		Extractors   bool
 		Classifier   bool
 		Classifiers  bool
+		Modules      bool
+		Module       bool
 		ExpectedNoun config.Noun
 	}{
 		{
@@ -45,6 +47,14 @@ func Test_RunParams_Noun(t *testing.T) {
 			ExpectedNoun: config.Classifier,
 		},
 		{
+			Module:       true,
+			ExpectedNoun: config.Module,
+		},
+		{
+			Modules:      true,
+			ExpectedNoun: config.Module,
+		},
+		{
 			ExpectedNoun: -1,
 		},
 	}
@@ -55,6 +65,8 @@ func Test_RunParams_Noun(t *testing.T) {
 		sut.Extractors = nounTest.Extractors
 		sut.Classifier = nounTest.Classifier
 		sut.Classifiers = nounTest.Classifiers
+		sut.Module = nounTest.Module
+		sut.Modules = nounTest.Modules
 
 		assert.Equal(t, nounTest.ExpectedNoun, sut.Noun())
 	}

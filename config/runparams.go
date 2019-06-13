@@ -21,6 +21,8 @@ type RunParams struct {
 	Classifier  bool
 	Extractors  bool
 	Classifiers bool
+	Modules     bool
+	Module      bool
 
 	ClassifierName string `docopt:"<classifier>"`
 	ExtractorName  string `docopt:"<extractor>"`
@@ -67,6 +69,7 @@ type Noun int
 const (
 	Classifier Noun = iota
 	Extractor
+	Module
 )
 
 func (r RunParams) Verb() Verb {
@@ -129,6 +132,8 @@ func (r RunParams) Noun() Noun {
 		return Extractor
 	} else if r.Classifier || r.Classifiers {
 		return Classifier
+	} else if r.Module || r.Modules {
+		return Module
 	}
 
 	return -1
