@@ -45,6 +45,8 @@ Options:
                                    : basename as the input
   -p, --progress                   : Show progress when classifying files. Only visible when
                                      redirecting stdout or in conjunction with -m or -o.
+  -t, --from-template <template>   : The extractor modules template to use when creating an
+                                     extractor from modules.
 `
 
 	filenameExamples := `
