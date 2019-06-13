@@ -45,7 +45,7 @@ func NewCreateExtractorFromTemplateWithArgs(params *config.RunParams,
 func (cmd *CreateExtractorFromTemplate) Execute(ctx context.Context) error {
 	fmt.Fprintf(cmd.writer, "Creating extractor '%s'... ", cmd.extractorName)
 
-	err := cmd.creator.CreateFromModules(ctx, cmd.extractorName, cmd.template)
+	err := cmd.creator.CreateFromJson(ctx, cmd.extractorName, cmd.template)
 
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")

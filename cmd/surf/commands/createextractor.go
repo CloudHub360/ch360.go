@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
 	"io"
 	"os"
@@ -15,7 +16,8 @@ const CreateExtractorCommand = "create extractor"
 
 type ExtractorCreator interface {
 	Create(ctx context.Context, name string, config io.Reader) error
-	CreateFromModules(ctx context.Context, name string, config io.Reader) error
+	CreateFromJson(ctx context.Context, name string, jsonTemplate io.Reader) error
+	CreateFromModules(ctx context.Context, name string, modules ch360.ModulesTemplate) error
 }
 
 type CreateExtractor struct {

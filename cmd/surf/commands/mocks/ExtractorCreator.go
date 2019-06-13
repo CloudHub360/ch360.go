@@ -25,8 +25,8 @@ func (_m *ExtractorCreator) Create(ctx context.Context, name string, config io.R
 	return r0
 }
 
-// CreateFromModules provides a mock function with given fields: ctx, name, config
-func (_m *ExtractorCreator) CreateFromModules(ctx context.Context, name string, config io.Reader) error {
+// CreateFromJson provides a mock function with given fields: ctx, name, config
+func (_m *ExtractorCreator) CreateFromJson(ctx context.Context, name string, config io.Reader) error {
 	ret := _m.Called(ctx, name, config)
 
 	var r0 error

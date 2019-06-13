@@ -34,7 +34,8 @@ type RunParams struct {
 	ClientId     string `docopt:"-i,--client-id"`
 	ClientSecret string `docopt:"-s,--client-secret"`
 
-	ModulesTemplate string `docopt:"-t,--from-template"`
+	ModulesTemplate string   `docopt:"-t,--from-template"`
+	ModuleIds       []string `docopt:"<module-ids>"`
 
 	ConfigPath     string `docopt:"<config-file>"`
 	SamplesPath    string `docopt:"<samples-zip>"`
