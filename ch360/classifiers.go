@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"github.com/CloudHub360/ch360.go/net"
 	"io"
-	"net/http"
 )
 
 type ClassifiersClient struct {
@@ -27,34 +26,9 @@ type Classifier struct {
 
 type ClassifierList []Classifier
 
-func (client *ClassifiersClient) issueRequest(ctx context.Context, method string, classifierName string) (*http.Response, error) {
-	return client.issueRequestWith(ctx, method, classifierName, nil, nil)
-}
-
-func (client *ClassifiersClient) issueRequestWith(ctx context.Context, method string,
-	suffix string,
-	body io.Reader,
-	headers map[string]string) (*http.Response, error) {
-
-	request, err := http.NewRequest(method,
-		client.baseUrl+"/classifiers/"+suffix,
-		body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	request = request.WithContext(ctx)
-
-	for k, v := range headers {
-		request.Header.Add(k, v)
-	}
-
-	return client.requestSender.Do(request)
-}
-
 func (client *ClassifiersClient) Create(ctx context.Context, name string) error {
-	_, err := client.issueRequest(ctx, "POST", name)
+	_, err := newRequest(ctx, "POST", client.baseUrl+"/classifiers/"+name, nil).
+		issue(client.requestSender)
 
 	return err
 }
@@ -63,13 +37,17 @@ func (client *ClassifiersClient) Upload(ctx context.Context, name string, conten
 	headers := map[string]string{
 		"Content-Type": "application/vnd.waives.classifier+zip",
 	}
-	_, err := client.issueRequestWith(ctx, "POST", name, contents, headers)
+
+	_, err := newRequest(ctx, "POST", client.baseUrl+"/classifiers/"+name, contents).
+		withHeaders(headers).
+		issue(client.requestSender)
 
 	return err
 }
 
 func (client *ClassifiersClient) Delete(ctx context.Context, name string) error {
-	_, err := client.issueRequest(ctx, "DELETE", name)
+	_, err := newRequest(ctx, "DELETE", client.baseUrl+"/classifiers/"+name, nil).
+		issue(client.requestSender)
 
 	return err
 }
@@ -83,14 +61,17 @@ func (client *ClassifiersClient) Train(ctx context.Context, name string, samples
 	headers := map[string]string{
 		"Content-Type": "application/zip",
 	}
-	_, err := client.issueRequestWith(ctx, "POST", name+"/samples", samplesArchive, headers)
+
+	_, err := newRequest(ctx, "POST", client.baseUrl+"/classifiers/"+name+"/samples", samplesArchive).
+		withHeaders(headers).
+		issue(client.requestSender)
 
 	return err
 }
 
 func (client *ClassifiersClient) GetAll(ctx context.Context) (ClassifierList, error) {
-
-	response, err := client.issueRequest(ctx, "GET", "")
+	response, err := newRequest(ctx, "GET", client.baseUrl+"/classifiers", nil).
+		issue(client.requestSender)
 
 	if err != nil {
 		return nil, err
