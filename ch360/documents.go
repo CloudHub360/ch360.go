@@ -7,7 +7,6 @@ import (
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360/results"
 	"github.com/CloudHub360/ch360.go/net"
-	"net/http"
 )
 
 var TotalDocumentSlots = 10
@@ -79,16 +78,10 @@ type classifyDocumentResponse struct {
 }
 
 func (client *DocumentsClient) Create(ctx context.Context, fileContents []byte) (string, error) {
-	request, err := http.NewRequest("POST",
-		client.baseUrl+"/documents",
-		bytes.NewBuffer(fileContents))
-	request = request.WithContext(ctx)
+	body := bytes.NewBuffer(fileContents)
+	response, err := newRequest(ctx, "POST", client.baseUrl+"/documents", body).
+		issue(client.requestSender)
 
-	if err != nil {
-		return "", err
-	}
-
-	response, err := client.requestSender.Do(request)
 	if err != nil {
 		return "", err
 	}
@@ -110,37 +103,24 @@ func (client *DocumentsClient) Create(ctx context.Context, fileContents []byte) 
 }
 
 func (client *DocumentsClient) Delete(ctx context.Context, documentId string) error {
-	request, err := http.NewRequest("DELETE",
-		client.baseUrl+"/documents/"+documentId,
-		nil)
-	request = request.WithContext(ctx)
+	_, err := newRequest(ctx, "DELETE", client.baseUrl+"/documents/"+documentId, nil).
+		issue(client.requestSender)
 
-	if err != nil {
-		return err
-	}
-
-	_, err = client.requestSender.Do(request)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (client *DocumentsClient) Classify(ctx context.Context, documentId string, classifierName string) (*results.ClassificationResult, error) {
-	request, err := http.NewRequest("POST",
-		client.baseUrl+"/documents/"+documentId+"/classify/"+classifierName,
-		nil)
-	request = request.WithContext(ctx)
+	response, err := newRequest(ctx, "POST",
+		client.baseUrl+"/documents/"+documentId+"/classify/"+classifierName, nil).
+		issue(client.requestSender)
 
 	if err != nil {
 		return nil, err
 	}
 
-	response, err := client.requestSender.Do(request)
-	if err != nil {
-		return nil, err
-	}
+	defer func() {
+		response.Body.Close()
+	}()
 
 	buf := bytes.Buffer{}
 	_, err = buf.ReadFrom(response.Body)
@@ -169,16 +149,10 @@ func (client *DocumentsClient) Classify(ctx context.Context, documentId string, 
 }
 
 func (client *DocumentsClient) Extract(ctx context.Context, documentId string, extractorName string) (*results.ExtractionResult, error) {
-	request, err := http.NewRequest("POST",
-		client.baseUrl+"/documents/"+documentId+"/extract/"+extractorName,
-		nil)
-	request = request.WithContext(ctx)
+	response, err := newRequest(ctx, "POST",
+		client.baseUrl+"/documents/"+documentId+"/extract/"+extractorName, nil).
+		issue(client.requestSender)
 
-	if err != nil {
-		return nil, err
-	}
-
-	response, err := client.requestSender.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -198,18 +172,17 @@ func (client *DocumentsClient) Extract(ctx context.Context, documentId string, e
 }
 
 func (client *DocumentsClient) GetAll(ctx context.Context) ([]Document, error) {
-	request, err := http.NewRequest("GET",
-		client.baseUrl+"/documents", nil)
-	request = request.WithContext(ctx)
+	response, err := newRequest(ctx, "GET",
+		client.baseUrl+"/documents", nil).
+		issue(client.requestSender)
 
 	if err != nil {
 		return nil, err
 	}
 
-	response, err := client.requestSender.Do(request)
-	if err != nil {
-		return nil, err
-	}
+	defer func() {
+		response.Body.Close()
+	}()
 
 	buf := bytes.Buffer{}
 	_, err = buf.ReadFrom(response.Body)
