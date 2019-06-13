@@ -9,18 +9,18 @@ import (
 	"os"
 )
 
-type CreateExtractorFromModules struct {
+type CreateExtractorFromTemplate struct {
 	writer        io.Writer
 	creator       ExtractorCreator
 	extractorName string
 	template      io.ReadCloser
 }
 
-func NewCreateExtractorFromModules(writer io.Writer,
+func NewCreateExtractorFromTemplate(writer io.Writer,
 	creator ExtractorCreator,
 	extractorName string,
-	templateFile io.ReadCloser) *CreateExtractorFromModules {
-	return &CreateExtractorFromModules{
+	templateFile io.ReadCloser) *CreateExtractorFromTemplate {
+	return &CreateExtractorFromTemplate{
 		writer:        writer,
 		creator:       creator,
 		template:      templateFile,
@@ -28,21 +28,21 @@ func NewCreateExtractorFromModules(writer io.Writer,
 	}
 }
 
-func NewCreateExtractorFromModulesWithArgs(params *config.RunParams,
-	client ExtractorCreator, out io.Writer) (*CreateExtractorFromModules, error) {
+func NewCreateExtractorFromTemplateWithArgs(params *config.RunParams,
+	client ExtractorCreator, out io.Writer) (*CreateExtractorFromTemplate, error) {
 
 	configFile, err := os.Open(params.ModulesTemplate)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("The file '%s' could not be found.", params.ModulesTemplate))
 	}
 
-	return NewCreateExtractorFromModules(out,
+	return NewCreateExtractorFromTemplate(out,
 		client,
 		params.Name,
 		configFile), nil
 }
 
-func (cmd *CreateExtractorFromModules) Execute(ctx context.Context) error {
+func (cmd *CreateExtractorFromTemplate) Execute(ctx context.Context) error {
 	fmt.Fprintf(cmd.writer, "Creating extractor '%s'... ", cmd.extractorName)
 
 	err := cmd.creator.CreateFromModules(ctx, cmd.extractorName, cmd.template)
@@ -57,6 +57,6 @@ func (cmd *CreateExtractorFromModules) Execute(ctx context.Context) error {
 	return nil
 }
 
-func (cmd CreateExtractorFromModules) Usage() string {
+func (cmd CreateExtractorFromTemplate) Usage() string {
 	return CreateExtractorCommand
 }

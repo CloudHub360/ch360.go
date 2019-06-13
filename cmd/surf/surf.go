@@ -21,8 +21,8 @@ Usage:
   surf login [options]
   surf ` + new(commands.UploadClassifier).Usage() + ` <name> <classifier-file> [options]
   surf ` + new(commands.CreateClassifier).Usage() + ` <name> <samples-zip> [options]
-  surf ` + new(commands.CreateExtractor).Usage() + ` <name> <config-file> [options]
-  surf ` + new(commands.CreateExtractor).Usage() + ` <name> --from-template=<template> [options]
+  surf ` + new(commands.CreateExtractor).Usage() + ` <name> <config-file>
+  surf ` + new(commands.CreateExtractorFromTemplate).Usage() + ` <name> --from-template=<template> 
   surf ` + new(commands.DeleteClassifier).Usage() + ` <name> [options]
   surf ` + new(commands.DeleteExtractor).Usage() + ` <name> [options]
   surf ` + new(commands.ListClassifiers).Usage() + ` [options]
