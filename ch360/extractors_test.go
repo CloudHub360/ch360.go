@@ -106,7 +106,7 @@ func (suite *ExtractorsClientSuite) Test_GetAll_Issues_Get_All_Extractors_Reques
 	suite.sut.GetAll(suite.ctx)
 
 	// Assert
-	suite.AssertRequestIssued("GET", apiUrl+"/extractors/")
+	suite.AssertRequestIssued("GET", apiUrl+"/extractors")
 }
 
 func (suite *ExtractorsClientSuite) Test_GetAll_Returns_List_Of_Extractors() {

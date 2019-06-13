@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"github.com/CloudHub360/ch360.go/net"
 	"io"
-	"net/http"
 )
 
 type ExtractorsClient struct {
@@ -27,30 +26,9 @@ type Extractor struct {
 
 type ExtractorList []Extractor
 
-func (client *ExtractorsClient) issueRequest(ctx context.Context, method string, suffix string) (*http.Response, error) {
-	return client.issueRequestWith(ctx, method, suffix, nil, nil)
-}
-
-func (client *ExtractorsClient) issueRequestWith(ctx context.Context, method, suffix string, body io.Reader, headers map[string]string) (*http.Response, error) {
-	request, err := http.NewRequest(method,
-		client.baseUrl+"/extractors/"+suffix,
-		body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	request = request.WithContext(ctx)
-
-	for k, v := range headers {
-		request.Header.Add(k, v)
-	}
-
-	return client.requestSender.Do(request)
-}
-
 func (client *ExtractorsClient) Create(ctx context.Context, name string, config io.Reader) error {
-	_, err := client.issueRequestWith(ctx, "POST", name, config, nil)
+	_, err := newRequest(ctx, "POST", client.baseUrl+"/extractors/"+name, config).
+		issue(client.requestSender)
 
 	return err
 }
@@ -60,24 +38,23 @@ func (client *ExtractorsClient) CreateFromModules(ctx context.Context, name stri
 		"Content-Type": "application/json",
 	}
 
-	_, err := client.issueRequestWith(ctx, "POST", name, jsonTemplate, headers)
+	_, err := newRequest(ctx, "POST", client.baseUrl+"/extractors/"+name, jsonTemplate).
+		withHeaders(headers).
+		issue(client.requestSender)
 
 	return err
 }
 
 func (client *ExtractorsClient) Delete(ctx context.Context, name string) error {
-	_, err := client.issueRequest(ctx, "DELETE", name)
+	_, err := newRequest(ctx, "DELETE", client.baseUrl+"/extractors/"+name, nil).
+		issue(client.requestSender)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (client *ExtractorsClient) GetAll(ctx context.Context) (ExtractorList, error) {
-
-	response, err := client.issueRequest(ctx, "GET", "")
+	response, err := newRequest(ctx, "GET", client.baseUrl+"/extractors", nil).
+		issue(client.requestSender)
 
 	if err != nil {
 		return nil, err
