@@ -2,6 +2,8 @@
 
 package mocks
 
+import ch360 "github.com/CloudHub360/ch360.go/ch360"
+
 import context "context"
 import io "io"
 import mock "github.com/stretchr/testify/mock"
@@ -25,13 +27,27 @@ func (_m *ExtractorCreator) Create(ctx context.Context, name string, config io.R
 	return r0
 }
 
-// CreateFromJson provides a mock function with given fields: ctx, name, config
-func (_m *ExtractorCreator) CreateFromJson(ctx context.Context, name string, config io.Reader) error {
-	ret := _m.Called(ctx, name, config)
+// CreateFromJson provides a mock function with given fields: ctx, name, jsonTemplate
+func (_m *ExtractorCreator) CreateFromJson(ctx context.Context, name string, jsonTemplate io.Reader) error {
+	ret := _m.Called(ctx, name, jsonTemplate)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, io.Reader) error); ok {
-		r0 = rf(ctx, name, config)
+		r0 = rf(ctx, name, jsonTemplate)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// CreateFromModules provides a mock function with given fields: ctx, name, modules
+func (_m *ExtractorCreator) CreateFromModules(ctx context.Context, name string, modules ch360.ModulesTemplate) error {
+	ret := _m.Called(ctx, name, modules)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, ch360.ModulesTemplate) error); ok {
+		r0 = rf(ctx, name, modules)
 	} else {
 		r0 = ret.Error(0)
 	}
