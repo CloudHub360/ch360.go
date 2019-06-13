@@ -41,7 +41,7 @@ func CommandFor(runParams *config.RunParams, apiClient *ch360.ApiClient) (Comman
 		switch runParams.Verb() {
 		case config.Create:
 			if runParams.ModulesTemplate != "" {
-				return NewCreateExtractorFromModulesWithArgs(runParams, apiClient.Extractors, out)
+				return NewCreateExtractorFromTemplateWithArgs(runParams, apiClient.Extractors, out)
 			}
 			return NewCreateExtractorFromArgs(runParams, apiClient.Extractors, out)
 		case config.Delete:
