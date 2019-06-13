@@ -70,12 +70,16 @@ Filename and glob pattern examples:
 	appDir, err := config.NewAppDirectory()
 	exitOnErr(err)
 
-	var cmd commands.Command
+	var (
+		cmd       commands.Command
+		apiClient *ch360.ApiClient
+	)
+
 	if login, _ := args.Bool("login"); login {
 		tokenRetriever := ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
 		cmd = commands.NewLoginFrom(runParams, os.Stdout, appDir, tokenRetriever)
 	} else {
-		apiClient, err := initSurf(runParams)
+		apiClient, err = initApiClient(runParams)
 		exitOnErr(err)
 		cmd, err = commands.CommandFor(runParams, apiClient)
 	}
@@ -99,7 +103,7 @@ func exitOnErr(err error) {
 	}
 }
 
-func initSurf(params *config.RunParams) (*ch360.ApiClient, error) {
+func initApiClient(params *config.RunParams) (*ch360.ApiClient, error) {
 
 	appDir, err := config.NewAppDirectory()
 	if err != nil {
