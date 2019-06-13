@@ -12,6 +12,7 @@ type ApiClient struct {
 	Classifiers *ClassifiersClient
 	Documents   *DocumentsClient
 	Extractors  *ExtractorsClient
+	Modules     *ModulesClient
 }
 
 func NewTokenRetriever(httpClient net.HttpDoer, apiUrl string) auth.TokenRetriever {
@@ -50,6 +51,10 @@ func NewApiClient(httpClient net.HttpDoer, apiUrl string, clientId string, clien
 			requestSender: &responseCheckingDoer,
 		},
 		Extractors: &ExtractorsClient{
+			baseUrl:       apiUrl,
+			requestSender: &responseCheckingDoer,
+		},
+		Modules: &ModulesClient{
 			baseUrl:       apiUrl,
 			requestSender: &responseCheckingDoer,
 		},
