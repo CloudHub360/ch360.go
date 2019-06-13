@@ -27,6 +27,7 @@ Usage:
   surf ` + new(commands.DeleteExtractor).Usage() + ` <name> [options]
   surf ` + new(commands.ListClassifiers).Usage() + ` [options]
   surf ` + new(commands.ListExtractors).Usage() + ` [options]
+  surf ` + new(commands.ListModules).Usage() + ` [options]
   surf ` + new(commands.ClassifyCommand).Usage() + ` <file> <classifier> [options]
   surf ` + new(commands.Extract).Usage() + ` <file> <extractor> [options]
   surf ` + new(commands.Read).Usage() + ` <file> (pdf|txt|wvdoc) [options]
