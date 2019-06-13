@@ -115,7 +115,7 @@ func (suite *ClassifiersClientSuite) Test_GetAll_Issues_Get_All_Classifiers_Requ
 	suite.sut.GetAll(suite.ctx)
 
 	// Assert
-	suite.AssertRequestIssued("GET", apiUrl+"/classifiers/")
+	suite.AssertRequestIssued("GET", apiUrl+"/classifiers")
 }
 
 func (suite *ClassifiersClientSuite) Test_GetAll_Returns_List_Of_Classifiers() {
