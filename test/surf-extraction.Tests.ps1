@@ -45,18 +45,17 @@ Creating extractor '$extractorName'... [OK]
         Get-Extractors | Format-MultilineOutput | Should -Match $extractorName
     }
 
-    # TODO uncomment when the extractors service functions correctly
-#    It "should not be created from an invalid fpxlc definition file" {
-#        $extractorDefinition = (Join-Path $PSScriptRoot "invalid.fpxlc")
-#        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
-#Creating extractor 'test-extractor'... [FAILED]
-#The file supplied is not a valid extractor configuration file.
-#"@
-#        $LASTEXITCODE | Should -Be 1
-#
-#        # Verify
-#        Get-Extractors | Format-MultilineOutput | Should -Not -Match $extractorName
-#    }
+   It "should not be created from an invalid fpxlc definition file" {
+       $extractorDefinition = (Join-Path $PSScriptRoot "invalid.fpxlc")
+       New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
+Creating extractor 'test-extractor'... [FAILED]
+The file supplied is not a valid extractor configuration file.
+"@
+       $LASTEXITCODE | Should -Be 1
+
+       # Verify
+       Get-Extractors | Format-MultilineOutput | Should -Not -Match $extractorName
+   }
 
     It "should not be created from a non-existent fpxlc definition file" {
         $extractorDefinition = (Join-Path $PSScriptRoot "non-existent.fpxlc")
