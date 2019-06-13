@@ -118,9 +118,7 @@ func (client *DocumentsClient) Classify(ctx context.Context, documentId string, 
 		return nil, err
 	}
 
-	defer func() {
-		response.Body.Close()
-	}()
+	defer response.Body.Close()
 
 	buf := bytes.Buffer{}
 	_, err = buf.ReadFrom(response.Body)
@@ -157,9 +155,7 @@ func (client *DocumentsClient) Extract(ctx context.Context, documentId string, e
 		return nil, err
 	}
 
-	defer func() {
-		response.Body.Close()
-	}()
+	defer response.Body.Close()
 
 	extractResponse := results.ExtractionResult{}
 	err = json.NewDecoder(response.Body).Decode(&extractResponse)
@@ -180,9 +176,7 @@ func (client *DocumentsClient) GetAll(ctx context.Context) ([]Document, error) {
 		return nil, err
 	}
 
-	defer func() {
-		response.Body.Close()
-	}()
+	defer response.Body.Close()
 
 	buf := bytes.Buffer{}
 	_, err = buf.ReadFrom(response.Body)
