@@ -10,11 +10,12 @@ func _() {
 	var x [1]struct{}
 	_ = x[Classifier-0]
 	_ = x[Extractor-1]
+	_ = x[Module-2]
 }
 
-const _Noun_name = "ClassifierExtractor"
+const _Noun_name = "ClassifierExtractorModule"
 
-var _Noun_index = [...]uint8{0, 10, 19}
+var _Noun_index = [...]uint8{0, 10, 19, 25}
 
 func (i Noun) String() string {
 	if i < 0 || i >= Noun(len(_Noun_index)-1) {
