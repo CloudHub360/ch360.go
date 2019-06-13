@@ -39,17 +39,13 @@ type ModuleList []Module
 
 func (m *ModulesClient) GetAll(ctx context.Context) (ModuleList, error) {
 
-	request, err := newRequest(ctx, "GET", m.baseUrl+"/modules", nil).build()
+	response, err := newRequest(ctx, "GET", m.baseUrl+"/modules", nil).
+		issue(m.requestSender)
 
 	if err != nil {
 		return nil, err
 	}
 
-	response, err := m.requestSender.Do(request)
-
-	if err != nil {
-		return nil, err
-	}
 	defer response.Body.Close()
 
 	var modulesResponse struct {
