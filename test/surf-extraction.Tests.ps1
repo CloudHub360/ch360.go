@@ -9,7 +9,7 @@ $extractorName = "test-extractor"
 $documentsPath = (Join-Path $PSScriptRoot (Join-Path "documents" "extraction"))
 
 function New-Extractor([string]$extractorName, [Io.FileInfo]$extractorDefinition) {
-    Invoke-App create extractor $extractorName $extractorDefinition 2>&1
+    Invoke-App upload extractor $extractorName $extractorDefinition 2>&1
 }
 
 function Get-Extractors {
@@ -37,7 +37,7 @@ Describe "extractors" {
     It "should be created from an fpxlc definition file" {
         $extractorDefinition = (Join-Path $PSScriptRoot "extract-amount.fpxlc")
         New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
-Creating extractor '$extractorName'... [OK]
+Uploading extractor '$extractorName'... [OK]
 "@
         $LASTEXITCODE | Should -Be 0
 
