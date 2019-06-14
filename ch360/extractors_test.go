@@ -19,7 +19,7 @@ type ExtractorsClientSuite struct {
 	httpClient      *mocks.HttpDoer
 	extractorName   string
 	extractorConfig *bytes.Buffer
-	modulesTemplate *bytes.Buffer
+	modulesTemplate *ch360.ModulesTemplate
 	ctx             context.Context
 }
 
@@ -31,6 +31,7 @@ func (suite *ExtractorsClientSuite) SetupTest() {
 	suite.extractorName = "extractor-name"
 	suite.extractorConfig = &bytes.Buffer{}
 	suite.ctx = context.Background()
+	suite.modulesTemplate = aModulesTemplate()
 }
 
 func TestExtractorsClientSuiteRunner(t *testing.T) {
@@ -72,19 +73,17 @@ func (suite *ExtractorsClientSuite) Test_CreateExtractor_Issues_Create_Extractor
 }
 
 func (suite *ExtractorsClientSuite) Test_CreateExtractorFromModules_Issues_Create_Extractor_Request() {
-	// Arrange
-	suite.modulesTemplate = bytes.NewBufferString("some bytes")
-
 	// Act
-	suite.sut.CreateFromJson(suite.ctx, suite.extractorName, suite.modulesTemplate)
+	suite.sut.CreateFromModules(suite.ctx, suite.extractorName, *suite.modulesTemplate)
 
 	// Assert
 	suite.AssertRequestIssued("POST", apiUrl+"/extractors/"+suite.extractorName).
-		WithBody(suite.T(), suite.modulesTemplate.Bytes()).
+		WithBody(suite.T(), func(actualBody []byte) {
+			assert.Equal(suite.T(), modulesTemplateJson, string(actualBody))
+		}).
 		WithHeaders(suite.T(), map[string][]string{
 			"Content-Type": {"application/json"},
 		})
-
 }
 
 func (suite *ExtractorsClientSuite) Test_DeleteExtractor_Issues_Delete_Extractor_Request() {
@@ -131,6 +130,14 @@ func AListOfExtractors(names ...string) ch360.ExtractorList {
 	}
 
 	return expected
+}
+
+const modulesTemplateJson = `{"modules":[{"id":"waives.name"},{"id":"waives.date"}]}`
+
+func aModulesTemplate() *ch360.ModulesTemplate {
+	template, _ := ch360.NewModulesTemplateFromJson(bytes.NewBufferString(
+		modulesTemplateJson))
+	return template
 }
 
 func anHttpResponse(body []byte) *http.Response {
