@@ -34,15 +34,13 @@ func (client *ExtractorsClient) Create(ctx context.Context, name string, config 
 }
 
 func (client *ExtractorsClient) CreateFromJson(ctx context.Context, name string, jsonTemplate io.Reader) error {
-	var template ModulesTemplate
-
-	err := json.NewDecoder(jsonTemplate).Decode(&template)
+	template, err := NewModulesTemplateFromJson(jsonTemplate)
 
 	if err != nil {
 		return err
 	}
 
-	return client.CreateFromModules(ctx, name, template)
+	return client.CreateFromModules(ctx, name, *template)
 }
 
 type ModulesTemplate struct {
