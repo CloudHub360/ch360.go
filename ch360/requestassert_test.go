@@ -12,10 +12,10 @@ type requestAssertion struct {
 	request *http.Request
 }
 
-func (r requestAssertion) WithBody(t *testing.T, expectedBody []byte) requestAssertion {
+func (r requestAssertion) WithBody(t *testing.T, assertFn func(actualBody []byte)) requestAssertion {
 	actualBody := bytes.Buffer{}
 	_, _ = actualBody.ReadFrom(r.request.Body)
-	assert.Equal(t, expectedBody, actualBody.Bytes())
+	assertFn(actualBody.Bytes())
 	return r
 }
 
