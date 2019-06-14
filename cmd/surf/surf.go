@@ -50,6 +50,7 @@ Options:
                                      redirecting stdout or in conjunction with -m or -o.
   -t, --from-template <template>   : The extractor modules template to use when creating an
                                      extractor from modules.
+  --verbose-http                   : Log HTTP requests and responses as they happen, to stderr.
 `
 
 	filenameExamples := `
@@ -125,7 +126,7 @@ func initApiClient(params *config.RunParams) (*ch360.ApiClient, error) {
 		return nil, err
 	}
 
-	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret), nil
+	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret, params.VerboseHttp), nil
 }
 
 var DefaultHttpClient = &http.Client{Timeout: time.Minute * 5}

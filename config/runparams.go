@@ -34,6 +34,7 @@ type RunParams struct {
 	ShowProgress bool   `docopt:"-p,--progress"`
 	ClientId     string `docopt:"-i,--client-id"`
 	ClientSecret string `docopt:"-s,--client-secret"`
+	VerboseHttp  bool   `docopt:"--verbose-http"`
 
 	ModulesTemplate string   `docopt:"-t,--from-template"`
 	ModuleIds       []string `docopt:"<module-ids>"`
