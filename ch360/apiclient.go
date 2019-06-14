@@ -4,6 +4,7 @@ import (
 	"github.com/CloudHub360/ch360.go/auth"
 	"github.com/CloudHub360/ch360.go/net"
 	"github.com/CloudHub360/ch360.go/response"
+	"os"
 )
 
 const ApiAddress = "https://api.waives.io"
@@ -23,14 +24,19 @@ func NewTokenRetriever(httpClient net.HttpDoer, apiUrl string) auth.TokenRetriev
 			&response.ErrorChecker{}))
 }
 
-func NewApiClient(httpClient net.HttpDoer, apiUrl string, clientId string, clientSecret string) *ApiClient {
+func NewApiClient(httpClient net.HttpDoer, apiUrl string, clientId string, clientSecret string, log bool) *ApiClient {
 
-	ctxhttpClient := net.NewContextAwareHttpClient(httpClient)
+	var myHttpClient net.HttpDoer
+	myHttpClient = net.NewContextAwareHttpClient(httpClient)
 
-	tokenRetriever := NewTokenRetriever(ctxhttpClient, apiUrl)
+	if log {
+		myHttpClient = NewLoggingDoer(myHttpClient, os.Stderr)
+	}
+
+	tokenRetriever := NewTokenRetriever(myHttpClient, apiUrl)
 
 	authorisingDoer := AuthorisingDoer{
-		wrappedSender:  ctxhttpClient,
+		wrappedSender:  myHttpClient,
 		tokenRetriever: tokenRetriever,
 		clientId:       clientId,
 		clientSecret:   clientSecret,
