@@ -19,15 +19,15 @@ func main() {
 
 Usage:
   surf login [options]
+  surf ` + new(commands.ListClassifiers).Usage() + ` [options]
   surf ` + new(commands.UploadClassifier).Usage() + ` <name> <classifier-file> [options]
   surf ` + new(commands.CreateClassifier).Usage() + ` <name> <samples-zip> [options]
-  surf ` + new(commands.CreateExtractor).Usage() + ` <name> <config-file>
-  surf ` + new(commands.CreateExtractorFromTemplate).Usage() + ` <name> --from-template=<template> 
-  surf ` + new(commands.CreateExtractor).Usage() + ` <name> <module-ids>...
   surf ` + new(commands.DeleteClassifier).Usage() + ` <name> [options]
-  surf ` + new(commands.DeleteExtractor).Usage() + ` <name> [options]
-  surf ` + new(commands.ListClassifiers).Usage() + ` [options]
   surf ` + new(commands.ListExtractors).Usage() + ` [options]
+  surf ` + new(commands.UploadExtractor).Usage() + ` <name> <config-file>
+  surf ` + new(commands.CreateExtractor).Usage() + ` <name> --from-template=<template> 
+  surf ` + new(commands.CreateExtractor).Usage() + ` <name> <module-ids>...
+  surf ` + new(commands.DeleteExtractor).Usage() + ` <name> [options]
   surf ` + new(commands.ListModules).Usage() + ` [options]
   surf ` + new(commands.ClassifyCommand).Usage() + ` <file> <classifier> [options]
   surf ` + new(commands.Extract).Usage() + ` <file> <extractor> [options]
