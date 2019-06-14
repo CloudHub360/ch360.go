@@ -54,6 +54,13 @@ type ModuleTemplate struct {
 	Arguments map[string]interface{} `json:"arguments,omitempty"`
 }
 
+func NewModulesTemplateFromJson(stream io.Reader) (*ModulesTemplate, error) {
+	template := ModulesTemplate{}
+	err := json.NewDecoder(stream).Decode(&template)
+
+	return &template, err
+}
+
 func (client *ExtractorsClient) CreateFromModules(ctx context.Context, name string, modules ModulesTemplate) error {
 	headers := map[string]string{
 		"Content-Type": "application/json",
