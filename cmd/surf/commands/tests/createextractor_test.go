@@ -17,7 +17,7 @@ type CreateExtractorSuite struct {
 	suite.Suite
 	output        *bytes.Buffer
 	creator       *mocks.ExtractorCreator
-	sut           *commands.CreateExtractor
+	sut           *commands.UploadExtractor
 	config        *bytes.Buffer
 	extractorName string
 	ctx           context.Context
@@ -30,7 +30,7 @@ func (suite *CreateExtractorSuite) SetupTest() {
 	suite.config = &bytes.Buffer{}
 	suite.config.Write([]byte("some data"))
 	suite.extractorName = generators.String("extractor-name")
-	suite.sut = commands.NewCreateExtractor(suite.output,
+	suite.sut = commands.NewUploadExtractor(suite.output,
 		suite.creator,
 		suite.extractorName,
 		suite.config)
