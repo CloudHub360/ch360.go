@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-type CreateExtractorSuite struct {
+type UploadExtractorSuite struct {
 	suite.Suite
 	output        *bytes.Buffer
 	creator       *mocks.ExtractorCreator
@@ -23,7 +23,7 @@ type CreateExtractorSuite struct {
 	ctx           context.Context
 }
 
-func (suite *CreateExtractorSuite) SetupTest() {
+func (suite *UploadExtractorSuite) SetupTest() {
 	suite.output = &bytes.Buffer{}
 	suite.creator = new(mocks.ExtractorCreator)
 
@@ -39,21 +39,21 @@ func (suite *CreateExtractorSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func TestCreateExtractorSuiteRunner(t *testing.T) {
-	suite.Run(t, new(CreateExtractorSuite))
+func TestUploadExtractorSuiteRunner(t *testing.T) {
+	suite.Run(t, new(UploadExtractorSuite))
 }
 
-func (suite *CreateExtractorSuite) ClearExpectedCalls() {
+func (suite *UploadExtractorSuite) ClearExpectedCalls() {
 	suite.creator.ExpectedCalls = nil
 }
 
-func (suite *CreateExtractorSuite) TestCreateExtractor_Execute_Calls_Client_With_Correct_Args() {
+func (suite *UploadExtractorSuite) TestUploadExtractor_Execute_Calls_Client_With_Correct_Args() {
 	suite.sut.Execute(context.Background())
 
 	suite.creator.AssertCalled(suite.T(), "Create", suite.ctx, suite.extractorName, suite.config)
 }
 
-func (suite *CreateExtractorSuite) TestCreateExtractor_Execute_Returns_Error_If_The_Extractor_Cannot_Be_Created() {
+func (suite *UploadExtractorSuite) TestUploadExtractor_Execute_Returns_Error_If_The_Extractor_Cannot_Be_Created() {
 	expectedErr := errors.New("Error message")
 	suite.ClearExpectedCalls()
 	suite.creator.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(expectedErr)
