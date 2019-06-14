@@ -2,61 +2,77 @@ package commands
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 )
 
-//go:generate mockery -name "ExtractorCreator"
-
 const CreateExtractorCommand = "create extractor"
-
-type ExtractorCreator interface {
-	Create(ctx context.Context, name string, config io.Reader) error
-	CreateFromJson(ctx context.Context, name string, jsonTemplate io.Reader) error
-	CreateFromModules(ctx context.Context, name string, modules ch360.ModulesTemplate) error
-}
 
 type CreateExtractor struct {
 	writer        io.Writer
 	creator       ExtractorCreator
 	extractorName string
-	config        io.Reader
+	template      *ch360.ModulesTemplate
 }
 
 func NewCreateExtractor(writer io.Writer,
 	creator ExtractorCreator,
 	extractorName string,
-	config io.Reader) *CreateExtractor {
+	template *ch360.ModulesTemplate) *CreateExtractor {
 	return &CreateExtractor{
 		writer:        writer,
 		creator:       creator,
-		config:        config,
+		template:      template,
 		extractorName: extractorName,
 	}
 }
 
-func NewCreateExtractorFromArgs(params *config.RunParams,
+func NewCreateExtractorWithArgs(params *config.RunParams,
 	client ExtractorCreator, out io.Writer) (*CreateExtractor, error) {
 
-	configFile, err := os.Open(params.ConfigPath)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("The file '%s' could not be found.", params.ConfigPath))
+	var (
+		err          error
+		templateFile *os.File
+		template     = new(ch360.ModulesTemplate)
+	)
+
+	if params.ModulesTemplate != "" {
+		// deserialise template file
+		templateFile, err = os.Open(params.ModulesTemplate)
+
+		if err != nil {
+			return nil, err
+		}
+
+		template, err = ch360.NewModulesTemplateFromJson(templateFile)
+
+		if err != nil {
+			return nil, errors.WithMessagef(err, "Error when reading json template '%s'", params.ModulesTemplate)
+		}
+
+	} else {
+		// create template struct from IDs
+		for _, moduleId := range params.ModuleIds {
+			template.Modules = append(template.Modules, ch360.ModuleTemplate{
+				ID: moduleId,
+			})
+		}
 	}
 
 	return NewCreateExtractor(out,
 		client,
 		params.Name,
-		configFile), nil
+		template), nil
 }
 
 func (cmd *CreateExtractor) Execute(ctx context.Context) error {
 	fmt.Fprintf(cmd.writer, "Creating extractor '%s'... ", cmd.extractorName)
 
-	err := cmd.creator.Create(ctx, cmd.extractorName, cmd.config)
+	err := cmd.creator.CreateFromModules(ctx, cmd.extractorName, *cmd.template)
 
 	if err != nil {
 		fmt.Fprintln(cmd.writer, "[FAILED]")
