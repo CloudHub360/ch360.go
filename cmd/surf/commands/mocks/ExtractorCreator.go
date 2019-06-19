@@ -42,11 +42,11 @@ func (_m *ExtractorCreator) CreateFromJson(ctx context.Context, name string, jso
 }
 
 // CreateFromModules provides a mock function with given fields: ctx, name, modules
-func (_m *ExtractorCreator) CreateFromModules(ctx context.Context, name string, modules ch360.ModulesTemplate) error {
+func (_m *ExtractorCreator) CreateFromModules(ctx context.Context, name string, modules ch360.ExtractorTemplate) error {
 	ret := _m.Called(ctx, name, modules)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, ch360.ModulesTemplate) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, ch360.ExtractorTemplate) error); ok {
 		r0 = rf(ctx, name, modules)
 	} else {
 		r0 = ret.Error(0)

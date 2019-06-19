@@ -16,13 +16,13 @@ type CreateExtractor struct {
 	writer        io.Writer
 	creator       ExtractorCreator
 	extractorName string
-	template      *ch360.ModulesTemplate
+	template      *ch360.ExtractorTemplate
 }
 
 func NewCreateExtractor(writer io.Writer,
 	creator ExtractorCreator,
 	extractorName string,
-	template *ch360.ModulesTemplate) *CreateExtractor {
+	template *ch360.ExtractorTemplate) *CreateExtractor {
 	return &CreateExtractor{
 		writer:        writer,
 		creator:       creator,
@@ -37,7 +37,7 @@ func NewCreateExtractorWithArgs(params *config.RunParams,
 	var (
 		err          error
 		templateFile *os.File
-		template     = new(ch360.ModulesTemplate)
+		template     = new(ch360.ExtractorTemplate)
 	)
 
 	if params.ModulesTemplate != "" {
