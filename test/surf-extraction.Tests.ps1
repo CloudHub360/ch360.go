@@ -12,6 +12,11 @@ function New-Extractor([string]$extractorName, [Io.FileInfo]$extractorDefinition
     Invoke-App upload extractor $extractorName $extractorDefinition 2>&1
 }
 
+function New-ExtractorFromModules([string]$extractorName,
+    [parameter(Position=0, ValueFromRemainingArguments=$true)] $moduleIds) {
+    Invoke-App create extractor $extractorName @moduleIds 2>&1
+}
+
 function Get-Extractors {
     Invoke-App list extractors 2>&1
 }
@@ -64,6 +69,16 @@ The file supplied is not a valid extractor configuration file.
 
         # Verify
         Get-Extractors | Format-MultilineOutput | Should -Not -Match $extractorName
+    }
+
+    It "should be created from a list of module IDs " {
+        New-ExtractorFromModules $extractorName "waives.name" "waives.date" | Format-MultilineOutput | Should -Be @"
+Creating extractor '$extractorName'... [OK]
+"@
+        $LASTEXITCODE | Should -Be 0
+
+        # Verify
+        Get-Extractors | Format-MultilineOutput | Should -Match $extractorName
     }
 
     AfterAll {
