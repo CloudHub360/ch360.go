@@ -43,7 +43,7 @@ func (client *ExtractorsClient) CreateFromJson(ctx context.Context, name string,
 	return client.CreateFromModules(ctx, name, *template)
 }
 
-type ModulesTemplate struct {
+type ExtractorTemplate struct {
 	Modules []ModuleTemplate `json:"modules"`
 }
 
@@ -52,14 +52,14 @@ type ModuleTemplate struct {
 	Arguments map[string]interface{} `json:"arguments,omitempty"`
 }
 
-func NewModulesTemplateFromJson(stream io.Reader) (*ModulesTemplate, error) {
-	template := ModulesTemplate{}
+func NewModulesTemplateFromJson(stream io.Reader) (*ExtractorTemplate, error) {
+	template := ExtractorTemplate{}
 	err := json.NewDecoder(stream).Decode(&template)
 
 	return &template, err
 }
 
-func (client *ExtractorsClient) CreateFromModules(ctx context.Context, name string, modules ModulesTemplate) error {
+func (client *ExtractorsClient) CreateFromModules(ctx context.Context, name string, modules ExtractorTemplate) error {
 	headers := map[string]string{
 		"Content-Type": "application/json",
 	}

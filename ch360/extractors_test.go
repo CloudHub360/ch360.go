@@ -19,7 +19,7 @@ type ExtractorsClientSuite struct {
 	httpClient      *mocks.HttpDoer
 	extractorName   string
 	extractorConfig *bytes.Buffer
-	modulesTemplate *ch360.ModulesTemplate
+	modulesTemplate *ch360.ExtractorTemplate
 	ctx             context.Context
 }
 
@@ -134,7 +134,7 @@ func AListOfExtractors(names ...string) ch360.ExtractorList {
 
 const modulesTemplateJson = `{"modules":[{"id":"waives.name"},{"id":"waives.date"}]}`
 
-func aModulesTemplate() *ch360.ModulesTemplate {
+func aModulesTemplate() *ch360.ExtractorTemplate {
 	template, _ := ch360.NewModulesTemplateFromJson(bytes.NewBufferString(
 		modulesTemplateJson))
 	return template

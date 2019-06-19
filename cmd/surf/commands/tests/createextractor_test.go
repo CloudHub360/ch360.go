@@ -19,7 +19,7 @@ type CreateExtractorSuite struct {
 	output          *bytes.Buffer
 	creator         *mocks.ExtractorCreator
 	sut             *commands.CreateExtractor
-	modulesTemplate *ch360.ModulesTemplate
+	modulesTemplate *ch360.ExtractorTemplate
 	extractorName   string
 	ctx             context.Context
 }
@@ -41,7 +41,7 @@ func (suite *CreateExtractorSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func aModulesTemplate() *ch360.ModulesTemplate {
+func aModulesTemplate() *ch360.ExtractorTemplate {
 	modulesTemplate, _ := ch360.NewModulesTemplateFromJson(bytes.NewBufferString(modulesTemplateJson))
 	return modulesTemplate
 }

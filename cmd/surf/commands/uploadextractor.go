@@ -17,7 +17,7 @@ const UploadExtractorCommand = "upload extractor"
 type ExtractorCreator interface {
 	Create(ctx context.Context, name string, config io.Reader) error
 	CreateFromJson(ctx context.Context, name string, jsonTemplate io.Reader) error
-	CreateFromModules(ctx context.Context, name string, modules ch360.ModulesTemplate) error
+	CreateFromModules(ctx context.Context, name string, modules ch360.ExtractorTemplate) error
 }
 
 type UploadExtractor struct {
