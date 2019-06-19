@@ -48,7 +48,7 @@ Uploading extractor '$extractorName'... [OK]
    It "should not be created from an invalid fpxlc definition file" {
        $extractorDefinition = (Join-Path $PSScriptRoot "invalid.fpxlc")
        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
-Creating extractor 'test-extractor'... [FAILED]
+Uploading extractor 'test-extractor'... [FAILED]
 The file supplied is not a valid extractor configuration file.
 "@
        $LASTEXITCODE | Should -Be 1
