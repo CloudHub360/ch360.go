@@ -96,6 +96,10 @@ Creating extractor '$extractorName'... [OK]
         Get-Extractors | Format-MultilineOutput | Should -Match $extractorName
     }
 
+    It "list available modules" {
+        Invoke-App list modules 2>&1 | Format-MultilineOutput | Should -Match "waives.date"
+    }
+
     AfterAll {
         Remove-UserExtractors
         Restore-ApplicationFolder
