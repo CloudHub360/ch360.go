@@ -17,6 +17,10 @@ function New-ExtractorFromModules([string]$extractorName,
     Invoke-App create extractor $extractorName @moduleIds 2>&1
 }
 
+function New-ExtractorFromTemplate([string]$extractorName, [Io.FileInfo]$extractorTemplate) {
+    Invoke-App create extractor $extractorName --from-template $extractorTemplate 2>&1
+}
+
 function Get-Extractors {
     Invoke-App list extractors 2>&1
 }
@@ -73,6 +77,17 @@ The file supplied is not a valid extractor configuration file.
 
     It "should be created from a list of module IDs " {
         New-ExtractorFromModules $extractorName "waives.name" "waives.date" | Format-MultilineOutput | Should -Be @"
+Creating extractor '$extractorName'... [OK]
+"@
+        $LASTEXITCODE | Should -Be 0
+
+        # Verify
+        Get-Extractors | Format-MultilineOutput | Should -Match $extractorName
+    }
+
+    It "should be created from a template" {
+        $extractorTemplate = (Join-Path $PSScriptRoot "extractor-template.json")
+        New-ExtractorFromTemplate $extractorName $extractorTemplate | Format-MultilineOutput | Should -Be @"
 Creating extractor '$extractorName'... [OK]
 "@
         $LASTEXITCODE | Should -Be 0
