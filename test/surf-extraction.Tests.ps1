@@ -96,8 +96,28 @@ Creating extractor '$extractorName'... [OK]
         Get-Extractors | Format-MultilineOutput | Should -Match $extractorName
     }
 
-    It "list available modules" {
-        Invoke-App list modules 2>&1 | Format-MultilineOutput | Should -Match "waives.date"
+    It "should list available modules" {
+        $output = Invoke-App list modules 2>&1 | Format-MultilineOutput
+
+        $output | Should -Match "Name\s+ID\s+Description"
+        $output | Should -Match "Name\s+waives.name\s+.*"
+        ($output | Measure-Object -Line).Lines | Should -BeGreaterThan 20
+    }
+
+    It "should not be created from a missing extractor template" {
+        $extractorTemplate = "missing.json"
+        New-ExtractorFromTemplate $extractorName $extractorTemplate | Format-MultilineOutput | Should -Be @"
+Error when opening template file 'missing.json': no such file or directory
+"@
+        $LASTEXITCODE | Should -Be 1
+    }
+
+    It "should not be created from invalid json" {
+        $extractorTemplate = (Join-Path $PSScriptRoot "invalid.json")
+        New-ExtractorFromTemplate $extractorName $extractorTemplate | Format-MultilineOutput | Should -Be @"
+Error when reading json template '$extractorTemplate': invalid character 'b' looking for beginning of value
+"@
+        $LASTEXITCODE | Should -Be 1
     }
 
     AfterAll {
