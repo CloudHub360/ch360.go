@@ -45,13 +45,16 @@ func NewCreateExtractorWithArgs(params *config.RunParams,
 		templateFile, err = os.Open(params.ModulesTemplate)
 
 		if err != nil {
-			return nil, err
+			pathErr := err.(*os.PathError)
+			return nil, errors.WithMessagef(pathErr.Err,
+				"Error when opening template file '%s'", params.ModulesTemplate)
 		}
 
 		template, err = ch360.NewModulesTemplateFromJson(templateFile)
 
 		if err != nil {
-			return nil, errors.WithMessagef(err, "Error when reading json template '%s'", params.ModulesTemplate)
+			return nil, errors.WithMessagef(err,
+				"Error when reading json template '%s'", params.ModulesTemplate)
 		}
 
 	} else {
