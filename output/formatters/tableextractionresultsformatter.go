@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var _ ResultsFormatter = (*TableClassifyResultsFormatter)(nil)
+var _ ResultsFormatter = (*TableExtractionResultsFormatter)(nil)
 
 type TableExtractionResultsFormatter struct {
 }
@@ -50,10 +50,9 @@ func (f *TableExtractionResultsFormatter) WriteResult(writer io.Writer, fullPath
 	var row = fmt.Sprintf(FileColumnFmt, filename)
 
 	for _, fieldResult := range extractionResult.FieldResults {
-		resultText := NoResultText
-		if fieldResult.Result != nil {
-			resultText = fieldResult.Result.Text
-		}
+
+		resultText := FieldFormatter{FieldResult: fieldResult}.String()
+
 		row = row + fmt.Sprintf(FieldColumnFmt, resultText)
 	}
 

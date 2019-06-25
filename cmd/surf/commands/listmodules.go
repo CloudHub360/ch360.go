@@ -48,6 +48,7 @@ func (cmd *ListModules) Execute(ctx context.Context) error {
 	table.SetCenterSeparator("-")
 	table.SetAutoWrapText(false)
 	table.SetColumnSeparator("")
+
 	for _, module := range modules {
 		table.Append([]string{module.Name, module.ID, module.Summary})
 	}
