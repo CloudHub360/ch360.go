@@ -1,27 +1,29 @@
 package results
 
+type InnerResult struct {
+	Text           string      `json:"text"`
+	Value          interface{} `json:"value"`
+	Rejected       bool        `json:"rejected"`
+	RejectReason   string      `json:"reject_reason"`
+	ProximityScore float64     `json:"proximity_score"`
+	MatchScore     float64     `json:"match_score"`
+	TextScore      float64     `json:"text_score"`
+	Areas          []struct {
+		Top        float64 `json:"top"`
+		Left       float64 `json:"left"`
+		Bottom     float64 `json:"bottom"`
+		Right      float64 `json:"right"`
+		PageNumber int     `json:"page_number"`
+	} `json:"areas"`
+}
+
 type FieldResult struct {
-	FieldName    string `json:"field_name"`
-	Rejected     bool   `json:"rejected"`
-	RejectReason string `json:"reject_reason"`
-	Result       *struct {
-		Text           string      `json:"text"`
-		Value          interface{} `json:"value"`
-		Rejected       bool        `json:"rejected"`
-		RejectReason   string      `json:"reject_reason"`
-		ProximityScore float64     `json:"proximity_score"`
-		MatchScore     float64     `json:"match_score"`
-		TextScore      float64     `json:"text_score"`
-		Areas          []struct {
-			Top        float64 `json:"top"`
-			Left       float64 `json:"left"`
-			Bottom     float64 `json:"bottom"`
-			Right      float64 `json:"right"`
-			PageNumber int     `json:"page_number"`
-		} `json:"areas"`
-	} `json:"result"`
-	AlternativeResults interface{} `json:"alternatives"`
-	TabularResults     interface{} `json:"tabular_results"`
+	FieldName          string         `json:"field_name"`
+	Rejected           bool           `json:"rejected"`
+	RejectReason       string         `json:"reject_reason"`
+	Result             *InnerResult   `json:"result"`
+	AlternativeResults []*InnerResult `json:"alternatives"`
+	TabularResults     interface{}    `json:"tabular_results"`
 }
 
 type Document struct {
