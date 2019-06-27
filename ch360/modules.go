@@ -21,6 +21,7 @@ func NewModulesClient(baseUrl string, requestSender net.HttpDoer) *ModulesClient
 type Module struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
+	Summary     string `json:"summary"`
 	Description string `json:"description"`
 	Fields      []struct {
 		Name        string      `json:"name"`

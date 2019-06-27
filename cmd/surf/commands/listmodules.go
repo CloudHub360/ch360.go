@@ -41,7 +41,7 @@ func (cmd *ListModules) Execute(ctx context.Context) error {
 	}
 
 	table := tablewriter.NewWriter(cmd.writer)
-	table.SetHeader([]string{"Name", "ID", "Description"})
+	table.SetHeader([]string{"Name", "ID", "Summary"})
 	table.SetBorder(false)
 	table.SetAutoFormatHeaders(false)
 	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
@@ -49,7 +49,7 @@ func (cmd *ListModules) Execute(ctx context.Context) error {
 	table.SetAutoWrapText(false)
 	table.SetColumnSeparator("")
 	for _, module := range modules {
-		table.Append([]string{module.Name, module.ID, module.Description})
+		table.Append([]string{module.Name, module.ID, module.Summary})
 	}
 	table.Render()
 
