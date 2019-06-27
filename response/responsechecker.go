@@ -3,7 +3,6 @@ package response
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
@@ -18,9 +17,6 @@ type Checker interface {
 }
 
 func (c *ErrorChecker) CheckForErrors(response *http.Response) error {
-	type errorResponse struct {
-		Message string `json:"message"`
-	}
 
 	buf := bytes.Buffer{}
 	_, err := buf.ReadFrom(response.Body)
@@ -38,12 +34,51 @@ func (c *ErrorChecker) CheckForErrors(response *http.Response) error {
 		return nil
 	}
 
-	errResponse := errorResponse{}
-	err = json.Unmarshal(buf.Bytes(), &errResponse)
+	if json.Valid(buf.Bytes()) {
+		var (
+			basicError    = &basicErrorResponse{}
+			detailedError = &DetailedErrorResponse{}
+		)
+		// Try the basic err json first...
+		err = json.Unmarshal(buf.Bytes(), &basicError)
 
-	if err == nil && len(errResponse.Message) > 0 {
-		return errors.New(errResponse.Message)
+		if err == nil && len(basicError.Message) > 0 {
+			return basicError
+		}
+
+		// .. then the more detailed form
+		err = json.Unmarshal(buf.Bytes(), &detailedError)
+
+		if err == nil && detailedError.Status != 0 {
+			return detailedError
+		}
 	}
 
-	return errors.New(fmt.Sprintf("Received unexpected response with HTTP code %d", response.StatusCode))
+	return errors.Errorf("Received unexpected response with HTTP code %d", response.StatusCode)
+}
+
+type basicErrorResponse struct {
+	Message string `json:"message"`
+}
+
+func (e *basicErrorResponse) Error() string {
+	return e.Message
+}
+
+type DetailedErrorResponse struct {
+	Errors []struct {
+		ModuleID      string   `json:"module_id"`
+		Messages      []string `json:"messages"`
+		Path          string   `json:"path"`
+		ArgumentName  string   `json:"argument_name"`
+		ArgumentValue string   `json:"argument_value"`
+	} `json:"errors"`
+	Type     string `json:"type"`
+	Title    string `json:"title"`
+	Status   int    `json:"status"`
+	Instance string `json:"instance"`
+}
+
+func (e *DetailedErrorResponse) Error() string {
+	return e.Title
 }
