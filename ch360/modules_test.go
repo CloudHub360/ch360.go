@@ -91,7 +91,7 @@ var exampleGetModulesResponse = `{
     {
       "id": "waives.reference_number",
       "name": "Reference Number",
-      "description": "Identifies reference numbers in a document, matching a specified format.",
+      "summary": "Identifies reference numbers in a document, matching a specified format.",
       "fields": [
         {
           "name": "Reference Number",
@@ -118,7 +118,7 @@ var exampleGetModulesResponse = `{
     {
       "id": "waives.currency",
       "name": "Currency",
-      "description": "Identifies the currency of the document based on the currency symbols in the document and the locale in which the document was produced.",
+      "summary": "Identifies the currency of the document based on the currency symbols in the document and the locale in which the document was produced.",
       "fields": [
         {
           "name": "Currency",
