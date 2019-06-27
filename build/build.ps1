@@ -56,7 +56,9 @@ function Register-CustomAssertions([string]$path) {
 Task Test Build, {
   try {
     pushd $RootDir
-    exec { go test -v -race ./... }
+
+    $vet = Allow-Vet
+    exec { go test -v $vet -race ./... }
 
     Register-CustomAssertions "test/assertions/pester"
 
@@ -68,6 +70,16 @@ Task Test Build, {
   } finally {
     popd
   }
+}
+
+function Allow-Vet {
+  $os = $PSVersionTable.OS
+  if (($os -eq $null) -or ($os.StartsWith("Microsoft Windows"))) {
+    Write-Warning "OS is Windows, disabling go vet (see golang/go#27089)"
+    return "-vet=off"
+  }
+
+  return ""
 }
 
 Task . PackageRestore, Build
