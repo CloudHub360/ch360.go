@@ -76,7 +76,7 @@ The file supplied is not a valid extractor configuration file.
     }
 
     It "should be created from a list of module IDs " {
-        New-ExtractorFromModules $extractorName "waives.name" "waives.date" | Format-MultilineOutput | Should -Be @"
+        New-ExtractorFromModules $extractorName "waives.invoice_number" "waives.name" | Format-MultilineOutput | Should -Be @"
 Creating extractor '$extractorName'... [OK]
 "@
         $LASTEXITCODE | Should -Be 0
