@@ -99,7 +99,7 @@ Creating extractor '$extractorName'... [OK]
     It "should list available modules" {
         $output = Invoke-App list modules 2>&1 | Format-MultilineOutput
 
-        $output | Should -Match "Name\s+ID\s+Description"
+        $output | Should -Match "Name\s+ID\s+Summary"
         $output | Should -Match "Name\s+waives.name\s+.*"
         ($output | Measure-Object -Line).Lines | Should -BeGreaterThan 20
     }
