@@ -54,18 +54,17 @@ Uploading extractor '$extractorName'... [OK]
         Get-Extractors | Format-MultilineOutput | Should -Match $extractorName
     }
 
-# TODO uncomment when https://github.com/CloudHub360/platform/issues/1534 is fixed
-#    It "should not be created from an invalid fpxlc definition file" {
-#        $extractorDefinition = (Join-Path $PSScriptRoot "invalid.fpxlc")
-#        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
-# Uploading extractor 'test-extractor'... [FAILED]
-# The file supplied is not a valid extractor configuration file.
-# "@
-#        $LASTEXITCODE | Should -Be 1
+   It "should not be created from an invalid fpxlc definition file" {
+       $extractorDefinition = (Join-Path $PSScriptRoot "invalid.fpxlc")
+       New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
+Uploading extractor 'test-extractor'... [FAILED]
+The file supplied is not a valid extractor configuration file.
+"@
+       $LASTEXITCODE | Should -Be 1
 
-#        # Verify
-#        Get-Extractors | Format-MultilineOutput | Should -Not -Match $extractorName
-#    }
+       # Verify
+       Get-Extractors | Format-MultilineOutput | Should -Not -Match $extractorName
+   }
 
     It "should not be created from a non-existent fpxlc definition file" {
         $extractorDefinition = (Join-Path $PSScriptRoot "non-existent.fpxlc")
