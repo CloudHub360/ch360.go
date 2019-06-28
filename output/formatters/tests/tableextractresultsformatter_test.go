@@ -56,7 +56,7 @@ func (suite *TableExtractionResultsFormatterSuite) TestWrites_Empty_String_When_
 	err := suite.sut.WriteResult(suite.output, suite.filename, suite.result, 0)
 
 	require.Nil(suite.T(), err)
-	suite.assertTableColumnsContent(suite.output.String(), []string{suite.filename, formatters.NoResultText})
+	suite.assertTableColumnsContent(suite.output.String(), []string{suite.filename, "(no result)"})
 }
 
 func (suite *TableExtractionResultsFormatterSuite) TestWrites_Filename_Only_When_It_Has_Path() {

@@ -2,9 +2,8 @@ package formatters
 
 import (
 	"encoding/csv"
-	"errors"
-	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/results"
+	"github.com/pkg/errors"
 	"io"
 	"path/filepath"
 )
@@ -50,7 +49,7 @@ func (f *CSVExtractionResultsFormatter) WriteResult(writer io.Writer, filename s
 	extractionResult, ok := result.(*results.ExtractionResult)
 
 	if !ok {
-		return errors.New(fmt.Sprintf("Unexpected type: %T", result))
+		return errors.Errorf("unexpected type: %T", result)
 	}
 
 	if options&IncludeHeader == IncludeHeader {
@@ -59,12 +58,11 @@ func (f *CSVExtractionResultsFormatter) WriteResult(writer io.Writer, filename s
 
 	record := []string{filepath.FromSlash(filename)}
 
-	for _, field := range extractionResult.FieldResults {
-		resultText := ""
-		if field.Result != nil {
-			resultText = field.Result.Text
-		}
-		record = append(record, resultText)
+	for _, fieldResult := range extractionResult.FieldResults {
+
+		fieldFormatter := NewFieldFormatter(fieldResult, "|", "")
+
+		record = append(record, fieldFormatter.String())
 	}
 
 	return f.writeRecord(writer, record)

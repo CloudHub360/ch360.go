@@ -13,6 +13,7 @@ func Test_FieldFormatter(t *testing.T) {
 		expectedResults []string
 		expectedString  string
 		separator       string
+		noResultStr     string
 	}{
 		{
 			fieldResult:     aFieldResult(false, []string{"result1", "alternative1", "alternative2"}, ""),
@@ -34,11 +35,21 @@ func Test_FieldFormatter(t *testing.T) {
 			expectedResults: []string{"result1", "alternative1", "alternative2"},
 			expectedString:  "result1|alternative1|alternative2",
 			separator:       "|",
+		}, {
+			fieldResult:     aFieldResult(false, []string{}, ""),
+			expectedResults: []string{},
+			expectedString:  "(no result)",
+			noResultStr:     "(no result)",
+		}, {
+			fieldResult:     aFieldResult(false, []string{}, ""),
+			expectedResults: []string{},
+			expectedString:  "",
+			noResultStr:     "",
 		},
 	}
 
 	for _, fixture := range fixtures {
-		sut := formatters.NewFieldFormatter(fixture.fieldResult, fixture.separator)
+		sut := formatters.NewFieldFormatter(fixture.fieldResult, fixture.separator, fixture.noResultStr)
 
 		actualString := sut.String()
 		actualResults := sut.Results()

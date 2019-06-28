@@ -19,7 +19,6 @@ func NewTableExtractionResultsFormatter() *TableExtractionResultsFormatter {
 	return &TableExtractionResultsFormatter{}
 }
 
-var NoResultText = "(no result)"
 var FieldColumnWidth uint = 31
 var FileColumnWidth uint = 35
 
@@ -48,7 +47,7 @@ func (f *TableExtractionResultsFormatter) WriteResult(writer io.Writer, fullPath
 	extractionResult, ok := result.(*results.ExtractionResult)
 
 	if !ok {
-		return errors.New(fmt.Sprintf("Unexpected type: %T", result))
+		return errors.Errorf("unexpected type: %T", result)
 	}
 
 	if options&IncludeHeader == IncludeHeader {
@@ -73,7 +72,7 @@ func (f *TableExtractionResultsFormatter) WriteResult(writer io.Writer, fullPath
 
 	for _, fieldResult := range extractionResult.FieldResults {
 
-		fieldFormatter := NewFieldFormatter(fieldResult, ", ")
+		fieldFormatter := NewFieldFormatter(fieldResult, ", ", "(no result)")
 
 		row.Cells = append(row.Cells, &uitable.Cell{
 			Data:  fieldFormatter.String(),
