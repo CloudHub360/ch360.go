@@ -88,10 +88,10 @@ func (suite *TableExtractionResultsFormatterSuite) assertTableColumnsContent(row
 		runes = runes[idx:]
 	}
 
-	popResult(formatters.FileColumnWidth)
+	popResult(int(formatters.FileColumnWidth))
 
 	for len(runes) > 0 {
-		idx := formatters.FieldColumnWidth
+		idx := int(formatters.FieldColumnWidth)
 		if len(runes) < idx {
 			idx = len(runes)
 		}
