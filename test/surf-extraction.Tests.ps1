@@ -188,7 +188,7 @@ document1.pdf                       `$5.50
         Invoke-Extractor $filePattern $extractorName -Format "csv"
 
         Get-Content $document2OutputFile | ConvertFrom-ExtractionCsv `
-          | where { $_.file -like "*document2.pdf" -and $_.amount -eq "`$5.50" } `
+          | where { $_.file -like "*document2.pdf" -and $_.amount -eq "`$5.50|`$4" } `
           | Should -Not -Be $null
 
         Get-Content $document3OutputFile | ConvertFrom-ExtractionCsv `
@@ -207,7 +207,7 @@ document1.pdf                       `$5.50
         $results = Get-Content $outputFile | ConvertFrom-ExtractionCsv
 
         $results.length | Should -Be 3
-        $results | where { $_.file -like "*document2.pdf" -and $_.amount -eq "`$5.50" } | Should -Not -Be $null
+        $results | where { $_.file -like "*document2.pdf" -and $_.amount -eq "`$5.50|`$4" } | Should -Not -Be $null
         $results | where { $_.file -like "*document3.pdf" -and $_.amount -eq "`$5.50" } | Should -Not -Be $null
 
         Remove-Item -Path $outputFile
