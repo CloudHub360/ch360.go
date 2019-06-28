@@ -3,6 +3,7 @@ package formatters
 import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360/results"
+	"github.com/gosuri/uitable"
 	"github.com/pkg/errors"
 	"io"
 	"path/filepath"
@@ -18,19 +19,28 @@ func NewTableExtractionResultsFormatter() *TableExtractionResultsFormatter {
 	return &TableExtractionResultsFormatter{}
 }
 
-var FileColumnWidth = 36
-var FieldColumnWidth = 32
-var FileColumnFmt = fmt.Sprintf("%%-%d.%ds", FileColumnWidth, FileColumnWidth)
-var FieldColumnFmt = fmt.Sprintf("%%-%d.%ds", FieldColumnWidth, FieldColumnWidth)
 var NoResultText = "(no result)"
+var FieldColumnWidth uint = 31
+var FileColumnWidth uint = 35
 
 func (f *TableExtractionResultsFormatter) writeHeaderFor(writer io.Writer, result *results.ExtractionResult) error {
-	var header = fmt.Sprintf(FileColumnFmt, "File")
-
-	for _, fieldResult := range result.FieldResults {
-		header = header + fmt.Sprintf(FieldColumnFmt, fieldResult.FieldName)
+	cells := []*uitable.Cell{
+		{Width: FileColumnWidth, Wrap: false, RightAlign: false, Data: "File"},
 	}
-	_, err := fmt.Fprintln(writer, strings.TrimSpace(header))
+	for _, fieldResult := range result.FieldResults {
+		cells = append(cells, &uitable.Cell{
+			Data:  fieldResult.FieldName,
+			Width: FieldColumnWidth,
+		})
+	}
+
+	row := uitable.Row{
+		Cells:     cells,
+		Separator: " ",
+	}
+
+	_, err := fmt.Fprintln(writer, strings.TrimSpace(row.String()))
+
 	return err
 }
 
@@ -42,23 +52,39 @@ func (f *TableExtractionResultsFormatter) WriteResult(writer io.Writer, fullPath
 	}
 
 	if options&IncludeHeader == IncludeHeader {
-		f.writeHeaderFor(writer, extractionResult)
+		err := f.writeHeaderFor(writer, extractionResult)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	filename := filepath.Base(fullPath)
 
-	var row = fmt.Sprintf(FileColumnFmt, filename)
+	row := uitable.Row{
+		Separator: " ",
+		Cells: []*uitable.Cell{
+			{
+				Wrap:  false,
+				Width: FileColumnWidth,
+				Data:  filename,
+			},
+		}}
 
 	for _, fieldResult := range extractionResult.FieldResults {
 
-		resultText := FieldFormatter{FieldResult: fieldResult}.String()
+		fieldFormatter := NewFieldFormatter(fieldResult, ", ")
 
-		row = row + fmt.Sprintf(FieldColumnFmt, resultText)
+		row.Cells = append(row.Cells, &uitable.Cell{
+			Data:  fieldFormatter.String(),
+			Width: FieldColumnWidth,
+			Wrap:  true,
+		})
 	}
 
-	fmt.Fprintln(writer, strings.TrimSpace(row))
+	_, err := fmt.Fprintln(writer, strings.TrimSpace(row.String()))
 
-	return nil
+	return err
 }
 
 func (f *TableExtractionResultsFormatter) Flush(writer io.Writer) error {
