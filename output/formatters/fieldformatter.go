@@ -39,21 +39,23 @@ func (f FieldFormatter) Results() []string {
 // returns an empty array.
 func (f FieldFormatter) String() string {
 	if len(f.Results()) == 0 {
-		return NoResultText
+		return f.NoResultStr
 	}
 
-	return strings.Join(f.Results(), f.separator)
+	return strings.Join(f.Results(), f.Separator)
 }
 
 // FieldFormatter formats a results.FieldResult.
 type FieldFormatter struct {
 	FieldResult results.FieldResult
-	separator   string
+	Separator   string
+	NoResultStr string
 }
 
-func NewFieldFormatter(result results.FieldResult, separator string) *FieldFormatter {
+func NewFieldFormatter(result results.FieldResult, separator, noResultStr string) *FieldFormatter {
 	return &FieldFormatter{
 		FieldResult: result,
-		separator:   separator,
+		Separator:   separator,
+		NoResultStr: noResultStr,
 	}
 }
