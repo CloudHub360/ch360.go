@@ -13,6 +13,7 @@ import (
 var _ ResultsFormatter = (*TableExtractionResultsFormatter)(nil)
 
 type TableExtractionResultsFormatter struct {
+	outputRejectedFieldNotice bool
 }
 
 func NewTableExtractionResultsFormatter() *TableExtractionResultsFormatter {
@@ -74,8 +75,16 @@ func (f *TableExtractionResultsFormatter) WriteResult(writer io.Writer, fullPath
 
 		fieldFormatter := NewFieldFormatter(fieldResult, ", ", "(no result)")
 
+		fieldString := fieldFormatter.String()
+
+		if fieldResult.Rejected {
+			// prepend asterisk to rejected fields
+			fieldString = "* " + fieldString
+			f.outputRejectedFieldNotice = true
+		}
+
 		row.Cells = append(row.Cells, &uitable.Cell{
-			Data:  fieldFormatter.String(),
+			Data:  fieldString,
 			Width: FieldColumnWidth,
 			Wrap:  true,
 		})
@@ -87,5 +96,9 @@ func (f *TableExtractionResultsFormatter) WriteResult(writer io.Writer, fullPath
 }
 
 func (f *TableExtractionResultsFormatter) Flush(writer io.Writer) error {
+	if f.outputRejectedFieldNotice {
+		_, err := fmt.Fprintln(writer, "\n(*) denotes a rejected field")
+		return err
+	}
 	return nil
 }
