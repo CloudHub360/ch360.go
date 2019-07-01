@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -72,10 +73,35 @@ func (suite *TableExtractionResultsFormatterSuite) TestWrites_Filename_Only_When
 	suite.assertTableColumnsContent(suite.output.String(), []string{expectedFilename, "$5.50"})
 }
 
-func (suite *TableExtractionResultsFormatterSuite) TestFlush_Writes_Nothing() {
+func (suite *TableExtractionResultsFormatterSuite) TestShows_Asterisk_For_Rejected_Fields() {
+	// Arrange
+	filename := `document1.tif`
+	suite.result.FieldResults[0].Rejected = true
+
+	// Act
+	err := suite.sut.WriteResult(suite.output, filename, suite.result, 0)
+
+	// Assert
+	require.Nil(suite.T(), err)
+	suite.assertTableColumnsContent(suite.output.String(), []string{filename, "* $5.50"})
+}
+
+func (suite *TableExtractionResultsFormatterSuite) TestFlush_Writes_Nothing_After_No_Fields() {
 	suite.sut.Flush(suite.output)
 
 	assert.Equal(suite.T(), "", suite.output.String())
+}
+
+func (suite *TableExtractionResultsFormatterSuite) TestFlush_Writes_Asterisk_Note_After_Outputting_Rejected_Field() {
+	// Arrange
+	filename := `document1.tif`
+	suite.result.FieldResults[0].Rejected = true
+
+	// Act
+	suite.sut.WriteResult(ioutil.Discard, filename, suite.result, 0)
+	suite.sut.Flush(suite.output)
+
+	assert.Equal(suite.T(), "\n(*) denotes a rejected field\n", suite.output.String())
 }
 
 func (suite *TableExtractionResultsFormatterSuite) assertTableColumnsContent(row string, expectedContent []string) {
