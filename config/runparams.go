@@ -17,12 +17,13 @@ type RunParams struct {
 	List     bool
 	Read     bool
 
-	Extractor   bool
-	Classifier  bool
-	Extractors  bool
-	Classifiers bool
-	Modules     bool
-	Module      bool
+	Extractor         bool
+	Classifier        bool
+	Extractors        bool
+	ExtractorTemplate bool `docopt:"extractor-template"`
+	Classifiers       bool
+	Modules           bool
+	Module            bool
 
 	ClassifierName string `docopt:"<classifier>"`
 	ExtractorName  string `docopt:"<extractor>"`
@@ -71,6 +72,7 @@ const (
 	Classifier Noun = iota
 	Extractor
 	Module
+	ExtractorTemplate
 )
 
 func (r RunParams) Verb() Verb {
@@ -131,6 +133,8 @@ func (r RunParams) Validate() error {
 func (r RunParams) Noun() Noun {
 	if r.Extractor || r.Extractors {
 		return Extractor
+	} else if r.ExtractorTemplate {
+		return ExtractorTemplate
 	} else if r.Classifier || r.Classifiers {
 		return Classifier
 	} else if r.Module || r.Modules {
