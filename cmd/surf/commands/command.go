@@ -48,6 +48,10 @@ func CommandFor(runParams *config.RunParams, apiClient *ch360.ApiClient) (Comman
 		case config.List:
 			return NewListExtractors(apiClient.Extractors, out), nil
 		}
+	} else if runParams.Noun() == config.ExtractorTemplate {
+		return &CreateExtractorTemplate{
+			out: out,
+		}, nil
 	} else if runParams.Noun() == config.Module {
 		switch runParams.Verb() {
 		case config.List:
