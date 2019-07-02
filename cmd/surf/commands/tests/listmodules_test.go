@@ -57,6 +57,7 @@ func aListOfModules(names ...string) interface{} {
 	for index, name := range names {
 		expected[index] = ch360.Module{
 			Name: name,
+			ID:   name,
 		}
 	}
 

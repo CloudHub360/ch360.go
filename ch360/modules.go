@@ -60,3 +60,14 @@ func (m *ModulesClient) GetAll(ctx context.Context) (ModuleList, error) {
 
 	return modulesResponse.Modules, nil
 }
+
+// Map returns a map of moduleId : Module
+func (l ModuleList) Map() map[string]Module {
+	modulesMap := map[string]Module{}
+
+	for _, module := range l {
+		modulesMap[module.ID] = module
+	}
+
+	return modulesMap
+}
