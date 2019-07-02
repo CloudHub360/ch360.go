@@ -26,7 +26,7 @@ type CreateExtractorTemplate struct {
 
 // Execute runs the command.
 func (cmd CreateExtractorTemplate) Execute(ctx context.Context) error {
-	return ExecuteWithMessage("Creating extractor template...", os.Stderr, func() error {
+	return ExecuteWithMessage("Creating extractor template...", func() error {
 		defer cmd.close()
 
 		if len(cmd.moduleIds) == 0 {
