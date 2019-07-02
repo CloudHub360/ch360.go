@@ -2,16 +2,18 @@ package commands
 
 import (
 	"fmt"
-	"io"
+	"os"
 	"strings"
 )
 
 // Execute prints the provided message to out, runs fn(), then
 // prints [OK] or [FAILED] depending on fn's success.
-func ExecuteWithMessage(message string, out io.Writer, fn func() error) error {
+func ExecuteWithMessage(message string, fn func() error) error {
 	if !strings.HasSuffix(message, " ") {
 		message += " "
 	}
+
+	out := os.Stderr
 
 	_, err := fmt.Fprint(out, message)
 
