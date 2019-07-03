@@ -75,6 +75,33 @@ func (suite *ModulesClientSuite) Test_GetAll_Returns_List_Of_Modules() {
 	assert.Equal(suite.T(), 2, len(modules))
 }
 
+func (suite *ModulesClientSuite) Test_ModuleList_Find() {
+	modules := suite.aListOfModules()
+	fixtures := []struct {
+		moduleID string
+		expected *ch360.Module
+	}{
+		{
+			// case insensitive
+			moduleID: "waives.REFERENCE_NUMBER",
+			expected: &modules[0],
+		}, {
+			// case sensitive
+			moduleID: "waives.reference_number",
+			expected: &modules[0],
+		}, {
+			moduleID: "waives.not-present",
+			expected: nil,
+		},
+	}
+
+	for _, fixture := range fixtures {
+		result := modules.Find(fixture.moduleID)
+
+		assert.Equal(suite.T(), fixture.expected, result)
+	}
+}
+
 func (suite *ModulesClientSuite) aListOfModules() ch360.ModuleList {
 	var modulesResponse struct {
 		Modules ch360.ModuleList
