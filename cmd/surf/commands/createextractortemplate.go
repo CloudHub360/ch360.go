@@ -26,9 +26,13 @@ type CreateExtractorTemplate struct {
 
 // Execute runs the command.
 func (cmd CreateExtractorTemplate) Execute(ctx context.Context) error {
-	return ExecuteWithMessage("Creating extractor template...", func() error {
-		defer cmd.close()
+	defer TryClose(cmd.writer)
+	var (
+		jsonData []byte
+		err      error
+	)
 
+	err = ExecuteWithMessage("Creating extractor template...", func() error {
 		if len(cmd.moduleIds) == 0 {
 			return errors.New("At least one module ID must be specified")
 		}
@@ -45,23 +49,22 @@ func (cmd CreateExtractorTemplate) Execute(ctx context.Context) error {
 
 		template := cmd.buildExtractorTemplateFor(specifedModules)
 
-		jsonData, err := json.MarshalIndent(template, "", "  ")
+		jsonData, err = json.MarshalIndent(template, "", "  ")
 
 		if err != nil {
 			return errors.WithMessage(err, "Unable to create template")
 		}
 
-		_, err = cmd.writer.Write(jsonData)
-
-		return err
+		return nil
 	})
-}
 
-// Attempts to close any opened files
-func (cmd CreateExtractorTemplate) close() {
-	if closer, ok := cmd.writer.(io.WriteCloser); ok {
-		_ = closer.Close()
+	if err != nil {
+		return err
 	}
+
+	_, err = cmd.writer.Write(jsonData)
+
+	return err
 }
 
 func (cmd CreateExtractorTemplate) getSpecifiedModules(existingModules ch360.ModuleList) (ch360.ModuleList, error) {

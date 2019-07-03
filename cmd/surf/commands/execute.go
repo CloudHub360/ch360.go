@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
@@ -24,4 +25,14 @@ func ExecuteWithMessage(message string, fn func() error) error {
 
 	_, _ = fmt.Fprintln(out, "[OK]")
 	return nil
+}
+
+// TryClose tries to cast all provided writers to io.Closer, and, if
+// successful, calls Close on each.
+func TryClose(writers ...io.Writer) {
+	for _, writer := range writers {
+		if closer, ok := writer.(io.Closer); ok {
+			_ = closer.Close()
+		}
+	}
 }
