@@ -7,6 +7,7 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands/mocks"
+	"github.com/CloudHub360/ch360.go/response"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -70,4 +71,49 @@ func (suite *CreateExtractorSuite) TestCreateExtractor_Execute_Returns_Error_If_
 	receivedErr := suite.sut.Execute(context.Background())
 
 	assert.Equal(suite.T(), expectedErr, receivedErr)
+}
+
+func (suite *CreateExtractorSuite) TestCreateExtractor_Execute_Returns_Useful_Information_From_A_DetailedErrorResponse() {
+	detailedErrorResponse := aDetailedErrorResponse()
+	suite.ClearExpectedCalls()
+	suite.creator.
+		On("CreateFromModules", mock.Anything, mock.Anything, mock.Anything).
+		Return(detailedErrorResponse)
+	expectedErrMsg := `Extractor creation failed with the following error: Invalid Extractor Template
+
+Module (not found):
+  The module waives.supplier_identity2 does not exist.
+
+Module waives.supplier_identity:
+  Parameter "provider": No argument was specified (specified "")
+`
+
+	receivedErr := suite.sut.Execute(context.Background())
+
+	assert.Error(suite.T(), receivedErr, expectedErrMsg)
+}
+
+func aDetailedErrorResponse() *response.DetailedErrorResponse {
+	return &response.DetailedErrorResponse{
+		Title: "Invalid Extractor Template",
+		Errors: []map[string]interface{}{
+			{
+				"module_id":      "",
+				"messages":       []string{"The module waives.supplier_identity2 does not exist."},
+				"path":           "waives.supplier_identity2",
+				"argument_name":  nil,
+				"argument_value": "",
+			},
+			{
+				"module_id":      "waives.supplier_identity",
+				"messages":       []string{"No argument was specified"},
+				"path":           "modules[0].arguments.provider",
+				"argument_name":  "provider",
+				"argument_value": "",
+			},
+		},
+		Status:   422,
+		Instance: "/account/jK16_1URgUGxSo6yyWjHag/invalid-extractor-template/supplier-id",
+		Type:     "https://docs.waives.io/reference#invalid-extractor-template",
+	}
 }

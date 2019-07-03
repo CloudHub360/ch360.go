@@ -132,10 +132,12 @@ func buildDetailedErrorMessage(errorResponse response.DetailedErrorResponse) err
 
 			if detailedErr.Argument_Name != "" {
 				// param err
-				sb.WriteString(fmt.Sprintf("  Parameter \"%s\": %s (specified \"%s\")\n",
-					detailedErr.Argument_Name,
-					strings.Join(detailedErr.Messages, ", "),
-					detailedErr.Argument_Value))
+				for _, message := range detailedErr.Messages {
+					sb.WriteString(fmt.Sprintf("  Parameter \"%s\": %s (specified \"%s\")\n",
+						detailedErr.Argument_Name,
+						message,
+						detailedErr.Argument_Value))
+				}
 			} else {
 				// module err
 				sb.WriteString(fmt.Sprintf("  %s\n", strings.Join(detailedErr.Messages, ", ")))
