@@ -66,17 +66,11 @@ func (e *basicErrorResponse) Error() string {
 }
 
 type DetailedErrorResponse struct {
-	Errors []struct {
-		ModuleID      string   `json:"module_id"`
-		Messages      []string `json:"messages"`
-		Path          string   `json:"path"`
-		ArgumentName  string   `json:"argument_name"`
-		ArgumentValue string   `json:"argument_value"`
-	} `json:"errors"`
-	Type     string `json:"type"`
-	Title    string `json:"title"`
-	Status   int    `json:"status"`
-	Instance string `json:"instance"`
+	Errors   []map[string]interface{} `json:"errors"`
+	Type     string                   `json:"type"`
+	Title    string                   `json:"title"`
+	Status   int                      `json:"status"`
+	Instance string                   `json:"instance"`
 }
 
 func (e *DetailedErrorResponse) Error() string {

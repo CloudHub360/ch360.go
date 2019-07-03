@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/CloudHub360/ch360.go/response"
+	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"io"
 	"os"
+	"strings"
 )
 
 const CreateExtractorCommand = "create extractor"
@@ -74,11 +77,71 @@ func NewCreateExtractorWithArgs(params *config.RunParams,
 
 func (cmd *CreateExtractor) Execute(ctx context.Context) error {
 	return ExecuteWithMessage(fmt.Sprintf("Creating extractor '%s'... ", cmd.extractorName), func() error {
-		return cmd.creator.CreateFromModules(ctx, cmd.extractorName, *cmd.template)
+		err := cmd.creator.CreateFromModules(ctx, cmd.extractorName, *cmd.template)
+
+		if err != nil {
+			if detailedResponse, ok := err.(*response.DetailedErrorResponse); ok {
+				return buildDetailedErrorMessage(*detailedResponse)
+			}
+		}
+
+		return err
 	})
 
 }
 
 func (cmd CreateExtractor) Usage() string {
 	return CreateExtractorCommand
+}
+
+func buildDetailedErrorMessage(errorResponse response.DetailedErrorResponse) error {
+	//noinspection ALL odd names to match json
+	type detailedError struct {
+		Module_ID      string
+		Messages       []string
+		Path           string
+		Argument_Name  string
+		Argument_Value string
+	}
+
+	var detailedErrs []detailedError
+	err := mapstructure.Decode(errorResponse.Errors, &detailedErrs)
+
+	if err != nil {
+		return errors.WithMessage(&errorResponse, "Could not deserialise response from server")
+	}
+
+	sb := strings.Builder{}
+	sb.WriteString("Extractor creation failed with the following error: ")
+	sb.WriteString(fmt.Sprintf("%s\n", errorResponse.Title))
+
+	// group error info by module
+	errorsByModule := map[string][]detailedError{}
+	for _, detailedErr := range detailedErrs {
+		moduleId := detailedErr.Module_ID
+		errorsByModule[moduleId] = append(errorsByModule[moduleId], detailedErr)
+	}
+
+	for moduleId, detailedErrs := range errorsByModule {
+		if moduleId == "" {
+			moduleId = "(not found)"
+		}
+
+		sb.WriteString(fmt.Sprintf("\nModule %s:\n", moduleId))
+		for _, detailedErr := range detailedErrs {
+
+			if detailedErr.Argument_Name != "" {
+				// param err
+				sb.WriteString(fmt.Sprintf("  Parameter \"%s\": %s (specified \"%s\")\n",
+					detailedErr.Argument_Name,
+					strings.Join(detailedErr.Messages, ", "),
+					detailedErr.Argument_Value))
+			} else {
+				// module err
+				sb.WriteString(fmt.Sprintf("  %s\n", strings.Join(detailedErr.Messages, ", ")))
+			}
+		}
+	}
+
+	return errors.New(sb.String())
 }
