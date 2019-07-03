@@ -26,6 +26,7 @@ Usage:
   surf ` + new(commands.ListExtractors).Usage() + ` [options]
   surf ` + new(commands.UploadExtractor).Usage() + ` <name> <config-file> [options]
   surf ` + new(commands.CreateExtractor).Usage() + ` <name> --from-template=<template> [options] 
+  surf ` + new(commands.CreateExtractor).Usage() + ` <name> <module-ids>... [options]
   surf ` + new(commands.CreateExtractorTemplate).Usage() + ` <module-ids>... [options]
   surf ` + new(commands.DeleteExtractor).Usage() + ` <name> [options]
   surf ` + new(commands.ListModules).Usage() + ` [options]
