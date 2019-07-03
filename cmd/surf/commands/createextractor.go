@@ -73,18 +73,10 @@ func NewCreateExtractorWithArgs(params *config.RunParams,
 }
 
 func (cmd *CreateExtractor) Execute(ctx context.Context) error {
-	fmt.Fprintf(cmd.writer, "Creating extractor '%s'... ", cmd.extractorName)
+	return ExecuteWithMessage(fmt.Sprintf("Creating extractor '%s'... ", cmd.extractorName), func() error {
+		return cmd.creator.CreateFromModules(ctx, cmd.extractorName, *cmd.template)
+	})
 
-	err := cmd.creator.CreateFromModules(ctx, cmd.extractorName, *cmd.template)
-
-	if err != nil {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
-		return err
-	}
-
-	fmt.Fprintln(cmd.writer, "[OK]")
-
-	return nil
 }
 
 func (cmd CreateExtractor) Usage() string {
