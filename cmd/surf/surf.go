@@ -14,11 +14,6 @@ import (
 	"time"
 )
 
-type DetailedError interface {
-	Error() string
-	Detail() string
-}
-
 func main() {
 	usage := `surf - the official command line client for waives.io.
 
@@ -109,12 +104,7 @@ func handleInterrupt(canceller context.CancelFunc) {
 func exitOnErr(err error) {
 	if err != nil && err != context.Canceled {
 
-		if vErr, ok := err.(DetailedError); ok {
-			_, _ = fmt.Fprintln(os.Stderr, vErr.Error())
-			_, _ = fmt.Fprintln(os.Stderr, vErr.Detail())
-		} else {
-			_, _ = fmt.Fprintln(os.Stderr, err)
-		}
+		_, _ = fmt.Fprintln(os.Stderr, err)
 
 		os.Exit(1)
 	}
