@@ -120,6 +120,23 @@ Error when reading json template '$extractorTemplate': invalid character 'b' loo
         $LASTEXITCODE | Should -Be 1
     }
 
+    It "should print detailed error information" {
+        $output = Invoke-App create extractor test-name waives.date waives.non-existent 2>&1 | Format-MultilineOutput
+
+        $output | Should -Be @"
+Creating extractor 'test-name'... [FAILED]
+Extractor creation failed with the following error: Invalid Extractor Template
+
+Module (not found):
+    The module waives.not-there does not exist.
+
+Module waives.date:
+    Parameter "locale": The required parameter does not have an argument (specified "")
+
+"@
+        $LASTEXITCODE | Should -Be 1
+    }
+
     AfterAll {
         Remove-UserExtractors
         Restore-ApplicationFolder
