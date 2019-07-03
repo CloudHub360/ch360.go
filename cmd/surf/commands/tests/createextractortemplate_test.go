@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"strings"
 	"testing"
 )
 
@@ -76,6 +77,23 @@ func (suite *CreateExtractorTemplateSuite) Test_CreateExtractorTemplate_Returns_
 func (suite *CreateExtractorTemplateSuite) Test_CreateExtractorTemplate_Writes_A_Valid_Template_To_Supplied_Writer() {
 	// Act
 	_ = suite.sut.Execute(suite.ctx)
+	template, err := ch360.NewModulesTemplateFromJson(suite.output)
+
+	// Assert
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), 3, len(template.Modules))
+}
+
+func (suite *CreateExtractorTemplateSuite) Test_CreateExtractorTemplate_Is_Case_Insensitive() {
+	// Arrange
+	moduleIds := suite.moduleIds
+	for i, moduleID := range moduleIds {
+		moduleIds[i] = strings.ToUpper(moduleID)
+	}
+	sut, _ := commands.NewCreateExtractorTemplate(moduleIds, suite.client, suite.output)
+
+	// Act
+	_ = sut.Execute(suite.ctx)
 	template, err := ch360.NewModulesTemplateFromJson(suite.output)
 
 	// Assert

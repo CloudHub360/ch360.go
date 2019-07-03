@@ -68,16 +68,15 @@ func (cmd CreateExtractorTemplate) Execute(ctx context.Context) error {
 }
 
 func (cmd CreateExtractorTemplate) getSpecifiedModules(existingModules ch360.ModuleList) (ch360.ModuleList, error) {
-	modulesMap := existingModules.Map()
-
 	var (
 		missingModules = []string{}
 		presentModules ch360.ModuleList
 	)
 
+	// annoyingly we can't use a map here, since we want a case-insensitive search.
 	for _, requestedModuleID := range cmd.moduleIds {
-		if presentModule, ok := modulesMap[requestedModuleID]; ok {
-			presentModules = append(presentModules, presentModule)
+		if existingModule := existingModules.Find(requestedModuleID); existingModule != nil {
+			presentModules = append(presentModules, *existingModule)
 		} else {
 			missingModules = append(missingModules, requestedModuleID)
 		}
