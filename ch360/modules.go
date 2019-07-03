@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/CloudHub360/ch360.go/net"
+	"strings"
 )
 
 type ModulesClient struct {
@@ -61,13 +62,14 @@ func (m *ModulesClient) GetAll(ctx context.Context) (ModuleList, error) {
 	return modulesResponse.Modules, nil
 }
 
-// Map returns a map of moduleId : Module
-func (l ModuleList) Map() map[string]Module {
-	modulesMap := map[string]Module{}
-
-	for _, module := range l {
-		modulesMap[module.ID] = module
+// Find performs a case-insensitive search for the provided ID
+// string, and returns the Module if found and nil if not.
+func (l ModuleList) Find(id string) *Module {
+	for _, existingModule := range l {
+		if strings.ToLower(id) == strings.ToLower(existingModule.ID) {
+			return &existingModule
+		}
 	}
 
-	return modulesMap
+	return nil
 }
