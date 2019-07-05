@@ -3,6 +3,7 @@ package ch360_test
 import (
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/net/mocks"
+	"github.com/CloudHub360/ch360.go/response"
 	mockresponse "github.com/CloudHub360/ch360.go/response/mocks"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -81,4 +82,35 @@ func (suite *ResponseCheckingDoerSuite) Test_ResponseCheckingDoer_Returns_Err_Fr
 
 	// Assert
 	assert.Equal(suite.T(), expectedErr, receivedErr)
+}
+
+func Test_DetailedErrorResponse_Error_Returns_Detail_Message(t *testing.T) {
+	fixtures := []struct {
+		title       string
+		detail      string
+		expectedErr string
+	}{
+		{
+			title:       "",
+			detail:      "detail message",
+			expectedErr: "detail message",
+		}, {
+			title:       "title",
+			detail:      "detail message",
+			expectedErr: "detail message",
+		}, {
+			title:       "title",
+			expectedErr: "title",
+		},
+	}
+
+	for _, fixture := range fixtures {
+
+		sut := response.DetailedErrorResponse{
+			Title:  fixture.title,
+			Detail: fixture.detail,
+		}
+
+		assert.Equal(t, fixture.expectedErr, sut.Error())
+	}
 }
