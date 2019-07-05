@@ -113,7 +113,7 @@ func buildDetailedErrorMessage(errorResponse response.DetailedErrorResponse) err
 
 	sb := strings.Builder{}
 	sb.WriteString("Extractor creation failed with the following error: ")
-	sb.WriteString(fmt.Sprintf("%s\n", errorResponse.Title))
+	sb.WriteString(fmt.Sprintf("%s\n", errorResponse.Error()))
 
 	// group error info by module
 	errorsByModule := map[string][]detailedError{}

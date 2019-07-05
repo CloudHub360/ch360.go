@@ -71,8 +71,12 @@ type DetailedErrorResponse struct {
 	Title    string                   `json:"title"`
 	Status   int                      `json:"status"`
 	Instance string                   `json:"instance"`
+	Detail   string                   `json:"detail"`
 }
 
 func (e *DetailedErrorResponse) Error() string {
+	if len(e.Detail) > 0 {
+		return e.Detail
+	}
 	return e.Title
 }
