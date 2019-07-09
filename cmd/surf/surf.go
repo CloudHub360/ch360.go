@@ -7,6 +7,8 @@ import (
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/docopt/docopt-go"
+	"github.com/pkg/errors"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -50,7 +52,7 @@ Options:
                                      redirecting stdout or in conjunction with -m or -o.
   -t, --from-template <template>   : The extractor modules template to use when creating an
                                      extractor from modules.
-  --verbose-http                   : Log HTTP requests and responses as they happen, to stderr.
+  --log-http <file>                : Log HTTP requests and responses as they happen, to a file.
 `
 
 	filenameExamples := `
@@ -112,7 +114,6 @@ func exitOnErr(err error) {
 }
 
 func initApiClient(params *config.RunParams) (*ch360.ApiClient, error) {
-
 	appDir, err := config.NewAppDirectory()
 	if err != nil {
 		return nil, err
@@ -126,7 +127,16 @@ func initApiClient(params *config.RunParams) (*ch360.ApiClient, error) {
 		return nil, err
 	}
 
-	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret, params.VerboseHttp), nil
+	httpLogSink := io.Writer(nil)
+	if params.LogHttp != "" {
+		// attempt to open file to log http requests to
+		if httpLogSink, err = os.Create(params.LogHttp); err != nil {
+			return nil, errors.WithMessage(err, "Unable to open HTTP log file")
+		}
+
+	}
+
+	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret, httpLogSink), nil
 }
 
 var DefaultHttpClient = &http.Client{Timeout: time.Minute * 5}
