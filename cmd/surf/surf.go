@@ -133,7 +133,6 @@ func initApiClient(params *config.RunParams) (*ch360.ApiClient, error) {
 		if httpLogSink, err = os.Create(params.LogHttp); err != nil {
 			return nil, errors.WithMessage(err, "Unable to open HTTP log file")
 		}
-
 	}
 
 	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret, httpLogSink), nil
