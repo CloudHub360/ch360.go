@@ -31,6 +31,9 @@ func NewProgressHandlerFor(params *config.RunParams, progressOut io.Writer) (*Pr
 func NewProgressHandler(resultsWriter resultsWriters.ResultsWriter, showProgress bool, progressOut io.Writer) *ProgressHandler {
 	progress := uiprogress.New()
 	progress.SetOut(progressOut)
+
+	progress.Start()
+
 	return &ProgressHandler{
 		resultsWriter: resultsWriter,
 		showProgress:  showProgress,
@@ -62,7 +65,6 @@ func (c *ProgressHandler) NotifyErr(filename string, err error) error {
 }
 
 func (c *ProgressHandler) initProgressBar(total int) {
-	c.progress.Start()
 	c.progressBar = c.progress.AddBar(total).PrependFunc(func(bar *uiprogress.Bar) string {
 		return fmt.Sprintf("Processing file [%d/%d]", bar.Current(), bar.Total)
 	})
