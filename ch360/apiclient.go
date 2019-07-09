@@ -24,10 +24,17 @@ func NewTokenRetriever(httpClient net.HttpDoer, apiUrl string) auth.TokenRetriev
 			&response.ErrorChecker{}))
 }
 
-func NewApiClient(httpClient net.HttpDoer, apiUrl string, clientId string, clientSecret string, httpLogSink io.Writer) *ApiClient {
+func NewApiClient(httpClient net.HttpDoer,
+	apiUrl string,
+	clientId string,
+	clientSecret string,
+	httpLogSink io.Writer) *ApiClient {
 
 	var myHttpClient net.HttpDoer
-	myHttpClient = net.NewContextAwareHttpClient(httpClient)
+
+	myHttpClient = net.NewUserAgentHttpClient(httpClient, "surf/"+Version)
+
+	myHttpClient = net.NewContextAwareHttpClient(myHttpClient)
 
 	if httpLogSink != nil {
 		myHttpClient = NewLoggingDoer(myHttpClient, httpLogSink)
