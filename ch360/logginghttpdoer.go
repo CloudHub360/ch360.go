@@ -3,16 +3,24 @@ package ch360
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/CloudHub360/ch360.go/net"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"sync"
+	"sync/atomic"
 )
 
+// LoggingDoer is an HttpDoer decorator that logs all HTTP requests and
+// responses to the specified io.Writer. It indents any json request /
+// response bodies, and redacts any non-json bodies.
 type LoggingDoer struct {
 	wrappedSender net.HttpDoer
 	out           io.Writer
+	mutex         sync.Mutex
+	count         uint32
 }
 
 func NewLoggingDoer(httpDoer net.HttpDoer, out io.Writer) *LoggingDoer {
@@ -23,16 +31,40 @@ func NewLoggingDoer(httpDoer net.HttpDoer, out io.Writer) *LoggingDoer {
 }
 
 func (d *LoggingDoer) Do(request *http.Request) (*http.Response, error) {
+	requestId := atomic.AddUint32(&d.count, 1)
+	requestBytes, err := d.formatRequest(request, requestId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	d.safeWrite(requestBytes)
+
+	response, capturedErr := d.wrappedSender.Do(request)
+
+	responseBytes, err := d.formatResponse(response, requestId)
+
+	d.safeWrite(responseBytes)
+
+	return response, capturedErr
+}
+
+func (d *LoggingDoer) safeWrite(bytes []byte) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
+	_, _ = d.out.Write(bytes)
+}
+
+func (d *LoggingDoer) formatRequest(request *http.Request, requestId uint32) ([]byte, error) {
 	requestBytes, err := httputil.DumpRequestOut(request, false)
 
 	if err != nil {
 		return nil, err
 	}
-	_, err = d.out.Write(requestBytes)
 
-	if err != nil {
-		return nil, err
-	}
+	logBuffer := bytes.NewBufferString(fmt.Sprintf("[%04d -->] ", requestId))
+	logBuffer.Write(requestBytes)
 
 	if request.Body != nil {
 		body, err := request.GetBody()
@@ -45,34 +77,57 @@ func (d *LoggingDoer) Do(request *http.Request) (*http.Response, error) {
 		_, _ = bodyBuffer.ReadFrom(body)
 
 		if json.Valid(bodyBuffer.Bytes()) {
-			formattedJson := bytes.Buffer{}
-			_ = json.Indent(&formattedJson, bodyBuffer.Bytes(), "", "  ")
-			formattedJson.WriteTo(d.out)
-			d.out.Write([]byte("\n"))
+			_ = json.Indent(logBuffer, bodyBuffer.Bytes(), "", "  ")
+			logBuffer.WriteString("\n")
 		} else {
-			d.out.Write([]byte("<binary request body>\n\n"))
+			logBuffer.WriteString("<binary request body>\n")
 		}
 	}
 
-	response, capturedErr := d.wrappedSender.Do(request)
+	logBuffer.WriteString("\n")
 
-	responseBodyBuffer := bytes.Buffer{}
-	responseBodyBuffer.ReadFrom(response.Body)
-	bodyReader := bytes.NewReader(responseBodyBuffer.Bytes())
-	response.Body = ioutil.NopCloser(bodyReader)
+	return logBuffer.Bytes(), nil
+}
 
-	responseBytes, err := httputil.DumpResponse(response, false)
+func (d *LoggingDoer) formatResponse(response *http.Response, requestId uint32) ([]byte, error) {
+	// get headers
+	responseHeaders, err := httputil.DumpResponse(response, false)
 
-	d.out.Write(responseBytes)
-
-	if json.Valid(responseBodyBuffer.Bytes()) {
-		formattedJson := bytes.Buffer{}
-		json.Indent(&formattedJson, responseBodyBuffer.Bytes(), "", "  ")
-		formattedJson.WriteTo(d.out)
-	} else {
-		d.out.Write([]byte("<binary response body>\n\n"))
+	if err != nil {
+		return nil, err
 	}
 
-	d.out.Write([]byte("\n"))
-	return response, capturedErr
+	logBuffer := bytes.NewBufferString(fmt.Sprintf("[%04d <--] ", requestId))
+
+	logBuffer.Write(responseHeaders)
+
+	bodyBuffer := bytes.Buffer{}
+
+	// reset the response body
+	if response.Body != nil {
+		_, err := bodyBuffer.ReadFrom(response.Body)
+
+		if err != nil {
+			return nil, err
+		}
+
+		response.Body = ioutil.NopCloser(bytes.NewReader(bodyBuffer.Bytes()))
+	}
+
+	// format json
+	if json.Valid(bodyBuffer.Bytes()) {
+		formattedJson := bytes.Buffer{}
+		err = json.Indent(&formattedJson, bodyBuffer.Bytes(), "", "  ")
+
+		if err != nil {
+			return nil, err
+		}
+
+		logBuffer.Write(formattedJson.Bytes())
+		logBuffer.WriteString("\n\n")
+	} else {
+		logBuffer.WriteString("<binary response body>\n\n")
+	}
+
+	return logBuffer.Bytes(), nil
 }
