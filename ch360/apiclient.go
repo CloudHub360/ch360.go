@@ -30,46 +30,45 @@ func NewApiClient(httpClient net.HttpDoer,
 	clientSecret string,
 	httpLogSink io.Writer) *ApiClient {
 
-	var myHttpClient net.HttpDoer
-
-	myHttpClient = net.NewUserAgentHttpClient(httpClient, "surf/"+Version)
-
-	myHttpClient = net.NewContextAwareHttpClient(myHttpClient)
+	var myHttpClient = httpClient
 
 	if httpLogSink != nil {
 		myHttpClient = NewLoggingDoer(myHttpClient, httpLogSink)
 	}
 
+	myHttpClient = net.NewUserAgentHttpClient(myHttpClient, "surf/"+Version)
+	myHttpClient = net.NewContextAwareHttpClient(myHttpClient)
+
 	tokenRetriever := NewTokenRetriever(myHttpClient, apiUrl)
 
-	authorisingDoer := AuthorisingDoer{
+	myHttpClient = &AuthorisingDoer{
 		wrappedSender:  myHttpClient,
 		tokenRetriever: tokenRetriever,
 		clientId:       clientId,
 		clientSecret:   clientSecret,
 	}
 
-	responseCheckingDoer := ResponseCheckingDoer{
-		wrappedSender:   &authorisingDoer,
+	myHttpClient = &ResponseCheckingDoer{
+		wrappedSender:   myHttpClient,
 		responseChecker: &response.ErrorChecker{},
 	}
 
 	apiClient := &ApiClient{
 		Classifiers: &ClassifiersClient{
 			baseUrl:       apiUrl,
-			requestSender: &responseCheckingDoer,
+			requestSender: myHttpClient,
 		},
 		Documents: &DocumentsClient{
 			baseUrl:       apiUrl,
-			requestSender: &responseCheckingDoer,
+			requestSender: myHttpClient,
 		},
 		Extractors: &ExtractorsClient{
 			baseUrl:       apiUrl,
-			requestSender: &responseCheckingDoer,
+			requestSender: myHttpClient,
 		},
 		Modules: &ModulesClient{
 			baseUrl:       apiUrl,
-			requestSender: &responseCheckingDoer,
+			requestSender: myHttpClient,
 		},
 	}
 
