@@ -25,6 +25,8 @@ func newRequest(ctx context.Context, method string, url string, body io.Reader) 
 
 	request = request.WithContext(ctx)
 
+	request.Header.Add("User-Agent", "surf/"+Version)
+
 	return &requestBuilder{
 		request: request,
 	}
