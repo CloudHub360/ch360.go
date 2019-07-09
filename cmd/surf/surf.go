@@ -48,7 +48,7 @@ Options:
   -o, --output-file <file>         : Write all results to the specified file
   -m, --multiple-files             : Write results output to multiple files with the same
                                    : basename as the input
-  -p, --progress                   : Show progress when classifying files. Only visible when
+  -p, --progress                   : Show progress when processing files. Only visible when
                                      redirecting stdout or in conjunction with -m or -o.
   -t, --from-template <template>   : The extractor modules template to use when creating an
                                      extractor from modules.
