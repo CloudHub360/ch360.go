@@ -32,19 +32,17 @@ func NewLoggingDoer(httpDoer net.HttpDoer, out io.Writer) *LoggingDoer {
 
 func (d *LoggingDoer) Do(request *http.Request) (*http.Response, error) {
 	requestId := atomic.AddUint32(&d.count, 1)
-	requestBytes, err := d.formatRequest(request, requestId)
-
-	if err != nil {
-		return nil, err
-	}
+	requestBytes := d.formatRequest(request, requestId)
 
 	d.safeWrite(requestBytes)
 
 	response, capturedErr := d.wrappedSender.Do(request)
 
-	responseBytes, err := d.formatResponse(response, requestId)
+	if response != nil {
+		responseBytes := d.formatResponse(response, requestId)
 
-	d.safeWrite(responseBytes)
+		d.safeWrite(responseBytes)
+	}
 
 	return response, capturedErr
 }
@@ -56,11 +54,11 @@ func (d *LoggingDoer) safeWrite(bytes []byte) {
 	_, _ = d.out.Write(bytes)
 }
 
-func (d *LoggingDoer) formatRequest(request *http.Request, requestId uint32) ([]byte, error) {
+func (d *LoggingDoer) formatRequest(request *http.Request, requestId uint32) []byte {
 	requestBytes, err := httputil.DumpRequestOut(request, false)
 
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	logBuffer := bytes.NewBufferString(fmt.Sprintf("[%04d -->] ", requestId))
@@ -70,7 +68,7 @@ func (d *LoggingDoer) formatRequest(request *http.Request, requestId uint32) ([]
 		body, err := request.GetBody()
 
 		if err != nil {
-			return nil, err
+			return nil
 		}
 
 		bodyBuffer := bytes.Buffer{}
@@ -86,15 +84,15 @@ func (d *LoggingDoer) formatRequest(request *http.Request, requestId uint32) ([]
 
 	logBuffer.WriteString("\n")
 
-	return logBuffer.Bytes(), nil
+	return logBuffer.Bytes()
 }
 
-func (d *LoggingDoer) formatResponse(response *http.Response, requestId uint32) ([]byte, error) {
+func (d *LoggingDoer) formatResponse(response *http.Response, requestId uint32) []byte {
 	// get headers
 	responseHeaders, err := httputil.DumpResponse(response, false)
 
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	logBuffer := bytes.NewBufferString(fmt.Sprintf("[%04d <--] ", requestId))
@@ -108,7 +106,7 @@ func (d *LoggingDoer) formatResponse(response *http.Response, requestId uint32) 
 		_, err := bodyBuffer.ReadFrom(response.Body)
 
 		if err != nil {
-			return nil, err
+			return nil
 		}
 
 		response.Body = ioutil.NopCloser(bytes.NewReader(bodyBuffer.Bytes()))
@@ -120,7 +118,7 @@ func (d *LoggingDoer) formatResponse(response *http.Response, requestId uint32) 
 		err = json.Indent(&formattedJson, bodyBuffer.Bytes(), "", "  ")
 
 		if err != nil {
-			return nil, err
+			return nil
 		}
 
 		logBuffer.Write(formattedJson.Bytes())
@@ -129,5 +127,5 @@ func (d *LoggingDoer) formatResponse(response *http.Response, requestId uint32) 
 		logBuffer.WriteString("<binary response body>\n\n")
 	}
 
-	return logBuffer.Bytes(), nil
+	return logBuffer.Bytes()
 }
