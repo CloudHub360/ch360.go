@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/CloudHub360/ch360.go/net"
-	"github.com/CloudHub360/ch360.go/response"
 	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
@@ -26,10 +25,10 @@ type AccessToken struct {
 type HttpTokenRetriever struct {
 	apiUrl          string
 	httpDoer        net.HttpDoer
-	responseChecker response.Checker
+	responseChecker net.ResponseChecker
 }
 
-func NewHttpTokenRetriever(httpDoer net.HttpDoer, apiUrl string, responseChecker response.Checker) *HttpTokenRetriever {
+func NewHttpTokenRetriever(httpDoer net.HttpDoer, apiUrl string, responseChecker net.ResponseChecker) *HttpTokenRetriever {
 	return &HttpTokenRetriever{
 		httpDoer:        httpDoer,
 		apiUrl:          apiUrl,

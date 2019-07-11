@@ -2,16 +2,15 @@ package ch360
 
 import (
 	"github.com/CloudHub360/ch360.go/net"
-	"github.com/CloudHub360/ch360.go/response"
 	"net/http"
 )
 
 type ResponseCheckingDoer struct {
-	responseChecker response.Checker
+	responseChecker net.ResponseChecker
 	wrappedSender   net.HttpDoer
 }
 
-func NewResponseCheckingdoer(checker response.Checker, wrappedSender net.HttpDoer) *ResponseCheckingDoer {
+func NewResponseCheckingdoer(checker net.ResponseChecker, wrappedSender net.HttpDoer) *ResponseCheckingDoer {
 	return &ResponseCheckingDoer{
 		wrappedSender:   wrappedSender,
 		responseChecker: checker,
