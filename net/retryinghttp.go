@@ -42,6 +42,7 @@ func (h *RetryingHttpClient) Do(request *http.Request) (*http.Response, error) {
 	var exponentialPolicy = backoff.NewExponentialBackOff()
 	exponentialPolicy.Multiplier = h.multiplier
 	backoffPolicy := backoff.WithMaxRetries(exponentialPolicy, uint64(h.retryAttempts))
+	backoffPolicy = backoff.WithContext(backoffPolicy, request.Context())
 
 	err = backoff.Retry(func() error {
 		// Reset the body on the request to ensure it's readable (rewound)
