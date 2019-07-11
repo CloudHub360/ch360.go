@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/CloudHub360/ch360.go/ioutils"
 	"github.com/pkg/errors"
 	"io"
 	"os"
@@ -26,7 +27,7 @@ type CreateExtractorTemplate struct {
 
 // Execute runs the command.
 func (cmd CreateExtractorTemplate) Execute(ctx context.Context) error {
-	defer TryClose(cmd.writer)
+	defer ioutils.TryClose(cmd.writer)
 	var (
 		jsonData []byte
 		err      error
