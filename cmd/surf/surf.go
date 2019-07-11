@@ -138,4 +138,4 @@ func initApiClient(params *config.RunParams) (*ch360.ApiClient, error) {
 	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret, httpLogSink), nil
 }
 
-var DefaultHttpClient = &http.Client{Timeout: time.Minute * 5}
+var DefaultHttpClient = &http.Client{Timeout: time.Minute * 2}
