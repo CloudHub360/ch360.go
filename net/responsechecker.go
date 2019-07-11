@@ -1,4 +1,4 @@
-package response
+package net
 
 import (
 	"bytes"
@@ -10,9 +10,9 @@ import (
 
 type ErrorChecker struct{}
 
-//go:generate mockery -name Checker
+//go:generate mockery -name ResponseChecker
 
-type Checker interface {
+type ResponseChecker interface {
 	CheckForErrors(response *http.Response) error
 }
 
@@ -24,6 +24,7 @@ func (c *ErrorChecker) CheckForErrors(response *http.Response) error {
 	if err != nil {
 		return errors.WithMessage(err, "Unable to read from HTTP response body")
 	}
+	response.Body.Close()
 
 	// We've read from the response body, and it can't be rewound, so 'recreate' it as a new io.Reader
 	// which will read from the start of the underlying byte array of 'buf'.

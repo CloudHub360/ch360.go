@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/CloudHub360/ch360.go/response"
+	"github.com/CloudHub360/ch360.go/net"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"io"
@@ -80,7 +80,7 @@ func (cmd *CreateExtractor) Execute(ctx context.Context) error {
 		err := cmd.creator.CreateFromModules(ctx, cmd.extractorName, *cmd.template)
 
 		if err != nil {
-			if detailedResponse, ok := err.(*response.DetailedErrorResponse); ok {
+			if detailedResponse, ok := err.(*net.DetailedErrorResponse); ok {
 				return buildDetailedErrorMessage(*detailedResponse)
 			}
 		}
@@ -94,7 +94,7 @@ func (cmd CreateExtractor) Usage() string {
 	return CreateExtractorCommand
 }
 
-func buildDetailedErrorMessage(errorResponse response.DetailedErrorResponse) error {
+func buildDetailedErrorMessage(errorResponse net.DetailedErrorResponse) error {
 	//noinspection ALL odd names to match json
 	type detailedError struct {
 		Module_ID      string

@@ -7,7 +7,7 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands/mocks"
-	"github.com/CloudHub360/ch360.go/response"
+	"github.com/CloudHub360/ch360.go/net"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -93,8 +93,8 @@ Module waives.supplier_identity:
 	assert.Error(suite.T(), receivedErr, expectedErrMsg)
 }
 
-func aDetailedErrorResponse() *response.DetailedErrorResponse {
-	return &response.DetailedErrorResponse{
+func aDetailedErrorResponse() *net.DetailedErrorResponse {
+	return &net.DetailedErrorResponse{
 		Title: "Invalid Extractor Template",
 		Errors: []map[string]interface{}{
 			{

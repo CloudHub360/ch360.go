@@ -3,7 +3,6 @@ package ch360
 import (
 	"github.com/CloudHub360/ch360.go/auth"
 	"github.com/CloudHub360/ch360.go/net"
-	"github.com/CloudHub360/ch360.go/response"
 	"io"
 )
 
@@ -21,7 +20,7 @@ func NewTokenRetriever(httpClient net.HttpDoer, apiUrl string) auth.TokenRetriev
 		auth.NewHttpTokenRetriever(
 			httpClient,
 			apiUrl,
-			&response.ErrorChecker{}))
+			&net.ErrorChecker{}))
 }
 
 func NewApiClient(httpClient net.HttpDoer,
@@ -50,7 +49,7 @@ func NewApiClient(httpClient net.HttpDoer,
 
 	myHttpClient = &ResponseCheckingDoer{
 		wrappedSender:   myHttpClient,
-		responseChecker: &response.ErrorChecker{},
+		responseChecker: &net.ErrorChecker{},
 	}
 
 	apiClient := &ApiClient{

@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"github.com/CloudHub360/ch360.go/auth"
+	"github.com/CloudHub360/ch360.go/net"
 	mocknet "github.com/CloudHub360/ch360.go/net/mocks"
-	"github.com/CloudHub360/ch360.go/response"
-	mockresponse "github.com/CloudHub360/ch360.go/response/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -27,7 +26,7 @@ type HttpTokenRetrieverSuite struct {
 	suite.Suite
 	sut                 *auth.HttpTokenRetriever
 	mockHttpClient      *mocknet.HttpDoer
-	mockResponseChecker *mockresponse.Checker
+	mockResponseChecker *mocknet.ResponseChecker
 	validTokenValue     string
 	validTokenBody      string
 	validTokenResponse  *http.Response
@@ -38,7 +37,7 @@ type HttpTokenRetrieverSuite struct {
 
 func (suite *HttpTokenRetrieverSuite) SetupTest() {
 	suite.mockHttpClient = new(mocknet.HttpDoer)
-	suite.mockResponseChecker = new(mockresponse.Checker)
+	suite.mockResponseChecker = new(mocknet.ResponseChecker)
 	suite.sut = auth.NewHttpTokenRetriever(suite.mockHttpClient, "notused", suite.mockResponseChecker)
 
 	suite.validTokenValue = `tokenvalue`
@@ -74,7 +73,7 @@ func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Sends_Client_Id_An
 
 func (suite *HttpTokenRetrieverSuite) Test_HttpTokenRetriever_Returns_Error_On_HttpClient_Error() {
 	// Arrange
-	tokenGetter := auth.NewHttpTokenRetriever(&http.Client{}, "http://invalid-url:-1", &response.ErrorChecker{})
+	tokenGetter := auth.NewHttpTokenRetriever(&http.Client{}, "http://invalid-url:-1", &net.ErrorChecker{})
 
 	// Act
 	_, err := tokenGetter.RetrieveToken(suite.clientId, suite.clientSecret)

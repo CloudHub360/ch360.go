@@ -2,9 +2,8 @@ package ch360_test
 
 import (
 	"github.com/CloudHub360/ch360.go/ch360"
+	"github.com/CloudHub360/ch360.go/net"
 	"github.com/CloudHub360/ch360.go/net/mocks"
-	"github.com/CloudHub360/ch360.go/response"
-	mockresponse "github.com/CloudHub360/ch360.go/response/mocks"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -17,12 +16,12 @@ type ResponseCheckingDoerSuite struct {
 	suite.Suite
 	sut        *ch360.ResponseCheckingDoer
 	underlying *mocks.HttpDoer
-	checker    *mockresponse.Checker
+	checker    *mocks.ResponseChecker
 }
 
 func (suite *ResponseCheckingDoerSuite) SetupTest() {
 	suite.underlying = &mocks.HttpDoer{}
-	suite.checker = &mockresponse.Checker{}
+	suite.checker = &mocks.ResponseChecker{}
 	suite.sut = ch360.NewResponseCheckingdoer(suite.checker, suite.underlying)
 }
 
@@ -106,7 +105,7 @@ func Test_DetailedErrorResponse_Error_Returns_Detail_Message(t *testing.T) {
 
 	for _, fixture := range fixtures {
 
-		sut := response.DetailedErrorResponse{
+		sut := net.DetailedErrorResponse{
 			Title:  fixture.title,
 			Detail: fixture.detail,
 		}
