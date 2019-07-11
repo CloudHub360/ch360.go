@@ -2,6 +2,7 @@ package net
 
 import (
 	"bytes"
+	"context"
 	"github.com/CloudHub360/ch360.go/ioutils"
 	"github.com/CloudHub360/ch360.go/net/mocks"
 	"github.com/pkg/errors"
@@ -90,4 +91,35 @@ func TestRetryingHttpClient_Should_Specify_The_Same_Request_Data_On_Each_Retry(t
 	for _, actualRequestBody := range actualRequestBodies {
 		assert.Equal(t, expectedBody, actualRequestBody)
 	}
+}
+
+func TestRetryingHttpClient_Should_Not_Retry_If_Cancelled(t *testing.T) {
+	// Arrange
+	var (
+		wrappedDoer                      = mocks.HttpDoer{}
+		expectedResponse  *http.Response = nil
+		retryAttempts                    = 1
+		request, _                       = http.NewRequest("GET", "https://api.waives.io/version", nil)
+		actualCallCount                  = 0
+		expectedCallCount                = 1
+		ctx, cancelFn                    = context.WithCancel(context.Background())
+	)
+	cancelFn() // cancel request's Context
+	expectedErr := ctx.Err()
+	wrappedDoer.
+		On("Do", mock.Anything).
+		Run(func(_ mock.Arguments) {
+			actualCallCount++
+		}).
+		Return(expectedResponse, expectedErr)
+
+	request = request.WithContext(ctx)
+	sut := NewRetryingHttpClient(&wrappedDoer, retryAttempts, 0.01)
+
+	// Act
+	_, actualErr := sut.Do(request)
+
+	// Assert
+	assert.Equal(t, expectedCallCount, actualCallCount)
+	assert.Equal(t, expectedErr, actualErr)
 }
