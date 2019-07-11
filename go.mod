@@ -3,6 +3,7 @@ module github.com/CloudHub360/ch360.go
 go 1.12
 
 require (
+	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/fatih/color v1.7.0 // indirect
