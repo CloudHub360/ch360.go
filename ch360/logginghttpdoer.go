@@ -55,31 +55,23 @@ func (d *LoggingDoer) safeWrite(bytes []byte) {
 }
 
 func (d *LoggingDoer) formatRequest(request *http.Request, requestId uint32) []byte {
+
 	requestBytes, err := httputil.DumpRequestOut(request, false)
 
 	if err != nil {
 		return nil
 	}
 
+	bodyBuffer := net.RequestBodyBytes(request)
+
 	logBuffer := bytes.NewBufferString(fmt.Sprintf("[%04d -->] ", requestId))
 	logBuffer.Write(requestBytes)
 
-	if request.Body != nil {
-		body, err := request.GetBody()
-
-		if err != nil {
-			return nil
-		}
-
-		bodyBuffer := bytes.Buffer{}
-		_, _ = bodyBuffer.ReadFrom(body)
-
-		if json.Valid(bodyBuffer.Bytes()) {
-			_ = json.Indent(logBuffer, bodyBuffer.Bytes(), "", "  ")
-			logBuffer.WriteString("\n")
-		} else {
-			logBuffer.WriteString("<binary request body>\n")
-		}
+	if json.Valid(bodyBuffer.Bytes()) {
+		_ = json.Indent(logBuffer, bodyBuffer.Bytes(), "", "  ")
+		logBuffer.WriteString("\n")
+	} else {
+		logBuffer.WriteString("<binary request body>\n")
 	}
 
 	logBuffer.WriteString("\n")
