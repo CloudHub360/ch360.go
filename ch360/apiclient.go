@@ -37,6 +37,7 @@ func NewApiClient(httpClient net.HttpDoer,
 
 	myHttpClient = net.NewUserAgentHttpClient(myHttpClient, "surf/"+Version)
 	myHttpClient = net.NewContextAwareHttpClient(myHttpClient)
+	myHttpClient = net.NewRetryingHttpClient(myHttpClient, 3, 2)
 
 	tokenRetriever := NewTokenRetriever(myHttpClient, apiUrl)
 
