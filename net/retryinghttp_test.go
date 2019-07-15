@@ -31,7 +31,7 @@ func TestRetryingHttpClient_Should_Return_Response_From_Wrapped_Doer_On_Success(
 	assert.Equal(t, expectedErr, actualErr)
 }
 
-func TestRetryingHttpClient_Should_Retry_On_Failure(t *testing.T) {
+func TestRetryingHttpClient_Should_Retry_On_Network_Error(t *testing.T) {
 	// Arrange
 	var (
 		wrappedDoer                      = mocks.HttpDoer{}
@@ -41,6 +41,32 @@ func TestRetryingHttpClient_Should_Retry_On_Failure(t *testing.T) {
 		retryAttempts     = 3
 		expectedCallCount = retryAttempts + 1
 		request, _        = http.NewRequest("GET", "https://api.waives.io/version", nil)
+	)
+	wrappedDoer.
+		On("Do", mock.Anything).
+		Run(func(_ mock.Arguments) {
+			actualCallCount++
+		}).
+		Return(expectedResponse, expectedErr)
+	sut := NewRetryingHttpClient(&wrappedDoer, retryAttempts, 0.01)
+
+	// Act
+	_, _ = sut.Do(request)
+
+	// Assert
+	assert.Equal(t, expectedCallCount, actualCallCount)
+}
+
+func TestRetryingHttpClient_Should_Retry_On_Http_500_And_Over(t *testing.T) {
+	// Arrange
+	var (
+		wrappedDoer             = mocks.HttpDoer{}
+		expectedResponse        = &http.Response{StatusCode: 500}
+		expectedErr       error = nil
+		retryAttempts           = 3
+		expectedCallCount       = retryAttempts + 1
+		request, _              = http.NewRequest("GET", "https://api.waives.io/version", nil)
+		actualCallCount   int
 	)
 	wrappedDoer.
 		On("Do", mock.Anything).
