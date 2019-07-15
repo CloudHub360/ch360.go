@@ -12,6 +12,8 @@ type ErrorChecker struct{}
 
 //go:generate mockery -name ResponseChecker
 
+var _ ResponseChecker = (*ErrorChecker)(nil)
+
 type ResponseChecker interface {
 	CheckForErrors(response *http.Response) error
 }
