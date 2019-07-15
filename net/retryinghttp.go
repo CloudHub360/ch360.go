@@ -47,10 +47,24 @@ func (h *RetryingHttpClient) Do(request *http.Request) (*http.Response, error) {
 	err = backoff.Retry(func() error {
 		// Reset the body on the request to ensure it's readable (rewound)
 		request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody.Bytes()))
-		response, err = h.wrapped.Do(request)
 
-		return err
+		response, err = h.wrapped.Do(request)
+		return shouldRetry(response, err)
 	}, backoffPolicy)
 
 	return response, err
+}
+
+// shouldRetry returns an error if the provided response and error are retryable.
+func shouldRetry(response *http.Response, err error) error {
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode >= 500 || response.StatusCode == 408 {
+		return errors.Errorf("Unexpected HTTP response %v", response.StatusCode)
+	}
+
+	// no error, don't retry
+	return nil
 }
