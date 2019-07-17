@@ -20,14 +20,6 @@ func main() {
 	//
 	//Usage:
 	//  surf login [options]
-	//  surf ` + new(commands.ListClassifiers).Usage() + ` [options]
-	//  surf ` + new(commands.UploadClassifier).Usage() + ` <name> <classifier-file> [options]
-	//  surf ` + new(commands.CreateClassifier).Usage() + ` <name> <samples-zip> [options]
-	//  surf ` + new(commands.DeleteClassifier).Usage() + ` <name> [options]
-	//  surf ` + new(commands.ListExtractors).Usage() + ` [options]
-	//  surf ` + new(commands.UploadExtractor).Usage() + ` <name> <config-file> [options]
-	//  surf ` + new(commands.CreateExtractor).Usage() + ` <name> --from-template=<template> [options]
-	//  surf ` + new(commands.CreateExtractor).Usage() + ` <name> <module-ids>... [options]
 	//  surf ` + new(commands.CreateExtractorTemplate).Usage() + ` <module-ids>... [options]
 	//  surf ` + new(commands.DeleteExtractor).Usage() + ` <name> [options]
 	//  surf ` + new(commands.ListModules).Usage() + ` [options]
@@ -127,9 +119,18 @@ func main() {
 		createClassifierName = createClassifier.Arg("name", "The name of the new classifier.").Required().String()
 		createClassifierFile = createClassifier.Arg("samples-zip", "The zip file containing training samples.").Required().File()
 
-		createExtractor        = create.Command("extractor", "Create waives extractor.")
-		createExtractorName    = createExtractor.Arg("name", "The name of the new extractor.").Required().String()
-		createExtractorModules = createExtractor.Arg("module-ids...", "The module ids to create the extractor from.").Required().Strings()
+		createExtractor = create.Command("extractor", "Create waives extractor.")
+
+		createExtractorFromModules = createExtractor.Command("from-modules", "Create waives extractor from a set of modules.")
+
+		createExtractorFromModulesName = createExtractorFromModules.Arg("name", "The name of the new extractor.").Required().String()
+		createExtractorFromModulesIds  = createExtractorFromModules.Arg("module-ids", "The module ids to create the extractor from.").Strings()
+
+		createExtractorFromTemplate     = createExtractor.Command("from-template", "The extractor template to create the extractor from.")
+		createExtractorFromTemplateName = createExtractorFromTemplate.Arg("name", "The name of the new extractor.").
+						Required().String()
+		createExtractorFromTemplateFile = createExtractorFromTemplate.Arg("template-file", "The extraction template file (json).").
+						Required().File()
 
 		login = app.Command("login", "Connect surf to your account.")
 	)
@@ -175,9 +176,14 @@ func main() {
 			cmd = commands.NewCreateClassifier(os.Stdout, apiClient.Classifiers,
 				apiClient.Classifiers, apiClient.Classifiers, *createClassifierName, *createClassifierFile)
 			defer (*createClassifierFile).Close()
-		case createExtractor.FullCommand():
+		case createExtractorFromModules.FullCommand():
 			cmd = commands.NewCreateExtractorFromModules(os.Stdout, apiClient.Extractors,
-				*createExtractorName, *createExtractorModules)
+				*createExtractorFromModulesName, *createExtractorFromModulesIds)
+		case createExtractorFromTemplate.FullCommand():
+			cmd, err = commands.NewCreateExtractorFromTemplate(os.Stdout, apiClient.Extractors,
+				*createExtractorFromTemplateName, *createExtractorFromTemplateFile)
+
+			exitOnErr(err)
 		}
 	}
 
