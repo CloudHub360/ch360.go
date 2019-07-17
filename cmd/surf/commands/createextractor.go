@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/net"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"io"
-	"os"
 	"strings"
 )
 
@@ -53,44 +51,25 @@ func NewCreateExtractorFromModules(writer io.Writer,
 		template)
 }
 
-func NewCreateExtractorWithArgs(params *config.RunParams,
-	client ExtractorCreator, out io.Writer) (*CreateExtractor, error) {
+func NewCreateExtractorFromTemplate(out io.Writer,
+	client ExtractorCreator, extractorName string, templateFile io.Reader) (*CreateExtractor,
+	error) {
 
 	var (
-		err          error
-		templateFile *os.File
-		template     = new(ch360.ExtractorTemplate)
+		err      error
+		template = new(ch360.ExtractorTemplate)
 	)
 
-	if params.ModulesTemplate != "" {
-		// deserialise template file
-		templateFile, err = os.Open(params.ModulesTemplate)
+	template, err = ch360.NewModulesTemplateFromJson(templateFile)
 
-		if err != nil {
-			pathErr := err.(*os.PathError)
-			return nil, errors.WithMessagef(pathErr.Err,
-				"Error when opening template file '%s'", params.ModulesTemplate)
-		}
-
-		template, err = ch360.NewModulesTemplateFromJson(templateFile)
-
-		if err != nil {
-			return nil, errors.WithMessagef(err,
-				"Error when reading json template '%s'", params.ModulesTemplate)
-		}
-
-	} else {
-		// create template struct from IDs
-		for _, moduleId := range params.ModuleIds {
-			template.Modules = append(template.Modules, ch360.ModuleTemplate{
-				ID: moduleId,
-			})
-		}
+	if err != nil {
+		return nil, errors.WithMessagef(err,
+			"Error when reading json template")
 	}
 
 	return NewCreateExtractor(out,
 		client,
-		params.Name,
+		extractorName,
 		template), nil
 }
 
