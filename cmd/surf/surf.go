@@ -99,8 +99,10 @@ func main() {
 		clientSecret = app.Flag("client-secret", "Client secret").Short('s').String()
 		logHttp      = app.Flag("log-http", "Log HTTP requests and responses as they happen, to a file.").File()
 
-		list        = app.Command("list", "List waives resources.")
-		listModules = list.Command("modules", "List all available extractor modules.")
+		list            = app.Command("list", "List waives resources.")
+		listModules     = list.Command("modules", "List all available extractor modules.")
+		listClassifiers = list.Command("classifiers", "List all available classifiers.")
+		listExtractors  = list.Command("extractors", "List all available extractors.")
 
 		login = app.Command("login", "Connect surf to your account.")
 	)
@@ -117,7 +119,7 @@ func main() {
 	var cmd commands.Command
 
 	if parsedCommand == login.FullCommand() {
-		// special case for login
+		// special case for login, it doesn't need the api client to be created
 		tokenRetriever := ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
 		cmd = commands.NewLogin(os.Stdout, appDir, tokenRetriever, *clientId, *clientSecret)
 	} else {
@@ -128,6 +130,10 @@ func main() {
 		switch parsedCommand {
 		case listModules.FullCommand():
 			cmd = commands.NewListModules(apiClient.Modules, os.Stdout)
+		case listClassifiers.FullCommand():
+			cmd = commands.NewListClassifiers(apiClient.Classifiers, os.Stdout)
+		case listExtractors.FullCommand():
+			cmd = commands.NewListExtractors(apiClient.Extractors, os.Stdout)
 		}
 	}
 
