@@ -4,20 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/docopt/docopt-go"
 	"os"
 )
 
 type CredentialsResolver struct{}
-
-func (r *CredentialsResolver) ResolveFromArgs(args docopt.Opts, configurationReader config.ConfigurationReader) (string, string, error) {
-	var (
-		clientIdArg, _     = args.String("--client-id")
-		clientSecretArg, _ = args.String("--client-secret")
-	)
-
-	return r.Resolve(clientIdArg, clientSecretArg, configurationReader)
-}
 
 func (r *CredentialsResolver) Resolve(clientId string, clientSecret string, configurationReader config.ConfigurationReader) (string, string, error) {
 	// If user specified both Id and Secret as parameters (or piping secret in), then use those values

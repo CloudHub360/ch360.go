@@ -6,92 +6,130 @@ import (
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/docopt/docopt-go"
-	"github.com/pkg/errors"
-	"io"
+	"github.com/CloudHub360/ch360.go/ioutils"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"time"
 )
 
 func main() {
-	usage := `surf - the official command line client for waives.io.
+	//	usage := `surf - the official command line client for waives.io.
+	//
+	//Usage:
+	//  surf login [options]
+	//  surf ` + new(commands.ListClassifiers).Usage() + ` [options]
+	//  surf ` + new(commands.UploadClassifier).Usage() + ` <name> <classifier-file> [options]
+	//  surf ` + new(commands.CreateClassifier).Usage() + ` <name> <samples-zip> [options]
+	//  surf ` + new(commands.DeleteClassifier).Usage() + ` <name> [options]
+	//  surf ` + new(commands.ListExtractors).Usage() + ` [options]
+	//  surf ` + new(commands.UploadExtractor).Usage() + ` <name> <config-file> [options]
+	//  surf ` + new(commands.CreateExtractor).Usage() + ` <name> --from-template=<template> [options]
+	//  surf ` + new(commands.CreateExtractor).Usage() + ` <name> <module-ids>... [options]
+	//  surf ` + new(commands.CreateExtractorTemplate).Usage() + ` <module-ids>... [options]
+	//  surf ` + new(commands.DeleteExtractor).Usage() + ` <name> [options]
+	//  surf ` + new(commands.ListModules).Usage() + ` [options]
+	//  surf ` + new(commands.ClassifyCommand).Usage() + ` <file> <classifier> [options]
+	//  surf ` + new(commands.Extract).Usage() + ` <file> <extractor> [options]
+	//  surf ` + new(commands.Read).Usage() + ` <file> (pdf|txt|wvdoc) [options]
+	//  surf -h | --help
+	//  surf -v | --version
+	//
+	//Options:
+	//  -h, --help                       : Show this help message
+	//  -v, --version                    : Show application version
+	//  -i, --client-id <id>             : Client ID
+	//  -s, --client-secret <secret>     : Client secret
+	//  -f, --output-format <format>     : Output format for classification and extraction results.
+	//                                     Allowed values: table, csv, json [default: table]
+	//  -o, --output-file <file>         : Write all results to the specified file
+	//  -m, --multiple-files             : Write results output to multiple files with the same
+	//                                   : basename as the input
+	//  -p, --progress                   : Show progress when classifying files. Only visible when
+	//                                     redirecting stdout or in conjunction with -m or -o.
+	//  -t, --from-template <template>   : The extractor modules template to use when creating an
+	//                                     extractor from modules.
+	//  --log-http <file>                : Log HTTP requests and responses as they happen, to a file.
+	//`
+	//
+	//	filenameExamples := `
+	//Filename and glob pattern examples:
+	//  file1.pdf        : Specific file
+	//  *.*              : All files in the current folder
+	//  *.pdf            : All PDFs in the current folder
+	//  foo/*.tif        : All TIFs in folder foo
+	//  bar/**/*.*       : All files in subfolders of folder bar`
+	//
+	//	// Replace slashes with OS-specific path separators
+	//	usage = usage + filepath.FromSlash(filenameExamples)
+	//
+	//	args, err := docopt.ParseArgs(usage, nil, ch360.Version)
+	//	exitOnErr(err)
+	//
+	//	runParams, err := config.NewRunParamsFromArgs(args)
+	//	exitOnErr(err)
+	//
+	//	ctx, canceller := context.WithCancel(context.Background())
+	//	go handleInterrupt(canceller)
+	//
+	//	appDir, err := config.NewAppDirectory()
+	//	exitOnErr(err)
+	//
+	//	var (
+	//		cmd       commands.Command
+	//		apiClient *ch360.ApiClient
+	//	)
+	//
+	//	if login, _ := args.Bool("login"); login {
+	//		tokenRetriever := ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
+	//		cmd = commands.NewLoginFrom(runParams, os.Stdout, appDir, tokenRetriever)
+	//	} else {
+	//		apiClient, err = initApiClient(runParams)
+	//		exitOnErr(err)
+	//		cmd, err = commands.CommandFor(runParams, apiClient)
+	//	}
+	//	exitOnErr(err)
+	//
+	//	exitOnErr(cmd.Execute(ctx))
 
-Usage:
-  surf login [options]
-  surf ` + new(commands.ListClassifiers).Usage() + ` [options]
-  surf ` + new(commands.UploadClassifier).Usage() + ` <name> <classifier-file> [options]
-  surf ` + new(commands.CreateClassifier).Usage() + ` <name> <samples-zip> [options]
-  surf ` + new(commands.DeleteClassifier).Usage() + ` <name> [options]
-  surf ` + new(commands.ListExtractors).Usage() + ` [options]
-  surf ` + new(commands.UploadExtractor).Usage() + ` <name> <config-file> [options]
-  surf ` + new(commands.CreateExtractor).Usage() + ` <name> --from-template=<template> [options] 
-  surf ` + new(commands.CreateExtractor).Usage() + ` <name> <module-ids>... [options]
-  surf ` + new(commands.CreateExtractorTemplate).Usage() + ` <module-ids>... [options]
-  surf ` + new(commands.DeleteExtractor).Usage() + ` <name> [options]
-  surf ` + new(commands.ListModules).Usage() + ` [options]
-  surf ` + new(commands.ClassifyCommand).Usage() + ` <file> <classifier> [options]
-  surf ` + new(commands.Extract).Usage() + ` <file> <extractor> [options]
-  surf ` + new(commands.Read).Usage() + ` <file> (pdf|txt|wvdoc) [options]
-  surf -h | --help
-  surf -v | --version
+	var (
+		app          = kingpin.New("surf", "surf - the official command line client for waives.io.")
+		clientId     = app.Flag("client-id", "Client ID").Short('i').String()
+		clientSecret = app.Flag("client-secret", "Client secret").Short('s').String()
+		logHttp      = app.Flag("log-http", "Log HTTP requests and responses as they happen, to a file.").File()
 
-Options:
-  -h, --help                       : Show this help message
-  -v, --version                    : Show application version
-  -i, --client-id <id>             : Client ID
-  -s, --client-secret <secret>     : Client secret
-  -f, --output-format <format>     : Output format for classification and extraction results.        
-                                     Allowed values: table, csv, json [default: table]
-  -o, --output-file <file>         : Write all results to the specified file
-  -m, --multiple-files             : Write results output to multiple files with the same
-                                   : basename as the input
-  -p, --progress                   : Show progress when processing files. Only visible when
-                                     redirecting stdout or in conjunction with -m or -o.
-  -t, --from-template <template>   : The extractor modules template to use when creating an
-                                     extractor from modules.
-  --log-http <file>                : Log HTTP requests and responses as they happen, to a file.
-`
+		list        = app.Command("list", "List waives resources.")
+		listModules = list.Command("modules", "List all available extractor modules.")
 
-	filenameExamples := `
-Filename and glob pattern examples:
-  file1.pdf        : Specific file
-  *.*              : All files in the current folder
-  *.pdf            : All PDFs in the current folder
-  foo/*.tif        : All TIFs in folder foo
-  bar/**/*.*       : All files in subfolders of folder bar`
+		login = app.Command("login", "Connect surf to your account.")
+	)
+	defer ioutils.TryClose(*logHttp)
 
-	// Replace slashes with OS-specific path separators
-	usage = usage + filepath.FromSlash(filenameExamples)
+	parsedCommand := kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	args, err := docopt.ParseArgs(usage, nil, ch360.Version)
-	exitOnErr(err)
-
-	runParams, err := config.NewRunParamsFromArgs(args)
+	appDir, err := config.NewAppDirectory()
 	exitOnErr(err)
 
 	ctx, canceller := context.WithCancel(context.Background())
 	go handleInterrupt(canceller)
 
-	appDir, err := config.NewAppDirectory()
-	exitOnErr(err)
+	var cmd commands.Command
 
-	var (
-		cmd       commands.Command
-		apiClient *ch360.ApiClient
-	)
-
-	if login, _ := args.Bool("login"); login {
+	if parsedCommand == login.FullCommand() {
+		// special case for login
 		tokenRetriever := ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
-		cmd = commands.NewLoginFrom(runParams, os.Stdout, appDir, tokenRetriever)
+		cmd = commands.NewLogin(os.Stdout, appDir, tokenRetriever, *clientId, *clientSecret)
 	} else {
-		apiClient, err = initApiClient(runParams)
+
+		apiClient, err := initApiClient(*clientId, *clientSecret, *logHttp)
 		exitOnErr(err)
-		cmd, err = commands.CommandFor(runParams, apiClient)
+
+		switch parsedCommand {
+		case listModules.FullCommand():
+			cmd = commands.NewListModules(apiClient.Modules, os.Stdout)
+		}
 	}
-	exitOnErr(err)
 
 	exitOnErr(cmd.Execute(ctx))
 }
@@ -113,7 +151,7 @@ func exitOnErr(err error) {
 	}
 }
 
-func initApiClient(params *config.RunParams) (*ch360.ApiClient, error) {
+func initApiClient(clientIdFlag, clientSecretFlag string, logHttpFile *os.File) (*ch360.ApiClient, error) {
 	appDir, err := config.NewAppDirectory()
 	if err != nil {
 		return nil, err
@@ -121,21 +159,13 @@ func initApiClient(params *config.RunParams) (*ch360.ApiClient, error) {
 
 	credentialsResolver := &commands.CredentialsResolver{}
 
-	clientId, clientSecret, err := credentialsResolver.ResolveFromArgs(params.Args(), appDir)
+	clientId, clientSecret, err := credentialsResolver.Resolve(clientIdFlag, clientSecretFlag, appDir)
 
 	if err != nil {
 		return nil, err
 	}
 
-	httpLogSink := io.Writer(nil)
-	if params.LogHttp != "" {
-		// attempt to open file to log http requests to
-		if httpLogSink, err = os.Create(params.LogHttp); err != nil {
-			return nil, errors.WithMessage(err, "Unable to open HTTP log file")
-		}
-	}
-
-	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret, httpLogSink), nil
+	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret, logHttpFile), nil
 }
 
 var DefaultHttpClient = &http.Client{Timeout: time.Minute * 2}
