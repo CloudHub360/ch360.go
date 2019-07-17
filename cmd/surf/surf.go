@@ -115,6 +115,13 @@ func main() {
 		uploadClassifierName = uploadClassifier.Arg("name", "The name of the new classifier.").String()
 		uploadClassifierFile = uploadClassifier.Arg("classifier-file", "The trained classifier file.").File()
 
+		delete              = app.Command("delete", "Delete waives resources.")
+		deleteExtractor     = delete.Command("extractor", "Delete waives extractor.")
+		deleteExtractorName = deleteExtractor.Arg("name", "The name of the extractor to delete.").String()
+
+		deleteClassifier     = delete.Command("classifier", "Delete waives classifier.")
+		deleteClassifierName = deleteClassifier.Arg("name", "The name of the classifier to delete.").String()
+
 		login = app.Command("login", "Connect surf to your account.")
 	)
 	defer ioutils.TryClose(*logHttp)
@@ -151,6 +158,10 @@ func main() {
 		case uploadClassifier.FullCommand():
 			cmd = commands.NewUploadClassifier(os.Stdout, apiClient.Classifiers, *uploadClassifierName, *uploadClassifierFile)
 			defer (*uploadClassifierFile).Close()
+		case deleteExtractor.FullCommand():
+			cmd = commands.NewDeleteExtractor(*deleteExtractorName, os.Stdout, apiClient.Extractors)
+		case deleteClassifier.FullCommand():
+			cmd = commands.NewDeleteClassifier(*deleteClassifierName, os.Stdout, apiClient.Classifiers)
 		}
 	}
 
