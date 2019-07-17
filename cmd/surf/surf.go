@@ -8,6 +8,7 @@ import (
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/ioutils"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -104,6 +105,16 @@ func main() {
 		listClassifiers = list.Command("classifiers", "List all available classifiers.")
 		listExtractors  = list.Command("extractors", "List all available extractors.")
 
+		upload = app.Command("upload", "Upload waives resources.")
+
+		uploadExtractor     = upload.Command("extractor", "Upload waives extractor (.fpxlc file).")
+		uploadExtractorName = uploadExtractor.Arg("name", "The name of the new extractor.").String()
+		uploadExtractorFile = uploadExtractor.Arg("config-file", "The extraction configuration file.").File()
+
+		uploadClassifier     = upload.Command("classifier", "Upload waives classifier (.clf file).")
+		uploadClassifierName = uploadClassifier.Arg("name", "The name of the new classifier.").String()
+		uploadClassifierFile = uploadClassifier.Arg("classifier-file", "The trained classifier file.").File()
+
 		login = app.Command("login", "Connect surf to your account.")
 	)
 	defer ioutils.TryClose(*logHttp)
@@ -134,6 +145,12 @@ func main() {
 			cmd = commands.NewListClassifiers(apiClient.Classifiers, os.Stdout)
 		case listExtractors.FullCommand():
 			cmd = commands.NewListExtractors(apiClient.Extractors, os.Stdout)
+		case uploadExtractor.FullCommand():
+			cmd = commands.NewUploadExtractor(os.Stdout, apiClient.Extractors, *uploadExtractorName, *uploadExtractorFile)
+			defer (*uploadExtractorFile).Close()
+		case uploadClassifier.FullCommand():
+			cmd = commands.NewUploadClassifier(os.Stdout, apiClient.Classifiers, *uploadClassifierName, *uploadClassifierFile)
+			defer (*uploadClassifierFile).Close()
 		}
 	}
 
@@ -171,7 +188,11 @@ func initApiClient(clientIdFlag, clientSecretFlag string, logHttpFile *os.File) 
 		return nil, err
 	}
 
-	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret, logHttpFile), nil
+	var logSink io.Writer = nil
+	if logHttpFile != nil {
+		logSink = logHttpFile
+	}
+	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret, logSink), nil
 }
 
 var DefaultHttpClient = &http.Client{Timeout: time.Minute * 2}
