@@ -122,6 +122,11 @@ func main() {
 		deleteClassifier     = delete.Command("classifier", "Delete waives classifier.")
 		deleteClassifierName = deleteClassifier.Arg("name", "The name of the classifier to delete.").String()
 
+		create               = app.Command("create", "Create waives resources.")
+		createClassifier     = create.Command("classifier", "Create waives classifier from a set of samples.")
+		createClassifierName = createClassifier.Arg("name", "The name of the new classifier.").String()
+		createClassifierFile = createClassifier.Arg("samples-zip", "The zip file containing training samples.").File()
+
 		login = app.Command("login", "Connect surf to your account.")
 	)
 	defer ioutils.TryClose(*logHttp)
@@ -162,6 +167,10 @@ func main() {
 			cmd = commands.NewDeleteExtractor(*deleteExtractorName, os.Stdout, apiClient.Extractors)
 		case deleteClassifier.FullCommand():
 			cmd = commands.NewDeleteClassifier(*deleteClassifierName, os.Stdout, apiClient.Classifiers)
+		case createClassifier.FullCommand():
+			cmd = commands.NewCreateClassifier(os.Stdout, apiClient.Classifiers,
+				apiClient.Classifiers, apiClient.Classifiers, *createClassifierName, *createClassifierFile)
+			defer (*createClassifierFile).Close()
 		}
 	}
 
