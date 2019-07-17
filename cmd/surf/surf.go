@@ -20,9 +20,6 @@ func main() {
 	//
 	//Usage:
 	//  surf login [options]
-	//  surf ` + new(commands.CreateExtractorTemplate).Usage() + ` <module-ids>... [options]
-	//  surf ` + new(commands.DeleteExtractor).Usage() + ` <name> [options]
-	//  surf ` + new(commands.ListModules).Usage() + ` [options]
 	//  surf ` + new(commands.ClassifyCommand).Usage() + ` <file> <classifier> [options]
 	//  surf ` + new(commands.Extract).Usage() + ` <file> <extractor> [options]
 	//  surf ` + new(commands.Read).Usage() + ` <file> (pdf|txt|wvdoc) [options]
@@ -132,6 +129,13 @@ func main() {
 		createExtractorFromTemplateFile = createExtractorFromTemplate.Arg("template-file", "The extraction template file (json).").
 						Required().File()
 
+		createExtractorTemplate        = create.Command("extractor-template", "Create an extractor template from the provided module ids")
+		createExtractorTemplateModules = createExtractorTemplate.Arg("module-ids", "The module IDs to include in the template").
+						Required().Strings()
+		createExtractorTemplateOutputFile = createExtractorTemplate.Flag("output-file", "Where to save the template file (stdout if unspecified).").
+							Short('o').
+							OpenFile(os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+
 		login = app.Command("login", "Connect surf to your account.")
 	)
 	defer ioutils.TryClose(*logHttp)
@@ -184,6 +188,17 @@ func main() {
 				*createExtractorFromTemplateName, *createExtractorFromTemplateFile)
 
 			exitOnErr(err)
+
+		case createExtractorTemplate.FullCommand():
+			out := os.Stdout
+			if *createExtractorTemplateOutputFile != nil {
+				out = *createExtractorTemplateOutputFile
+				defer out.Close()
+			}
+
+			cmd = commands.NewCreateExtractorTemplate(*createExtractorTemplateModules,
+				apiClient.Modules, out)
+
 		}
 	}
 
