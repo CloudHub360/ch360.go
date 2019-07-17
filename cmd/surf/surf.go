@@ -98,7 +98,7 @@ func main() {
 		app          = kingpin.New("surf", "surf - the official command line client for waives.io.")
 		clientId     = app.Flag("client-id", "Client ID").Short('i').String()
 		clientSecret = app.Flag("client-secret", "Client secret").Short('s').String()
-		logHttp      = app.Flag("log-http", "Log HTTP requests and responses as they happen, to a file.").File()
+		logHttp      = app.Flag("log-http", "Log HTTP requests and responses as they happen, to a file.").OpenFile(os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 
 		list            = app.Command("list", "List waives resources.")
 		listModules     = list.Command("modules", "List all available extractor modules.")
@@ -108,24 +108,28 @@ func main() {
 		upload = app.Command("upload", "Upload waives resources.")
 
 		uploadExtractor     = upload.Command("extractor", "Upload waives extractor (.fpxlc file).")
-		uploadExtractorName = uploadExtractor.Arg("name", "The name of the new extractor.").String()
-		uploadExtractorFile = uploadExtractor.Arg("config-file", "The extraction configuration file.").File()
+		uploadExtractorName = uploadExtractor.Arg("name", "The name of the new extractor.").Required().String()
+		uploadExtractorFile = uploadExtractor.Arg("config-file", "The extraction configuration file.").Required().File()
 
 		uploadClassifier     = upload.Command("classifier", "Upload waives classifier (.clf file).")
-		uploadClassifierName = uploadClassifier.Arg("name", "The name of the new classifier.").String()
-		uploadClassifierFile = uploadClassifier.Arg("classifier-file", "The trained classifier file.").File()
+		uploadClassifierName = uploadClassifier.Arg("name", "The name of the new classifier.").Required().String()
+		uploadClassifierFile = uploadClassifier.Arg("classifier-file", "The trained classifier file.").Required().File()
 
-		delete              = app.Command("delete", "Delete waives resources.")
-		deleteExtractor     = delete.Command("extractor", "Delete waives extractor.")
-		deleteExtractorName = deleteExtractor.Arg("name", "The name of the extractor to delete.").String()
+		deleteCmd           = app.Command("delete", "Delete waives resources.")
+		deleteExtractor     = deleteCmd.Command("extractor", "Delete waives extractor.")
+		deleteExtractorName = deleteExtractor.Arg("name", "The name of the extractor to delete.").Required().String()
 
-		deleteClassifier     = delete.Command("classifier", "Delete waives classifier.")
-		deleteClassifierName = deleteClassifier.Arg("name", "The name of the classifier to delete.").String()
+		deleteClassifier     = deleteCmd.Command("classifier", "Delete waives classifier.")
+		deleteClassifierName = deleteClassifier.Arg("name", "The name of the classifier to delete.").Required().String()
 
 		create               = app.Command("create", "Create waives resources.")
 		createClassifier     = create.Command("classifier", "Create waives classifier from a set of samples.")
-		createClassifierName = createClassifier.Arg("name", "The name of the new classifier.").String()
-		createClassifierFile = createClassifier.Arg("samples-zip", "The zip file containing training samples.").File()
+		createClassifierName = createClassifier.Arg("name", "The name of the new classifier.").Required().String()
+		createClassifierFile = createClassifier.Arg("samples-zip", "The zip file containing training samples.").Required().File()
+
+		createExtractor        = create.Command("extractor", "Create waives extractor.")
+		createExtractorName    = createExtractor.Arg("name", "The name of the new extractor.").Required().String()
+		createExtractorModules = createExtractor.Arg("module-ids...", "The module ids to create the extractor from.").Required().Strings()
 
 		login = app.Command("login", "Connect surf to your account.")
 	)
@@ -171,6 +175,9 @@ func main() {
 			cmd = commands.NewCreateClassifier(os.Stdout, apiClient.Classifiers,
 				apiClient.Classifiers, apiClient.Classifiers, *createClassifierName, *createClassifierFile)
 			defer (*createClassifierFile).Close()
+		case createExtractor.FullCommand():
+			cmd = commands.NewCreateExtractorFromModules(os.Stdout, apiClient.Extractors,
+				*createExtractorName, *createExtractorModules)
 		}
 	}
 

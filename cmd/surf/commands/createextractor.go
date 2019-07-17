@@ -34,6 +34,25 @@ func NewCreateExtractor(writer io.Writer,
 	}
 }
 
+func NewCreateExtractorFromModules(writer io.Writer,
+	creator ExtractorCreator,
+	extractorName string,
+	modules []string) *CreateExtractor {
+
+	var template = new(ch360.ExtractorTemplate)
+
+	for _, moduleId := range modules {
+		template.Modules = append(template.Modules, ch360.ModuleTemplate{
+			ID: moduleId,
+		})
+	}
+
+	return NewCreateExtractor(writer,
+		creator,
+		extractorName,
+		template)
+}
+
 func NewCreateExtractorWithArgs(params *config.RunParams,
 	client ExtractorCreator, out io.Writer) (*CreateExtractor, error) {
 
