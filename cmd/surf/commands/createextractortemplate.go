@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/ioutils"
 	"github.com/pkg/errors"
 	"io"
-	"os"
 	"strings"
 )
 
@@ -119,32 +117,10 @@ func (cmd CreateExtractorTemplate) buildExtractorTemplateFor(modules ch360.Modul
 	return template
 }
 
-func NewCreateExtractorTemplate(moduleIds []string, client ModuleGetter, out io.Writer) (*CreateExtractorTemplate, error) {
+func NewCreateExtractorTemplate(moduleIds []string, client ModuleGetter, out io.Writer) *CreateExtractorTemplate {
 	return &CreateExtractorTemplate{
 		moduleIds: moduleIds,
 		client:    client,
 		writer:    out,
-	}, nil
-}
-
-func NewCreateExtractorTemplateWithArgs(params *config.RunParams, client ModuleGetter) (*CreateExtractorTemplate, error) {
-
-	var (
-		out = os.Stdout
-		err error
-	)
-
-	if params.OutputFile != "" {
-		out, err = os.Create(params.OutputFile)
 	}
-
-	if err != nil {
-		// os.Create's err is guaranteed to be os.PathError, so we
-		// get the underlying cause from it to avoid duplicating the path
-		// in the message output to the user
-		err := err.(*os.PathError).Err
-		return nil, errors.WithMessagef(err, "Could not open file '%s'", params.OutputFile)
-	}
-
-	return NewCreateExtractorTemplate(params.ModuleIds, client, out)
 }
