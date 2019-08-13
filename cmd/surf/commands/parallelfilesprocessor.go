@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"errors"
+	"github.com/CloudHub360/ch360.go/output/progress"
 	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/mattn/go-zglob"
 )
@@ -10,20 +11,22 @@ import (
 var ErrGlobMatchesNoFiles = errors.New("file pattern does not match any files")
 
 type ParallelFilesProcessor struct {
-	ProgressHandler ProgressHandler
+	ProgressHandler *progress.ProgressHandler
 }
 
 //go:generate mockery -name "ProcessorFuncFactory"
-type ProcessorFuncFactory interface {
-	ProcessorFor(ctx context.Context, filename string) pool.ProcessorFunc
-}
+type ProcessorFuncFactory func(ctx context.Context, filename string) pool.ProcessorFunc
 
 func (p *ParallelFilesProcessor) RunWithGlob(ctx context.Context,
-	filesPattern string,
+	filesPatterns []string,
 	parallelism int,
 	processorFuncFactory ProcessorFuncFactory) error {
 
-	files, _ := zglob.Glob(filesPattern)
+	var files []string
+	for _, filePattern := range filesPatterns {
+		globResult, _ := zglob.Glob(filePattern)
+		files = append(files, globResult...)
+	}
 	fileCount := len(files)
 	if fileCount == 0 {
 		return ErrGlobMatchesNoFiles
@@ -51,7 +54,7 @@ func (p *ParallelFilesProcessor) Run(ctx context.Context,
 		filename := filename // <- copy
 
 		processFileJob := pool.NewJob(
-			processorFuncFactory.ProcessorFor(ctx, filename),
+			processorFuncFactory(ctx, filename),
 			func(result interface{}, e error) {
 				if e != nil {
 					errs = append(errs, e)
@@ -81,4 +84,11 @@ func (p *ParallelFilesProcessor) Run(ctx context.Context,
 	}
 
 	return nil
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
 }

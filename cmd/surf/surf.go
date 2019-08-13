@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
-	"github.com/CloudHub360/ch360.go/config"
-	"github.com/CloudHub360/ch360.go/ioutils"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/CloudHub360/ch360.go/ch360"
+	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
+	"github.com/CloudHub360/ch360.go/config"
+	"github.com/CloudHub360/ch360.go/ioutils"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 func main() {
@@ -84,10 +85,12 @@ func main() {
 	//	exitOnErr(cmd.Execute(ctx))
 
 	var (
-		app          = kingpin.New("surf", "surf - the official command line client for waives.io.")
-		clientId     = app.Flag("client-id", "Client ID").Short('i').String()
-		clientSecret = app.Flag("client-secret", "Client secret").Short('s').String()
-		logHttp      = app.Flag("log-http", "Log HTTP requests and responses as they happen, to a file.").OpenFile(os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+		globalFlags = config.GlobalFlags{}
+
+		app = kingpin.New("surf", "surf - the official command line client for waives.io.")
+		//clientId     = app.Flag("client-id", "Client ID").Short('i').String()
+		//clientSecret = app.Flag("client-secret", "Client secret").Short('s').String()
+		//logHttp = app.Flag("log-http", "Log HTTP requests and responses as they happen, to a file.").OpenFile(os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 
 		list            = app.Command("list", "List waives resources.")
 		listModules     = list.Command("modules", "List all available extractor modules.")
@@ -132,31 +135,57 @@ func main() {
 		createExtractorTemplate        = create.Command("extractor-template", "Create an extractor template from the provided module ids")
 		createExtractorTemplateModules = createExtractorTemplate.Arg("module-ids", "The module IDs to include in the template").
 						Required().Strings()
-		createExtractorTemplateOutputFile = createExtractorTemplate.Flag("output-file", "Where to save the template file (stdout if unspecified).").
-							Short('o').
-							OpenFile(os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 
 		login = app.Command("login", "Connect surf to your account.")
 	)
-	defer ioutils.TryClose(*logHttp)
+	ctx, canceller := context.WithCancel(context.Background())
+	go handleInterrupt(canceller)
+
+	commands.ConfigureReadCommand(ctx, app, &globalFlags)
+
+	// readCmd.Action(func(parseContext *kingpin.ParseContext) error {
+	// return nil
+	// })
+
+	app.Flag("client-id", "Client ID").Short('i').
+		Short('i').
+		StringVar(&globalFlags.ClientId)
+	app.Flag("client-secret", "Client secret").Short('s').
+		Short('s').
+		StringVar(&globalFlags.ClientSecret)
+	app.Flag("log-http", "Log HTTP requests and responses as they happen, "+
+		"to a file.").
+		OpenFileVar(&globalFlags.LogHttp, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	app.Flag("multiple-files",
+		"Write results output to multiple files with the same basename as the input").
+		Short('m').
+		BoolVar(&globalFlags.MultiFileOut)
+	app.Flag("output-file", "Write all results to the specified file").
+		Short('o').
+		StringVar(&globalFlags.OutputFile)
+	app.Flag("output-format", "Output format for classification and extraction results. "+
+		"Allowed values: table, csv, json [default: table]").
+		Short('f').
+		Default("table").
+		EnumVar(&globalFlags.OutputFormat, "table", "csv", "json")
+
+	defer ioutils.TryClose(globalFlags.LogHttp)
 
 	parsedCommand := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	appDir, err := config.NewAppDirectory()
 	exitOnErr(err)
 
-	ctx, canceller := context.WithCancel(context.Background())
-	go handleInterrupt(canceller)
-
 	var cmd commands.Command
 
 	if parsedCommand == login.FullCommand() {
 		// special case for login, it doesn't need the api client to be created
 		tokenRetriever := ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
-		cmd = commands.NewLogin(os.Stdout, appDir, tokenRetriever, *clientId, *clientSecret)
+		cmd = commands.NewLogin(os.Stdout, appDir, tokenRetriever, globalFlags.ClientId,
+			globalFlags.ClientSecret)
 	} else {
 
-		apiClient, err := initApiClient(*clientId, *clientSecret, *logHttp)
+		apiClient, err := initApiClient(globalFlags.ClientId, globalFlags.ClientSecret, globalFlags.LogHttp)
 		exitOnErr(err)
 
 		switch parsedCommand {
@@ -191,10 +220,6 @@ func main() {
 
 		case createExtractorTemplate.FullCommand():
 			out := os.Stdout
-			if *createExtractorTemplateOutputFile != nil {
-				out = *createExtractorTemplateOutputFile
-				defer out.Close()
-			}
 
 			cmd = commands.NewCreateExtractorTemplate(*createExtractorTemplateModules,
 				apiClient.Modules, out)
@@ -202,7 +227,9 @@ func main() {
 		}
 	}
 
-	exitOnErr(cmd.Execute(ctx))
+	if cmd != nil {
+		exitOnErr(cmd.Execute(ctx))
+	}
 }
 
 func handleInterrupt(canceller context.CancelFunc) {

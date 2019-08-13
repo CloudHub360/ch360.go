@@ -28,27 +28,27 @@ type ResultsFormatter interface {
 	Flush(writer io.Writer) error
 }
 
-func NewResultsFormatterFor(params *config.RunParams) (ResultsFormatter, error) {
-	if params.Read {
+func NewResultsFormatterFor(params *config.GlobalFlags, verb config.Verb) (ResultsFormatter, error) {
+	if verb == config.Read {
 		return NewReadResultsFormatter(), nil
 	}
 
 	var formatter ResultsFormatter
 	switch OutputFormat(params.OutputFormat) {
 	case Table:
-		if params.Verb() == config.Classify {
+		if verb == config.Classify {
 			formatter = NewTableClassifyResultsFormatter()
 		} else {
 			formatter = NewTableExtractionResultsFormatter()
 		}
 	case Csv:
-		if params.Verb() == config.Classify {
+		if verb == config.Classify {
 			formatter = NewCSVClassifyResultsFormatter()
 		} else {
 			formatter = NewCSVExtractionResultsFormatter()
 		}
 	case Json:
-		if params.Verb() == config.Classify {
+		if verb == config.Classify {
 			formatter = NewJsonClassifyResultsFormatter()
 		} else {
 			formatter = NewJsonExtractionResultsFormatter()
