@@ -1,16 +1,18 @@
 package resultsWriters
 
 import (
+	"os"
+
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/output/formatters"
 	"github.com/CloudHub360/ch360.go/output/sinks"
 	"github.com/spf13/afero"
-	"os"
 )
 
-func NewResultsWriterFor(params *config.RunParams) (ResultsWriter, error) {
+func NewResultsWriterFor(params *config.GlobalFlags, fileExtension string,
+	verb config.Verb) (ResultsWriter, error) {
 
-	formatter, err := formatters.NewResultsFormatterFor(params)
+	formatter, err := formatters.NewResultsFormatterFor(params, verb)
 
 	if err != nil {
 		return nil, err
@@ -18,8 +20,7 @@ func NewResultsWriterFor(params *config.RunParams) (ResultsWriter, error) {
 
 	if params.MultiFileOut {
 		// Write output to a file "next to" each input file, with the specified extension
-		outputFileExtension := fileExtensionFor(params)
-		writerFactory := sinks.NewExtensionSwappingFileSinkFactory(outputFileExtension)
+		writerFactory := sinks.NewExtensionSwappingFileSinkFactory(fileExtension)
 		return NewIndividualResultsWriter(writerFactory, formatter), nil
 	} else if params.OutputFile != "" {
 		// Write output to a single "combined results" file with the specified filename
@@ -28,23 +29,4 @@ func NewResultsWriterFor(params *config.RunParams) (ResultsWriter, error) {
 		// Write output to the console
 		return NewCombinedResultsWriter(sinks.NewBasicWriterSink(os.Stdout), formatter), nil
 	}
-}
-
-func fileExtensionFor(params *config.RunParams) string {
-	if params.Verb() == config.Read {
-		if params.ReadPDF {
-			return ".ocr.pdf"
-		} else if params.ReadText {
-			return ".ocr.txt"
-		} else {
-			return ".ocr.wvdoc"
-		}
-	}
-
-	var outputFormatExtensions = map[formatters.OutputFormat]string{
-		formatters.Table: ".tab",
-		formatters.Json:  ".json",
-		formatters.Csv:   ".csv",
-	}
-	return outputFormatExtensions[formatters.OutputFormat(params.OutputFormat)]
 }

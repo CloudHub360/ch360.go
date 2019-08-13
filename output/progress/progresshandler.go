@@ -2,7 +2,6 @@ package progress
 
 import (
 	"fmt"
-	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/gosuri/uiprogress"
 	"github.com/pkg/errors"
@@ -18,15 +17,15 @@ type ProgressHandler struct {
 	started       bool
 }
 
-func NewProgressHandlerFor(params *config.RunParams, progressOut io.Writer) (*ProgressHandler, error) {
-	resultsWriter, err := resultsWriters.NewResultsWriterFor(params)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return NewProgressHandler(resultsWriter, params.ShowProgress, progressOut), nil
-}
+//func NewProgressHandlerFor(params *config.GlobalFlags, progressOut io.Writer) (*ProgressHandler, error) {
+//	resultsWriter, err := resultsWriters.NewResultsWriterFor(params)
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return NewProgressHandler(resultsWriter, params.ShowProgress, progressOut), nil
+//}
 
 func NewProgressHandler(resultsWriter resultsWriters.ResultsWriter, showProgress bool, progressOut io.Writer) *ProgressHandler {
 	progress := uiprogress.New()

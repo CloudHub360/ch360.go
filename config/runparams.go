@@ -7,6 +7,16 @@ import (
 	"os"
 )
 
+type GlobalFlags struct {
+	MultiFileOut bool
+	OutputFile   string
+	OutputFormat string
+	ShowProgress bool
+	ClientId     string
+	ClientSecret string
+	LogHttp      *os.File
+}
+
 type RunParams struct {
 	Login    bool
 	Classify bool
@@ -160,5 +170,9 @@ func IsOutputRedirected() bool {
 }
 
 func (r *RunParams) IsOutputSpecified() bool {
+	return r.OutputFile != "" || r.MultiFileOut
+}
+
+func (r *GlobalFlags) IsOutputSpecified() bool {
 	return r.OutputFile != "" || r.MultiFileOut
 }
