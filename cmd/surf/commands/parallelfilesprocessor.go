@@ -3,15 +3,21 @@ package commands
 import (
 	"context"
 	"errors"
-	"github.com/CloudHub360/ch360.go/output/progress"
 	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/mattn/go-zglob"
 )
 
 var ErrGlobMatchesNoFiles = errors.New("file pattern does not match any files")
 
+type ProgressHandler interface {
+	Notify(filename string, result interface{}) error
+	NotifyErr(filename string, err error) error
+	NotifyStart(totalJobs int) error
+	NotifyFinish() error
+}
+
 type ParallelFilesProcessor struct {
-	ProgressHandler *progress.ProgressHandler
+	ProgressHandler ProgressHandler
 }
 
 //go:generate mockery -name "ProcessorFuncFactory"
