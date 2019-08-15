@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
-	"github.com/CloudHub360/ch360.go/cmd/surf/commands/mocks"
+	"github.com/CloudHub360/ch360.go/cmd/surf/services"
+	mocks2 "github.com/CloudHub360/ch360.go/cmd/surf/services/mocks"
 	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -18,9 +18,9 @@ import (
 
 type ParallelFilesProcessorSuite struct {
 	suite.Suite
-	sut              *commands.ParallelFilesProcessor
-	progressHandler  *mocks.ProgressHandler
-	processorFactory *mocks.ProcessorFuncFactory
+	sut              *services.ParallelFilesProcessor
+	progressHandler  *mocks2.ProgressHandler
+	processorFactory services.ProcessorFuncFactory
 
 	processorFunc pool.ProcessorFunc
 	handlerFunc   pool.HandlerFunc
@@ -29,11 +29,13 @@ type ParallelFilesProcessorSuite struct {
 }
 
 func (suite *ParallelFilesProcessorSuite) SetupTest() {
-	suite.processorFactory = new(mocks.ProcessorFuncFactory)
+	suite.processorFactory = func(ctx context.Context, filename string) pool.ProcessorFunc {
+		return suite.processorFunc
+	}
 
-	suite.progressHandler = new(mocks.ProgressHandler)
+	suite.progressHandler = new(mocks2.ProgressHandler)
 
-	suite.sut = &commands.ParallelFilesProcessor{
+	suite.sut = &services.ParallelFilesProcessor{
 		ProgressHandler: suite.progressHandler,
 	}
 	suite.ctx = context.Background()
@@ -43,10 +45,6 @@ func (suite *ParallelFilesProcessorSuite) SetupTest() {
 	}
 	suite.handlerFunc = func(value interface{}, e error) {
 	}
-
-	suite.processorFactory.
-		On("ProcessorFor", mock.Anything, mock.Anything).
-		Return(suite.processorFunc)
 
 	suite.progressHandler.On("NotifyStart", mock.Anything).Return(nil)
 	suite.progressHandler.On("NotifyFinish").Return(nil)
@@ -61,16 +59,18 @@ func TestParallelFilesProcessorSuiteRunner(t *testing.T) {
 }
 
 func (suite *ParallelFilesProcessorSuite) Test_Err_Returned_When_Files_Glob_Matches_No_Files() {
-	err := suite.sut.RunWithGlob(suite.ctx, "not-present/*.pdf", rand.Int(), suite.processorFactory)
+	err := suite.sut.RunWithGlob(suite.ctx, []string{"not-present/*.pdf"}, rand.Int(),
+		suite.processorFactory)
 
-	suite.Assert().Equal(commands.ErrGlobMatchesNoFiles, err)
+	suite.Assert().Equal(services.ErrGlobMatchesNoFiles, err)
 }
 
 func (suite *ParallelFilesProcessorSuite) Test_Err_Returned_When_File_Is_Not_Present() {
 
-	err := suite.sut.RunWithGlob(suite.ctx, "not-present.pdf", rand.Int(), suite.processorFactory)
+	err := suite.sut.RunWithGlob(suite.ctx, []string{"not-present.pdf"}, rand.Int(),
+		suite.processorFactory)
 
-	suite.Assert().Equal(commands.ErrGlobMatchesNoFiles, err)
+	suite.Assert().Equal(services.ErrGlobMatchesNoFiles, err)
 }
 
 func (suite *ParallelFilesProcessorSuite) Test_ProcessorFunc_Called_Once_Per_File() {
@@ -83,7 +83,7 @@ func (suite *ParallelFilesProcessorSuite) Test_ProcessorFunc_Called_Once_Per_Fil
 	defer deleteFiles(files)
 
 	// Act
-	suite.sut.Run(suite.ctx, files, 1, processorFactory)
+	suite.sut.Run(suite.ctx, files, 1, processorFactory.ProcessorFor)
 
 	// Assert
 	suite.Assert().Equal(expectedProcessCalls, processorFactory.processorCalls)
@@ -106,7 +106,7 @@ func (suite *ParallelFilesProcessorSuite) Test_ProcessorFunc_Called_In_Parallel(
 
 	// Act
 	start := time.Now()
-	suite.sut.Run(suite.ctx, files, parallelism, processorFactory)
+	suite.sut.Run(suite.ctx, files, parallelism, processorFactory.ProcessorFor)
 	parallelDuration := time.Since(start)
 
 	// Assert
@@ -130,19 +130,19 @@ func (suite *ParallelFilesProcessorSuite) Test_First_Error_From_Processor_Func_R
 	var (
 		filesCount       = 5
 		files            = someTempFiles(filesCount)
-		processorFactory = &erroringProcessorFactory{}
+		processorFactory = erroringProcessorFactory{}
 		expectedErr      = processorFactory.Err(1)
 	)
 	defer deleteFiles(files)
 
 	// Act
-	receivedErr := suite.sut.Run(suite.ctx, files, 1, processorFactory)
+	receivedErr := suite.sut.Run(suite.ctx, files, 1, processorFactory.ProcessorFor)
 
 	// Assert
 	suite.Assert().Equal(expectedErr, receivedErr)
 }
 
-var _ commands.ProcessorFuncFactory = (*countingProcessorFactory)(nil)
+var _ services.ProcessorFuncFactory = (*countingProcessorFactory)(nil).ProcessorFor
 
 type countingProcessorFactory struct {
 	processorFactoryCalls int
@@ -157,7 +157,7 @@ func (f *countingProcessorFactory) ProcessorFor(ctx context.Context, filename st
 	}
 }
 
-var _ commands.ProcessorFuncFactory = (*erroringProcessorFactory)(nil)
+var _ services.ProcessorFuncFactory = (*erroringProcessorFactory)(nil).ProcessorFor
 
 type erroringProcessorFactory struct {
 	processorFactoryCalls int
@@ -176,7 +176,7 @@ func (f *erroringProcessorFactory) Err(i int) error {
 	return errors.New(fmt.Sprintf("Error %d", i))
 }
 
-var _ commands.ProcessorFuncFactory = (*sleepingProcessorFactory)(nil)
+var _ services.ProcessorFuncFactory = (*sleepingProcessorFactory)(nil).ProcessorFor
 
 type sleepingProcessorFactory struct {
 	delay time.Duration

@@ -1,4 +1,4 @@
-package commands
+package services
 
 import (
 	"context"
@@ -20,9 +20,9 @@ type ParallelFilesProcessor struct {
 	ProgressHandler ProgressHandler
 }
 
-//go:generate mockery -name "ProcessorFuncFactory"
 type ProcessorFuncFactory func(ctx context.Context, filename string) pool.ProcessorFunc
 
+// TODO remove
 func (p *ParallelFilesProcessor) RunWithGlob(ctx context.Context,
 	filesPatterns []string,
 	parallelism int,
