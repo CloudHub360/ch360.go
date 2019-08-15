@@ -30,7 +30,7 @@ func (suite *CreateExtractorTemplateSuite) SetupTest() {
 
 	suite.output = &bytes.Buffer{}
 
-	suite.sut, _ = commands.NewCreateExtractorTemplate(suite.moduleIds, suite.client, suite.output)
+	suite.sut = commands.NewCreateExtractorTemplate(suite.moduleIds, suite.client, suite.output)
 	suite.ctx = context.Background()
 }
 
@@ -51,7 +51,7 @@ func (suite *CreateExtractorTemplateSuite) Test_CreateExtractorTemplate_Returns_
 
 	for _, fixture := range fixtures {
 		// Arrange
-		sut, _ := commands.NewCreateExtractorTemplate(fixture.moduleIds, suite.client, suite.output)
+		sut := commands.NewCreateExtractorTemplate(fixture.moduleIds, suite.client, suite.output)
 
 		// Act
 		err := sut.Execute(suite.ctx)
@@ -65,7 +65,7 @@ func (suite *CreateExtractorTemplateSuite) Test_CreateExtractorTemplate_Returns_
 
 	// Arrange
 	moduleIds := []string{"missingModuleA", "missingModuleB", "missingModuleC"}
-	sut, _ := commands.NewCreateExtractorTemplate(moduleIds, suite.client, suite.output)
+	sut := commands.NewCreateExtractorTemplate(moduleIds, suite.client, suite.output)
 
 	// Act
 	err := sut.Execute(suite.ctx)
@@ -90,7 +90,7 @@ func (suite *CreateExtractorTemplateSuite) Test_CreateExtractorTemplate_Is_Case_
 	for i, moduleID := range moduleIds {
 		moduleIds[i] = strings.ToUpper(moduleID)
 	}
-	sut, _ := commands.NewCreateExtractorTemplate(moduleIds, suite.client, suite.output)
+	sut := commands.NewCreateExtractorTemplate(moduleIds, suite.client, suite.output)
 
 	// Act
 	_ = sut.Execute(suite.ctx)
