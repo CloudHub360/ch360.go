@@ -3,7 +3,6 @@
 package mocks
 
 import ch360 "github.com/CloudHub360/ch360.go/ch360"
-
 import context "context"
 import io "io"
 import mock "github.com/stretchr/testify/mock"
