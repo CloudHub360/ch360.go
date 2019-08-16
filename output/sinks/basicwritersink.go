@@ -1,6 +1,7 @@
 package sinks
 
 import (
+	"github.com/CloudHub360/ch360.go/fs"
 	"io"
 )
 
@@ -19,6 +20,8 @@ func (f *BasicWriterSink) Open() error {
 }
 
 func (f *BasicWriterSink) Close() error {
+	fs.TryClose(f.writer)
+
 	return nil
 }
 
