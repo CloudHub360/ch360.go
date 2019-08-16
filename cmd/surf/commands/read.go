@@ -32,8 +32,9 @@ func ConfigureReadCommand(ctx context.Context,
 			return ExecuteRead(ctx, readArgs, globalFlags)
 		})
 
-	cmd.Arg("format", "The output format. Allowed values: pdf, wvdoc, txt.").
-		Required().
+	cmd.Flag("format", "The output format. Allowed values: pdf, wvdoc, txt [default: txt].").
+		Short('f').
+		Default("txt").
 		EnumVar(&readArgs.outputFormat, "pdf", "wvdoc", "txt")
 
 	cmd.Arg("files", "The files to read.").
@@ -44,16 +45,9 @@ func ConfigureReadCommand(ctx context.Context,
 // ExecuteRead is the main entry point for the 'read' command. It has to do a lot of
 // setup / instantiation before actually performing OCR on the specified files.
 func ExecuteRead(ctx context.Context, readArgs *ReadArgs, globalFlags *config.GlobalFlags) error {
-	client, err := initApiClient(globalFlags.ClientId, globalFlags.ClientSecret, globalFlags.LogHttp)
 
-	if err != nil {
-		return err
-	}
-
-	fileExtension := ".ocr." + readArgs.outputFormat
-
-	resultsWriter, err := resultsWriters.NewResultsWriterFor(globalFlags, fileExtension,
-		config.Read)
+	resultsWriter, err := resultsWriters.NewReaderResultsWriter(globalFlags.MultiFileOut,
+		globalFlags.OutputFile, readArgs.outputFormat)
 
 	if err != nil {
 		return err
@@ -72,7 +66,18 @@ func ExecuteRead(ctx context.Context, readArgs *ReadArgs, globalFlags *config.Gl
 			"file format is pdf or wvdoc")
 	}
 
-	filePaths := GlobMany(readArgs.filePatterns)
+	filePaths, err := GlobMany(readArgs.filePatterns)
+	if err != nil {
+		return err
+	}
+
+	client, err := initApiClient(globalFlags.ClientId,
+		globalFlags.ClientSecret,
+		globalFlags.LogHttp)
+
+	if err != nil {
+		return err
+	}
 
 	fileReader := ch360.NewFileReader(client.Documents, client.Documents, client.Documents)
 
