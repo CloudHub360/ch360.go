@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"errors"
 	"github.com/CloudHub360/ch360.go/ch360"
 	ch360mocks "github.com/CloudHub360/ch360.go/ch360/mocks"
 	"github.com/CloudHub360/ch360.go/cmd/surf/services"
@@ -19,7 +20,6 @@ type parallelReaderSuite struct {
 	documentGetter  *ch360mocks.DocumentGetter
 	sut             *services.ParallelReaderService
 	filePatterns    []string
-	parallelWorkers int
 	ctx             context.Context
 	readMode        ch360.ReadMode
 }
@@ -30,7 +30,6 @@ func (suite *parallelReaderSuite) SetupTest() {
 	suite.progressHandler = new(mocks.ProgressHandler)
 	suite.ctx, _ = context.WithCancel(context.Background())
 	suite.filePatterns = []string{"testdata/empty-file1.txt", "testdata/empty-file2.txt"}
-	suite.parallelWorkers = 10
 
 	suite.readMode = ch360.ReadPDF
 
@@ -82,7 +81,6 @@ func (suite *parallelReaderSuite) Test_ReadAll_Returns_Error_If_File_Does_Not_Ex
 	err := suite.sut.ReadAll(suite.ctx, []string{filename}, suite.readMode)
 
 	assert.Error(suite.T(), err)
-
 }
 
 func (suite *parallelReaderSuite) Test_DocumentGetter_Called_To_Calculate_Parallelism() {
@@ -90,4 +88,17 @@ func (suite *parallelReaderSuite) Test_DocumentGetter_Called_To_Calculate_Parall
 
 	suite.documentGetter.AssertCalled(suite.T(),
 		"GetAll", suite.ctx)
+}
+
+func (suite *parallelReaderSuite) Test_ReadAll_Returns_Error_If_ExtractDocument_Fails() {
+	suite.fileReader.ExpectedCalls = nil
+	readErr := errors.New("simulated error")
+
+	suite.fileReader.
+		On("Read", mock.Anything, mock.Anything, mock.Anything).
+		Return(nil, readErr)
+
+	err := suite.sut.ReadAll(suite.ctx, suite.filePatterns, suite.readMode)
+
+	assert.Error(suite.T(), err)
 }
