@@ -1,6 +1,9 @@
 package fs
 
-import "os"
+import (
+	"io"
+	"os"
+)
 
 func DirectoryOrFileExists(dir string) (bool, error) {
 	_, err := os.Stat(dir)
@@ -28,4 +31,24 @@ func CreateDirectoryIfNotExists(dir string, permissions os.FileMode) error {
 		return err
 	}
 	return nil
+}
+
+// OpenForWriting is a convenience function that wraps os.Create,
+// but which returns os.Stdout if the provided filename is "-" or the empty string.
+func OpenForWriting(filename string) (*os.File, error) {
+	if filename == "-" || filename == "" {
+		return os.Stdout, nil
+	}
+
+	return os.Create(filename)
+}
+
+// TryClose will attempt to cast all provided writers to io.Closer,
+// and call Close on them if the cast succeeds.
+func TryClose(writers ...io.Writer) {
+	for _, writer := range writers {
+		if closer, ok := writer.(io.Closer); ok {
+			_ = closer.Close()
+		}
+	}
 }
