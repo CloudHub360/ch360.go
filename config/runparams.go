@@ -10,7 +10,6 @@ import (
 type GlobalFlags struct {
 	MultiFileOut bool
 	OutputFile   string
-	OutputFormat string
 	ShowProgress bool
 	ClientId     string
 	ClientSecret string
