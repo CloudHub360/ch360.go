@@ -88,9 +88,6 @@ func main() {
 		globalFlags = config.GlobalFlags{}
 
 		app = kingpin.New("surf", "surf - the official command line client for waives.io.")
-		//clientId     = app.Flag("client-id", "Client ID").Short('i').String()
-		//clientSecret = app.Flag("client-secret", "Client secret").Short('s').String()
-		//logHttp = app.Flag("log-http", "Log HTTP requests and responses as they happen, to a file.").OpenFile(os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 
 		list            = app.Command("list", "List waives resources.")
 		listModules     = list.Command("modules", "List all available extractor modules.")
@@ -144,10 +141,7 @@ func main() {
 
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
-
-	// readCmd.Action(func(parseContext *kingpin.ParseContext) error {
-	// return nil
-	// })
+	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
 
 	app.Flag("client-id", "Client ID").Short('i').
 		Short('i').

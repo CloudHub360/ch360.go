@@ -34,6 +34,27 @@ func NewExtractionResultsWriter(multiFileOut bool,
 	return newResultsWriter(multiFileOut, outputFile, fileExtension, resultsFormatter)
 }
 
+// NewClassificationResultsWriter constructs a ResultsWriter configured for classification.
+func NewClassificationResultsWriter(multiFileOut bool,
+	outputFile,
+	outputFormat string) (ResultsWriter, error) {
+
+	var resultsFormatter formatters.ResultsFormatter
+
+	switch outputFormat {
+	case "table":
+		resultsFormatter = formatters.NewTableClassifyResultsFormatter()
+	case "csv":
+		resultsFormatter = formatters.NewCSVClassifyResultsFormatter()
+	case "json":
+		resultsFormatter = formatters.NewJsonClassifyResultsFormatter()
+	}
+
+	fileExtension := "." + outputFormat
+
+	return newResultsWriter(multiFileOut, outputFile, fileExtension, resultsFormatter)
+}
+
 // NewReaderResultsWriter constructs a ResultsWriter configured for extraction.
 func NewReaderResultsWriter(multiFileOut bool,
 	outputFile, outputFormat string) (ResultsWriter, error) {
