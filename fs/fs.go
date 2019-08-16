@@ -1,7 +1,6 @@
 package fs
 
 import (
-	"io"
 	"os"
 )
 
@@ -41,14 +40,4 @@ func OpenForWriting(filename string) (*os.File, error) {
 	}
 
 	return os.Create(filename)
-}
-
-// TryClose will attempt to cast all provided writers to io.Closer,
-// and call Close on them if the cast succeeds.
-func TryClose(writers ...io.Writer) {
-	for _, writer := range writers {
-		if closer, ok := writer.(io.Closer); ok {
-			_ = closer.Close()
-		}
-	}
 }
