@@ -3,84 +3,68 @@ package commands
 import (
 	"context"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/auth"
+	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
-	"io"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const LoginCommand = "login"
-
-type Login struct {
-	appDirectory   config.ConfigurationWriter
-	tokenRetriever auth.TokenRetriever
-	writer         io.Writer
-	clientId       string
-	clientSecret   string
+// ConfigureLoginCommand configures kingpin to add the login command.
+func ConfigureLoginCommand(ctx context.Context,
+	app *kingpin.Application,
+	globalFlags *config.GlobalFlags) {
+	app.Command("login", "Connect surf to your account.").
+		Action(func(parseContext *kingpin.ParseContext) error {
+			// execute the command
+			return ExecuteWithMessage("Logging in... ", func() error {
+				return execute(ctx, globalFlags)
+			})
+		})
 }
 
-func NewLoginFrom(runParams *config.RunParams, out io.Writer, appDir config.ConfigurationWriter, tokenRetriever auth.TokenRetriever) *Login {
-	return NewLogin(out, appDir, tokenRetriever, runParams.ClientId, runParams.ClientSecret)
-}
-
-func NewLogin(out io.Writer, appDir config.ConfigurationWriter, tokenRetriever auth.TokenRetriever, clientId string, clientSecret string) *Login {
-	return &Login{
-		writer:         out,
-		appDirectory:   appDir,
-		clientId:       clientId,
-		clientSecret:   clientSecret,
-		tokenRetriever: tokenRetriever,
-	}
-}
-
-func (cmd *Login) Execute(ctx context.Context) error {
-
-	fmt.Fprint(cmd.writer, "Logging in... ")
-
-	err := cmd.execute()
-
-	if err != nil {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
-	} else {
-		fmt.Fprintln(cmd.writer, "[OK]")
-	}
-	return err
-}
-
-func (cmd *Login) execute() error {
+func execute(ctx context.Context, flags *config.GlobalFlags) error {
 	var (
-		err error
+		err          error
+		clientId     = flags.ClientId
+		clientSecret = flags.ClientSecret
+
+		tokenRetriever = ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
 	)
 
-	if cmd.clientId == "" {
+	appDirectory, err := config.NewAppDirectory()
+	if err != nil {
+		return err
+	}
+
+	if clientId == "" {
 		fmt.Print("\nClient Id: ")
-		cmd.clientId, err = cmd.readSecretFromConsole()
+		clientId, err = readSecretFromConsole()
 		if err != nil {
 			return err
 		}
 	}
 
-	if cmd.clientSecret == "" {
+	if clientSecret == "" {
 		fmt.Print("Client Secret: ")
-		cmd.clientSecret, err = cmd.readSecretFromConsole()
+		clientSecret, err = readSecretFromConsole()
 		if err != nil {
 			return err
 		}
 	}
 
-	_, err = cmd.tokenRetriever.RetrieveToken(cmd.clientId, cmd.clientSecret)
+	_, err = tokenRetriever.RetrieveToken(clientId, clientSecret)
 
 	if err != nil {
 		return err
 	}
 
-	configuration := config.NewConfiguration(cmd.clientId, cmd.clientSecret)
+	configuration := config.NewConfiguration(clientId, clientSecret)
 
-	err = cmd.appDirectory.WriteConfiguration(configuration)
+	err = appDirectory.WriteConfiguration(configuration)
 
 	return err
 }
 
-func (cmd *Login) readSecretFromConsole() (string, error) {
+func readSecretFromConsole() (string, error) {
 	secret, err := ConsoleSecretReader{}.Read()
 	if err != nil {
 		if err != ConsoleSecretReaderErrCancelled {
@@ -89,8 +73,4 @@ func (cmd *Login) readSecretFromConsole() (string, error) {
 		return "", err
 	}
 	return secret, nil
-}
-
-func (cmd Login) Usage() string {
-	return LoginCommand
 }

@@ -87,7 +87,8 @@ func main() {
 	var (
 		globalFlags = config.GlobalFlags{}
 
-		app = kingpin.New("surf", "surf - the official command line client for waives.io.")
+		app = kingpin.New("surf", "surf - the official command line client for waives.io.").
+			Version(ch360.Version)
 
 		list            = app.Command("list", "List waives resources.")
 		listModules     = list.Command("modules", "List all available extractor modules.")
@@ -95,10 +96,6 @@ func main() {
 		listExtractors  = list.Command("extractors", "List all available extractors.")
 
 		upload = app.Command("upload", "Upload waives resources.")
-
-		//uploadExtractor     = upload.Command("extractor", "Upload waives extractor (.fpxlc file).")
-		//uploadExtractorName = uploadExtractor.Arg("name", "The name of the new extractor.").Required().String()
-		//uploadExtractorFile = uploadExtractor.Arg("config-file", "The extraction configuration file.").Required().File()
 
 		uploadClassifier     = upload.Command("classifier", "Upload waives classifier (.clf file).")
 		uploadClassifierName = uploadClassifier.Arg("name", "The name of the new classifier.").Required().String()
@@ -133,12 +130,11 @@ func main() {
 		createExtractorTemplate        = create.Command("extractor-template", "Create an extractor template from the provided module ids")
 		createExtractorTemplateModules = createExtractorTemplate.Arg("module-ids", "The module IDs to include in the template").
 						Required().Strings()
-
-		login = app.Command("login", "Connect surf to your account.")
 	)
 	ctx, canceller := context.WithCancel(context.Background())
 	go handleInterrupt(canceller)
 
+	commands.ConfigureLoginCommand(ctx, app, &globalFlags)
 	commands.ConfigureUploadExtractorCommand(ctx, upload, &globalFlags)
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
@@ -165,58 +161,44 @@ func main() {
 
 	parsedCommand := kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	appDir, err := config.NewAppDirectory()
-	exitOnErr(err)
-
 	var cmd commands.Command
 
-	if parsedCommand == login.FullCommand() {
-		// special case for login, it doesn't need the api client to be created
-		tokenRetriever := ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
-		cmd = commands.NewLogin(os.Stdout, appDir, tokenRetriever, globalFlags.ClientId,
-			globalFlags.ClientSecret)
-	} else {
+	apiClient, err := initApiClient(globalFlags.ClientId, globalFlags.ClientSecret, globalFlags.LogHttp)
+	exitOnErr(err)
 
-		apiClient, err := initApiClient(globalFlags.ClientId, globalFlags.ClientSecret, globalFlags.LogHttp)
+	switch parsedCommand {
+	case listModules.FullCommand():
+		cmd = commands.NewListModules(apiClient.Modules, os.Stdout)
+	case listClassifiers.FullCommand():
+		cmd = commands.NewListClassifiers(apiClient.Classifiers, os.Stdout)
+	case listExtractors.FullCommand():
+		cmd = commands.NewListExtractors(apiClient.Extractors, os.Stdout)
+	case uploadClassifier.FullCommand():
+		cmd = commands.NewUploadClassifier(os.Stdout, apiClient.Classifiers, *uploadClassifierName, *uploadClassifierFile)
+		defer (*uploadClassifierFile).Close()
+	case deleteExtractor.FullCommand():
+		cmd = commands.NewDeleteExtractor(*deleteExtractorName, os.Stdout, apiClient.Extractors)
+	case deleteClassifier.FullCommand():
+		cmd = commands.NewDeleteClassifier(*deleteClassifierName, os.Stdout, apiClient.Classifiers)
+	case createClassifier.FullCommand():
+		cmd = commands.NewCreateClassifier(os.Stdout, apiClient.Classifiers,
+			apiClient.Classifiers, apiClient.Classifiers, *createClassifierName, *createClassifierFile)
+		defer (*createClassifierFile).Close()
+	case createExtractorFromModules.FullCommand():
+		cmd = commands.NewCreateExtractorFromModules(os.Stdout, apiClient.Extractors,
+			*createExtractorFromModulesName, *createExtractorFromModulesIds)
+	case createExtractorFromTemplate.FullCommand():
+		cmd, err = commands.NewCreateExtractorFromTemplate(os.Stdout, apiClient.Extractors,
+			*createExtractorFromTemplateName, *createExtractorFromTemplateFile)
+
 		exitOnErr(err)
 
-		switch parsedCommand {
-		case listModules.FullCommand():
-			cmd = commands.NewListModules(apiClient.Modules, os.Stdout)
-		case listClassifiers.FullCommand():
-			cmd = commands.NewListClassifiers(apiClient.Classifiers, os.Stdout)
-		case listExtractors.FullCommand():
-			cmd = commands.NewListExtractors(apiClient.Extractors, os.Stdout)
-		//case uploadExtractor.FullCommand():
-		//	cmd = commands.NewUploadExtractor(os.Stdout, apiClient.Extractors, *uploadExtractorName, *uploadExtractorFile)
-		//	defer (*uploadExtractorFile).Close()
-		case uploadClassifier.FullCommand():
-			cmd = commands.NewUploadClassifier(os.Stdout, apiClient.Classifiers, *uploadClassifierName, *uploadClassifierFile)
-			defer (*uploadClassifierFile).Close()
-		case deleteExtractor.FullCommand():
-			cmd = commands.NewDeleteExtractor(*deleteExtractorName, os.Stdout, apiClient.Extractors)
-		case deleteClassifier.FullCommand():
-			cmd = commands.NewDeleteClassifier(*deleteClassifierName, os.Stdout, apiClient.Classifiers)
-		case createClassifier.FullCommand():
-			cmd = commands.NewCreateClassifier(os.Stdout, apiClient.Classifiers,
-				apiClient.Classifiers, apiClient.Classifiers, *createClassifierName, *createClassifierFile)
-			defer (*createClassifierFile).Close()
-		case createExtractorFromModules.FullCommand():
-			cmd = commands.NewCreateExtractorFromModules(os.Stdout, apiClient.Extractors,
-				*createExtractorFromModulesName, *createExtractorFromModulesIds)
-		case createExtractorFromTemplate.FullCommand():
-			cmd, err = commands.NewCreateExtractorFromTemplate(os.Stdout, apiClient.Extractors,
-				*createExtractorFromTemplateName, *createExtractorFromTemplateFile)
+	case createExtractorTemplate.FullCommand():
+		out := os.Stdout
 
-			exitOnErr(err)
+		cmd = commands.NewCreateExtractorTemplate(*createExtractorTemplateModules,
+			apiClient.Modules, out)
 
-		case createExtractorTemplate.FullCommand():
-			out := os.Stdout
-
-			cmd = commands.NewCreateExtractorTemplate(*createExtractorTemplateModules,
-				apiClient.Modules, out)
-
-		}
 	}
 
 	if cmd != nil {
