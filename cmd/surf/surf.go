@@ -124,7 +124,8 @@ func main() {
 		createExtractorFromModules = createExtractor.Command("from-modules", "Create waives extractor from a set of modules.")
 
 		createExtractorFromModulesName = createExtractorFromModules.Arg("name", "The name of the new extractor.").Required().String()
-		createExtractorFromModulesIds  = createExtractorFromModules.Arg("module-ids", "The module ids to create the extractor from.").Strings()
+		createExtractorFromModulesIds  = createExtractorFromModules.Arg("module-ids",
+			"The module ids to create the extractor from.").Required().Strings()
 
 		createExtractorFromTemplate     = createExtractor.Command("from-template", "The extractor template to create the extractor from.")
 		createExtractorFromTemplateName = createExtractorFromTemplate.Arg("name", "The name of the new extractor.").
@@ -163,11 +164,6 @@ func main() {
 	app.Flag("output-file", "Write all results to the specified file").
 		Short('o').
 		StringVar(&globalFlags.OutputFile)
-	app.Flag("output-format", "Output format for classification and extraction results. "+
-		"Allowed values: table, csv, json [default: table]").
-		Short('f').
-		Default("table").
-		EnumVar(&globalFlags.OutputFormat, "table", "csv", "json")
 
 	defer ioutils.TryClose(globalFlags.LogHttp)
 
