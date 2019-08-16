@@ -2,17 +2,15 @@ package commands
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
 	"os"
 )
 
 //go:generate mockery -name "ExtractorCreator"
-
-const UploadExtractorCommand = "upload extractor"
 
 type ExtractorCreator interface {
 	Create(ctx context.Context, name string, config io.Reader) error
@@ -20,54 +18,47 @@ type ExtractorCreator interface {
 	CreateFromModules(ctx context.Context, name string, modules ch360.ExtractorTemplate) error
 }
 
-type UploadExtractor struct {
-	writer        io.Writer
-	creator       ExtractorCreator
+type uploadExtractorArgs struct {
 	extractorName string
-	config        io.Reader
+	extractorFile *os.File
 }
 
-func NewUploadExtractor(writer io.Writer,
-	creator ExtractorCreator,
-	extractorName string,
-	config io.Reader) *UploadExtractor {
-	return &UploadExtractor{
-		writer:        writer,
-		creator:       creator,
-		config:        config,
-		extractorName: extractorName,
-	}
+func ConfigureUploadExtractorCommand(ctx context.Context,
+	uploadCommand *kingpin.CmdClause,
+	globalFlags *config.GlobalFlags) {
+	args := &uploadExtractorArgs{}
+
+	uploadExtractorCommand := uploadCommand.
+		Command("extractor", "Upload waives extractor (.fpxlc file).")
+	uploadExtractorCommand.
+		Arg("name", "The name of the new extractor.").
+		Required().
+		StringVar(&args.extractorName)
+	uploadExtractorCommand.
+		Arg("config-file", "The extraction configuration file.").
+		Required().
+		FileVar(&args.extractorFile)
+
+	uploadExtractorCommand.Action(func(parseContext *kingpin.ParseContext) error {
+		// execute the command
+		return executeUploadExtractor(ctx, args, globalFlags)
+	})
 }
 
-func NewUploadExtractorFromArgs(params *config.RunParams,
-	client ExtractorCreator, out io.Writer) (*UploadExtractor, error) {
+func executeUploadExtractor(ctx context.Context,
+	args *uploadExtractorArgs,
+	globalFlags *config.GlobalFlags) error {
 
-	configFile, err := os.Open(params.ConfigPath)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("The file '%s' could not be found.", params.ConfigPath))
-	}
+	return ExecuteWithMessage(fmt.Sprintf("Uploading extractor '%s'... ", args.extractorName),
+		func() error {
+			client, err := initApiClient(globalFlags.ClientId,
+				globalFlags.ClientSecret,
+				globalFlags.LogHttp)
 
-	return NewUploadExtractor(out,
-		client,
-		params.Name,
-		configFile), nil
-}
+			if err != nil {
+				return err
+			}
 
-func (cmd *UploadExtractor) Execute(ctx context.Context) error {
-	fmt.Fprintf(cmd.writer, "Uploading extractor '%s'... ", cmd.extractorName)
-
-	err := cmd.creator.Create(ctx, cmd.extractorName, cmd.config)
-
-	if err != nil {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
-		return err
-	}
-
-	fmt.Fprintln(cmd.writer, "[OK]")
-
-	return nil
-}
-
-func (cmd UploadExtractor) Usage() string {
-	return UploadExtractorCommand
+			return client.Extractors.Create(ctx, args.extractorName, args.extractorFile)
+		})
 }

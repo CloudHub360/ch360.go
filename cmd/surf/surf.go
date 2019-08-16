@@ -96,9 +96,9 @@ func main() {
 
 		upload = app.Command("upload", "Upload waives resources.")
 
-		uploadExtractor     = upload.Command("extractor", "Upload waives extractor (.fpxlc file).")
-		uploadExtractorName = uploadExtractor.Arg("name", "The name of the new extractor.").Required().String()
-		uploadExtractorFile = uploadExtractor.Arg("config-file", "The extraction configuration file.").Required().File()
+		//uploadExtractor     = upload.Command("extractor", "Upload waives extractor (.fpxlc file).")
+		//uploadExtractorName = uploadExtractor.Arg("name", "The name of the new extractor.").Required().String()
+		//uploadExtractorFile = uploadExtractor.Arg("config-file", "The extraction configuration file.").Required().File()
 
 		uploadClassifier     = upload.Command("classifier", "Upload waives classifier (.clf file).")
 		uploadClassifierName = uploadClassifier.Arg("name", "The name of the new classifier.").Required().String()
@@ -139,6 +139,7 @@ func main() {
 	ctx, canceller := context.WithCancel(context.Background())
 	go handleInterrupt(canceller)
 
+	commands.ConfigureUploadExtractorCommand(ctx, upload, &globalFlags)
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
 	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
@@ -186,9 +187,9 @@ func main() {
 			cmd = commands.NewListClassifiers(apiClient.Classifiers, os.Stdout)
 		case listExtractors.FullCommand():
 			cmd = commands.NewListExtractors(apiClient.Extractors, os.Stdout)
-		case uploadExtractor.FullCommand():
-			cmd = commands.NewUploadExtractor(os.Stdout, apiClient.Extractors, *uploadExtractorName, *uploadExtractorFile)
-			defer (*uploadExtractorFile).Close()
+		//case uploadExtractor.FullCommand():
+		//	cmd = commands.NewUploadExtractor(os.Stdout, apiClient.Extractors, *uploadExtractorName, *uploadExtractorFile)
+		//	defer (*uploadExtractorFile).Close()
 		case uploadClassifier.FullCommand():
 			cmd = commands.NewUploadClassifier(os.Stdout, apiClient.Classifiers, *uploadClassifierName, *uploadClassifierFile)
 			defer (*uploadClassifierFile).Close()
