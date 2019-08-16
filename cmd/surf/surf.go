@@ -143,6 +143,7 @@ func main() {
 	go handleInterrupt(canceller)
 
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
+	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
 
 	// readCmd.Action(func(parseContext *kingpin.ParseContext) error {
 	// return nil
