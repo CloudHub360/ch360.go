@@ -20,6 +20,8 @@ func (f *BasicWriterSink) Open() error {
 }
 
 func (f *BasicWriterSink) Close() error {
+	// the underlying writer could well be a file, in which case we should
+	// try to close it here.
 	fs.TryClose(f.writer)
 
 	return nil
