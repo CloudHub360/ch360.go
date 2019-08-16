@@ -44,7 +44,7 @@ func ConfigureExtractCommand(ctx context.Context,
 }
 
 // ExecuteExtract is the main entry point for the 'extract' command. It has to do a lot of
-// setup / instantiation before actually performing OCR on the specified files.
+// setup / instantiation before actually performing data extraction on the specified files.
 func ExecuteExtract(ctx context.Context, extractArgs *ExtractArgs,
 	globalFlags *config.GlobalFlags) error {
 
