@@ -4,70 +4,85 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/CloudHub360/ch360.go/ioutils"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
 	"os"
 )
 
 //go:generate mockery -name "ClassifierUploader"
-
-const UploadClassifierCommand = "upload classifier"
-
 type ClassifierUploader interface {
 	Upload(ctx context.Context, name string, contents io.Reader) error
 }
 
-type UploadClassifier struct {
-	writer         io.Writer
-	uploader       ClassifierUploader
-	deleter        ClassifierDeleter
-	classifierName string
-	classifierFile *os.File
+func ConfigureUploadClassifierCommand(ctx context.Context,
+	uploadCmd *kingpin.CmdClause,
+	globalFlags *config.GlobalFlags) {
+	args := &uploadClassifierArgs{}
+	cmd := UploadClassifierCmd{}
+
+	uploadClassifierCli := uploadCmd.Command("classifier",
+		"Upload waives classifier (.clf file).").
+		Action(func(parseContext *kingpin.ParseContext) error {
+			err := cmd.initFromArgs(args, globalFlags)
+			exitOnErr(err)
+
+			msg := fmt.Sprintf("Creating classifier '%s' from '%s'... ", args.name,
+				args.classifierFile)
+
+			// execute the command
+			exitOnErr(ExecuteWithMessage(msg, func() error {
+				return cmd.Execute(ctx)
+			}))
+
+			return nil
+		})
+
+	uploadClassifierCli.
+		Arg("name", "The name of the new classifier.").
+		Required().
+		StringVar(&args.name)
+	uploadClassifierCli.
+		Arg("classifier-file", "The trained classifier file.").
+		Required().
+		StringVar(&args.classifierFile)
 }
 
-func NewUploadClassifier(writer io.Writer,
-	uploader ClassifierUploader,
-	classifierName string,
-	classifierFile *os.File) *UploadClassifier {
-	return &UploadClassifier{
-		writer:         writer,
-		uploader:       uploader,
-		classifierName: classifierName,
-		classifierFile: classifierFile,
+type uploadClassifierArgs struct {
+	name           string
+	classifierFile string
+}
+
+type UploadClassifierCmd struct {
+	Uploader           ClassifierUploader
+	ClassifierName     string
+	ClassifierContents io.Reader
+}
+
+// Execute runs the command.
+func (cmd *UploadClassifierCmd) Execute(ctx context.Context) error {
+	defer ioutils.TryClose(cmd.ClassifierContents)
+
+	return cmd.Uploader.Upload(ctx, cmd.ClassifierName, cmd.ClassifierContents)
+}
+
+func (cmd *UploadClassifierCmd) initFromArgs(args *uploadClassifierArgs, flags *config.GlobalFlags) error {
+	var err error
+	cmd.ClassifierContents, err = os.Open(args.classifierFile)
+	if err != nil {
+		return errors.New(fmt.Sprintf("The file '%s' could not be found.", args.classifierFile))
 	}
-}
 
-func NewUploadClassifierFromArgs(params *config.RunParams, client *ch360.ApiClient, out io.Writer) (*UploadClassifier, error) {
-	classifierFile, err := os.Open(params.ClassifierPath)
+	cmd.ClassifierName = args.name
+
+	apiClient, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
 
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("The file '%s' could not be found.", params.ClassifierPath))
-	}
-
-	return NewUploadClassifier(
-		out,
-		client.Classifiers,
-		params.Name,
-		classifierFile), nil
-}
-
-func (cmd *UploadClassifier) Execute(ctx context.Context) error {
-	defer cmd.classifierFile.Close()
-
-	fmt.Fprintf(cmd.writer, "Creating classifier '%s' from '%s'... ", cmd.classifierName, cmd.classifierFile.Name())
-
-	err := cmd.uploader.Upload(ctx, cmd.classifierName, cmd.classifierFile)
-	if err != nil {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err
 	}
 
-	fmt.Fprintln(cmd.writer, "[OK]")
+	cmd.Uploader = apiClient.Classifiers
 
 	return nil
-}
-
-func (cmd UploadClassifier) Usage() string {
-	return UploadClassifierCommand
 }

@@ -18,7 +18,7 @@ type UploadClassifierSuite struct {
 	suite.Suite
 	output         *bytes.Buffer
 	uploader       *mocks.ClassifierUploader
-	sut            *commands.UploadClassifier
+	sut            *commands.UploadClassifierCmd
 	classifierName string
 	classifierFile *os.File
 	ctx            context.Context
@@ -37,11 +37,12 @@ func (suite *UploadClassifierSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *UploadClassifierSuite) anUploadClassifierCommandWithFile(classifierFile *os.File) *commands.UploadClassifier {
-	return commands.NewUploadClassifier(suite.output,
-		suite.uploader,
-		suite.classifierName,
-		classifierFile)
+func (suite *UploadClassifierSuite) anUploadClassifierCommandWithFile(classifierFile *os.File) *commands.UploadClassifierCmd {
+	return &commands.UploadClassifierCmd{
+		Uploader:           suite.uploader,
+		ClassifierName:     suite.classifierName,
+		ClassifierContents: classifierFile,
+	}
 }
 
 func TestUploadClassifierSuiteRunner(t *testing.T) {
