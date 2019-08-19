@@ -49,20 +49,21 @@ func ConfigureUploadExtractorCommand(ctx context.Context,
 		StringVar(&args.extractorFile)
 
 	uploadExtractorCommand.Action(func(parseContext *kingpin.ParseContext) error {
-		exitOnErr(cmd.initFromArgs(args, globalFlags))
-		exitOnErr(cmd.Execute(ctx))
+		return ExecuteWithMessage(fmt.Sprintf("Uploading extractor '%s' from '%s'... ",
+			args.extractorName, args.extractorFile),
+			func() error {
+				exitOnErr(cmd.initFromArgs(args, globalFlags))
+				exitOnErr(cmd.Execute(ctx))
 
-		return nil
+				return nil
+			})
 	})
 }
 
 func (cmd *UploadExtractorCmd) Execute(ctx context.Context) error {
-	return ExecuteWithMessage(fmt.Sprintf("Uploading extractor '%s'... ", cmd.ExtractorName),
-		func() error {
-			defer ioutils.TryClose(cmd.ExtractorContent)
+	defer ioutils.TryClose(cmd.ExtractorContent)
 
-			return cmd.ExtractorCreator.Create(ctx, cmd.ExtractorName, cmd.ExtractorContent)
-		})
+	return cmd.ExtractorCreator.Create(ctx, cmd.ExtractorName, cmd.ExtractorContent)
 }
 
 func (cmd *UploadExtractorCmd) initFromArgs(args *uploadExtractorArgs,
