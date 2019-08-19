@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
+	"github.com/CloudHub360/ch360.go/ioutils"
+	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
 	"os"
@@ -18,9 +20,15 @@ type ExtractorCreator interface {
 	CreateFromModules(ctx context.Context, name string, modules ch360.ExtractorTemplate) error
 }
 
+type UploadExtractorCmd struct {
+	ExtractorCreator ExtractorCreator
+	ExtractorName    string
+	ExtractorContent io.Reader
+}
+
 type uploadExtractorArgs struct {
 	extractorName string
-	extractorFile *os.File
+	extractorFile string
 }
 
 func ConfigureUploadExtractorCommand(ctx context.Context,
@@ -28,6 +36,7 @@ func ConfigureUploadExtractorCommand(ctx context.Context,
 	globalFlags *config.GlobalFlags) {
 	args := &uploadExtractorArgs{}
 
+	cmd := &UploadExtractorCmd{}
 	uploadExtractorCommand := uploadCommand.
 		Command("extractor", "Upload waives extractor (.fpxlc file).")
 	uploadExtractorCommand.
@@ -37,28 +46,40 @@ func ConfigureUploadExtractorCommand(ctx context.Context,
 	uploadExtractorCommand.
 		Arg("config-file", "The extraction configuration file.").
 		Required().
-		FileVar(&args.extractorFile)
+		StringVar(&args.extractorFile)
 
 	uploadExtractorCommand.Action(func(parseContext *kingpin.ParseContext) error {
-		// execute the command
-		return executeUploadExtractor(ctx, args, globalFlags)
+		exitOnErr(cmd.initFromArgs(args, globalFlags))
+		exitOnErr(cmd.Execute(ctx))
+
+		return nil
 	})
 }
 
-func executeUploadExtractor(ctx context.Context,
-	args *uploadExtractorArgs,
-	globalFlags *config.GlobalFlags) error {
-
-	return ExecuteWithMessage(fmt.Sprintf("Uploading extractor '%s'... ", args.extractorName),
+func (cmd *UploadExtractorCmd) Execute(ctx context.Context) error {
+	return ExecuteWithMessage(fmt.Sprintf("Uploading extractor '%s'... ", cmd.ExtractorName),
 		func() error {
-			client, err := initApiClient(globalFlags.ClientId,
-				globalFlags.ClientSecret,
-				globalFlags.LogHttp)
+			defer ioutils.TryClose(cmd.ExtractorContent)
 
-			if err != nil {
-				return err
-			}
-
-			return client.Extractors.Create(ctx, args.extractorName, args.extractorFile)
+			return cmd.ExtractorCreator.Create(ctx, cmd.ExtractorName, cmd.ExtractorContent)
 		})
+}
+
+func (cmd *UploadExtractorCmd) initFromArgs(args *uploadExtractorArgs,
+	flags *config.GlobalFlags) error {
+
+	var err error
+	cmd.ExtractorContent, err = os.Open(args.extractorFile)
+	if err != nil {
+		return errors.Errorf("The file '%s' could not be read.", args.extractorFile)
+	}
+
+	client, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
+
+	if err != nil {
+		return err
+	}
+
+	cmd.ExtractorCreator = client.Extractors
+	return nil
 }
