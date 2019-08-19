@@ -19,15 +19,17 @@ import (
 
 type LoginSuite struct {
 	suite.Suite
-	sut            *commands.Login
+	sut            *commands.LoginCmd
 	configWriter   *mocks.ConfigurationWriter
 	tokenRetriever *authmocks.TokenRetriever
-	clientId       string
-	clientSecret   string
+	flags          *config.GlobalFlags
 	output         *bytes.Buffer
+	clientSecret   string
+	clientId       string
 }
 
 func (suite *LoginSuite) SetupTest() {
+
 	suite.clientId = generators.String("clientid")
 	suite.clientSecret = generators.String("clientsecret")
 
@@ -37,8 +39,16 @@ func (suite *LoginSuite) SetupTest() {
 	suite.tokenRetriever = new(authmocks.TokenRetriever)
 	suite.tokenRetriever.On("RetrieveToken", mock.Anything, mock.Anything).Return(&auth.AccessToken{}, nil)
 
+	suite.flags = &config.GlobalFlags{
+		ClientId:     generators.String("clientid"),
+		ClientSecret: generators.String("clientsecret"),
+	}
+
 	suite.output = &bytes.Buffer{}
-	suite.sut = commands.NewLogin(suite.output, suite.configWriter, suite.tokenRetriever, suite.clientId, suite.clientSecret)
+	suite.sut = &commands.LoginCmd{
+		TokenRetriever:      suite.tokenRetriever,
+		ConfigurationWriter: suite.configWriter,
+	}
 }
 
 func TestLoginSuiteRunner(t *testing.T) {
@@ -46,14 +56,14 @@ func TestLoginSuiteRunner(t *testing.T) {
 }
 
 func (suite *LoginSuite) TestLogin_Execute_Writes_Configuration_When_Id_And_Secret_Specified() {
-	err := suite.sut.Execute(context.Background())
+	err := suite.sut.Execute(context.Background(), suite.flags)
 	assert.Nil(suite.T(), err)
 
-	suite.assertConfigurationWrittenWithCredentials(suite.clientId, suite.clientSecret)
+	suite.assertConfigurationWrittenWithCredentials(suite.flags.ClientId, suite.clientSecret)
 }
 
 func (suite *LoginSuite) TestLogin_Execute_Requests_Auth_Token() {
-	err := suite.sut.Execute(context.Background())
+	err := suite.sut.Execute(context.Background(), suite.flags)
 	assert.Nil(suite.T(), err)
 
 	suite.tokenRetriever.AssertCalled(suite.T(), "RetrieveToken", suite.clientId, suite.clientSecret)
@@ -67,7 +77,7 @@ func (suite *LoginSuite) TestLogin_Execute_Returns_Err_From_Token_Retriever() {
 	suite.tokenRetriever.On("RetrieveToken", mock.Anything, mock.Anything).Return(nil, expectedErr)
 
 	// Act
-	err := suite.sut.Execute(context.Background())
+	err := suite.sut.Execute(context.Background(), suite.flags)
 
 	// Assert
 	suite.tokenRetriever.AssertCalled(suite.T(), "RetrieveToken", suite.clientId, suite.clientSecret)

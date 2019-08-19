@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"github.com/CloudHub360/ch360.go/auth"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -12,28 +13,40 @@ import (
 func ConfigureLoginCommand(ctx context.Context,
 	app *kingpin.Application,
 	globalFlags *config.GlobalFlags) {
+
+	loginCmd := &LoginCmd{}
 	app.Command("login", "Connect surf to your account.").
 		Action(func(parseContext *kingpin.ParseContext) error {
 			// execute the command
 			return ExecuteWithMessage("Logging in... ", func() error {
-				return execute(ctx, globalFlags)
+				exitOnErr(loginCmd.initFromArgs(globalFlags))
+				exitOnErr(loginCmd.Execute(ctx, globalFlags))
+
+				return nil
 			})
 		})
 }
 
-func execute(ctx context.Context, flags *config.GlobalFlags) error {
+type LoginCmd struct {
+	TokenRetriever      auth.TokenRetriever
+	ConfigurationWriter config.ConfigurationWriter
+}
+
+func (cmd *LoginCmd) initFromArgs(flags *config.GlobalFlags) error {
+
+	var err error
+	cmd.TokenRetriever = ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
+	cmd.ConfigurationWriter, err = config.NewAppDirectory()
+
+	return err
+}
+
+func (cmd *LoginCmd) Execute(ctx context.Context, flags *config.GlobalFlags) error {
 	var (
 		err          error
 		clientId     = flags.ClientId
 		clientSecret = flags.ClientSecret
-
-		tokenRetriever = ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
 	)
-
-	appDirectory, err := config.NewAppDirectory()
-	if err != nil {
-		return err
-	}
 
 	if clientId == "" {
 		fmt.Print("\nClient Id: ")
@@ -51,7 +64,7 @@ func execute(ctx context.Context, flags *config.GlobalFlags) error {
 		}
 	}
 
-	_, err = tokenRetriever.RetrieveToken(clientId, clientSecret)
+	_, err = cmd.TokenRetriever.RetrieveToken(clientId, clientSecret)
 
 	if err != nil {
 		return err
@@ -59,7 +72,7 @@ func execute(ctx context.Context, flags *config.GlobalFlags) error {
 
 	configuration := config.NewConfiguration(clientId, clientSecret)
 
-	err = appDirectory.WriteConfiguration(configuration)
+	err = cmd.ConfigurationWriter.WriteConfiguration(configuration)
 
 	return err
 }
