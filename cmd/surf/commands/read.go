@@ -18,55 +18,39 @@ type ReadArgs struct {
 	filePatterns []string
 }
 
-// ConfigureReadCommand configures kingpin to call ExecuteRead after having successfully parsed
-// the cli options.
-func ConfigureReadCommand(ctx context.Context,
-	app *kingpin.Application,
-	globalFlags *config.GlobalFlags) {
-	readArgs := &ReadArgs{}
-
-	cmd := app.
-		Command("read", "Perform OCR on a file or set of files.").
-		Action(func(parseContext *kingpin.ParseContext) error {
-			// execute the command
-			return ExecuteRead(ctx, readArgs, globalFlags)
-		})
-
-	cmd.Flag("format", "The output format. Allowed values: pdf, wvdoc, txt [default: txt].").
-		Short('f').
-		Default("txt").
-		EnumVar(&readArgs.outputFormat, "pdf", "wvdoc", "txt")
-
-	cmd.Arg("files", "The files to read.").
-		Required().
-		StringsVar(&readArgs.filePatterns)
+//go:generate mockery -name ReaderService
+type ReaderService interface {
+	ReadAll(ctx context.Context, files []string, readMode ch360.ReadMode) error
 }
 
-// ExecuteRead is the main entry point for the 'read' command. It has to do a lot of
-// setup / instantiation before actually performing OCR on the specified files.
-func ExecuteRead(ctx context.Context, readArgs *ReadArgs, globalFlags *config.GlobalFlags) error {
+// ReadCmd represents the 'read' command. It relies on a 'ReaderService' to perform the actual OCR.
+type ReadCmd struct {
+	FilePaths     []string
+	ReaderService ReaderService
+	ReadMode      ch360.ReadMode
+}
 
+func (cmd *ReadCmd) initFromArgs(args *ReadArgs, globalFlags *config.GlobalFlags) error {
 	resultsWriter, err := resultsWriters.NewReaderResultsWriter(globalFlags.MultiFileOut,
-		globalFlags.OutputFile, readArgs.outputFormat)
+		globalFlags.OutputFile, args.outputFormat)
 
 	if err != nil {
 		return err
 	}
 
-	progressHandler := progress.NewProgressHandler(resultsWriter,
-		globalFlags.ShowProgress, os.Stderr)
+	progressHandler := progress.NewProgressHandler(resultsWriter, globalFlags.ShowProgress, os.Stderr)
 
-	readMode := readModes[readArgs.outputFormat]
+	cmd.ReadMode = readModes[args.outputFormat]
 
 	// ensure we're not printing binary data to the console
 	if !config.IsOutputRedirected() &&
-		readMode.IsBinary() &&
+		cmd.ReadMode.IsBinary() &&
 		!globalFlags.IsOutputSpecified() {
 		return errors.New("you must use '-o' or '-m' or redirect stdout when the output " +
 			"file format is pdf or wvdoc")
 	}
 
-	filePaths, err := GlobMany(readArgs.filePatterns)
+	cmd.FilePaths, err = GlobMany(args.filePatterns)
 	if err != nil {
 		return err
 	}
@@ -79,10 +63,45 @@ func ExecuteRead(ctx context.Context, readArgs *ReadArgs, globalFlags *config.Gl
 		return err
 	}
 
-	fileReader := ch360.NewFileReader(client.Documents, client.Documents, client.Documents)
+	singleFileReader := ch360.NewFileReader(client.Documents, client.Documents, client.Documents)
 
-	return services.NewParallelReaderService(fileReader, client.Documents, progressHandler).
-		ReadAll(ctx, filePaths, readMode)
+	cmd.ReaderService = services.NewParallelReaderService(singleFileReader, client.Documents,
+		progressHandler)
+
+	return nil
+}
+
+// ConfigureReadCommand configures kingpin to call ExecuteRead after having successfully parsed
+// the cli options.
+func ConfigureReadCommand(ctx context.Context,
+	app *kingpin.Application,
+	globalFlags *config.GlobalFlags) {
+	readArgs := &ReadArgs{}
+
+	readCmd := &ReadCmd{}
+
+	cliCmd := app.
+		Command("read", "Perform OCR on a file or set of files.").
+		Action(func(parseContext *kingpin.ParseContext) error {
+			exitOnErr(readCmd.initFromArgs(readArgs, globalFlags))
+			exitOnErr(readCmd.Execute(ctx))
+			return nil
+		})
+
+	cliCmd.Flag("format", "The output format. Allowed values: pdf, wvdoc, txt [default: txt].").
+		Short('f').
+		Default("txt").
+		EnumVar(&readArgs.outputFormat, "pdf", "wvdoc", "txt")
+
+	cliCmd.Arg("files", "The files to read.").
+		Required().
+		StringsVar(&readArgs.filePatterns)
+}
+
+// Execute is the main entry point for the 'read' command.
+func (cmd *ReadCmd) Execute(ctx context.Context) error {
+
+	return cmd.ReaderService.ReadAll(ctx, cmd.FilePaths, cmd.ReadMode)
 }
 
 var readModes = map[string]ch360.ReadMode{
