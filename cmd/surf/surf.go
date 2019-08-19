@@ -97,10 +97,6 @@ func main() {
 
 		upload = app.Command("upload", "Upload waives resources.")
 
-		uploadClassifier     = upload.Command("classifier", "Upload waives classifier (.clf file).")
-		uploadClassifierName = uploadClassifier.Arg("name", "The name of the new classifier.").Required().String()
-		uploadClassifierFile = uploadClassifier.Arg("classifier-file", "The trained classifier file.").Required().File()
-
 		deleteCmd           = app.Command("delete", "Delete waives resources.")
 		deleteExtractor     = deleteCmd.Command("extractor", "Delete waives extractor.")
 		deleteExtractorName = deleteExtractor.Arg("name", "The name of the extractor to delete.").Required().String()
@@ -139,6 +135,7 @@ func main() {
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
 	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
+	commands.ConfigureUploadClassifierCommand(ctx, upload, &globalFlags)
 
 	app.Flag("client-id", "Client ID").Short('i').
 		Short('i').
@@ -173,9 +170,6 @@ func main() {
 		cmd = commands.NewListClassifiers(apiClient.Classifiers, os.Stdout)
 	case listExtractors.FullCommand():
 		cmd = commands.NewListExtractors(apiClient.Extractors, os.Stdout)
-	case uploadClassifier.FullCommand():
-		cmd = commands.NewUploadClassifier(os.Stdout, apiClient.Classifiers, *uploadClassifierName, *uploadClassifierFile)
-		defer (*uploadClassifierFile).Close()
 	case deleteExtractor.FullCommand():
 		cmd = commands.NewDeleteExtractor(*deleteExtractorName, os.Stdout, apiClient.Extractors)
 	case deleteClassifier.FullCommand():
