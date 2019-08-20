@@ -15,7 +15,7 @@ import (
 
 type CreateExtractorTemplateSuite struct {
 	suite.Suite
-	sut       *commands.CreateExtractorTemplate
+	sut       *commands.CreateExtractorTemplateCmd
 	client    *mocks.ModuleGetter
 	moduleIds []string
 	output    *bytes.Buffer
@@ -30,7 +30,11 @@ func (suite *CreateExtractorTemplateSuite) SetupTest() {
 
 	suite.output = &bytes.Buffer{}
 
-	suite.sut = commands.NewCreateExtractorTemplate(suite.moduleIds, suite.client, suite.output)
+	suite.sut = &commands.CreateExtractorTemplateCmd{
+		Client:    suite.client,
+		ModuleIds: suite.moduleIds,
+		Output:    suite.output,
+	}
 	suite.ctx = context.Background()
 }
 
@@ -51,7 +55,11 @@ func (suite *CreateExtractorTemplateSuite) Test_CreateExtractorTemplate_Returns_
 
 	for _, fixture := range fixtures {
 		// Arrange
-		sut := commands.NewCreateExtractorTemplate(fixture.moduleIds, suite.client, suite.output)
+		sut := &commands.CreateExtractorTemplateCmd{
+			Client:    suite.client,
+			ModuleIds: fixture.moduleIds,
+			Output:    suite.output,
+		}
 
 		// Act
 		err := sut.Execute(suite.ctx)
@@ -65,7 +73,11 @@ func (suite *CreateExtractorTemplateSuite) Test_CreateExtractorTemplate_Returns_
 
 	// Arrange
 	moduleIds := []string{"missingModuleA", "missingModuleB", "missingModuleC"}
-	sut := commands.NewCreateExtractorTemplate(moduleIds, suite.client, suite.output)
+	sut := &commands.CreateExtractorTemplateCmd{
+		Client:    suite.client,
+		ModuleIds: moduleIds,
+		Output:    suite.output,
+	}
 
 	// Act
 	err := sut.Execute(suite.ctx)
@@ -90,10 +102,15 @@ func (suite *CreateExtractorTemplateSuite) Test_CreateExtractorTemplate_Is_Case_
 	for i, moduleID := range moduleIds {
 		moduleIds[i] = strings.ToUpper(moduleID)
 	}
-	sut := commands.NewCreateExtractorTemplate(moduleIds, suite.client, suite.output)
+	sut := &commands.CreateExtractorTemplateCmd{
+		Client:    suite.client,
+		ModuleIds: moduleIds,
+		Output:    suite.output,
+	}
 
 	// Act
-	_ = sut.Execute(suite.ctx)
+	err := sut.Execute(suite.ctx)
+	assert.NoError(suite.T(), err)
 	template, err := ch360.NewModulesTemplateFromJson(suite.output)
 
 	// Assert

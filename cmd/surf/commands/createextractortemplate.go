@@ -4,76 +4,95 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/ioutils"
+	"github.com/CloudHub360/ch360.go/config"
 	"github.com/pkg/errors"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
+	"os"
 	"strings"
 )
 
 const CreateExtractorTemplateCommand = "create extractor-template"
 
-var _ Command = (*CreateExtractorTemplate)(nil)
+var _ Command = (*CreateExtractorTemplateCmd)(nil)
 
 // CreateExtractorTemplate is a command which accepts a list of module ids,
 // retrieves their descriptions from waives and generates a template json
 // from them.
-type CreateExtractorTemplate struct {
-	client    ModuleGetter
-	writer    io.Writer
+type CreateExtractorTemplateCmd struct {
+	Client    ModuleGetter
+	ModuleIds []string
+	Output    io.Writer
+}
+
+type createExtractorTemplateArgs struct {
 	moduleIds []string
 }
 
+// ConfigureCreateExtractorTemplateCmd configures kingpin with the 'create extractor-template'
+// command.
+func ConfigureCreateExtractorTemplateCmd(ctx context.Context, createCmd *kingpin.CmdClause,
+	flags *config.GlobalFlags) {
+	args := &createExtractorTemplateArgs{}
+	createExtractorTemplateCmd := &CreateExtractorTemplateCmd{}
+
+	createExtractorTemplateCli := createCmd.Command("extractor-template",
+		"Create an extractor template from the provided module ids.").
+		Action(func(parseContext *kingpin.ParseContext) error {
+			exitOnErr(createExtractorTemplateCmd.initFromArgs(args, flags))
+
+			exitOnErr(createExtractorTemplateCmd.Execute(ctx))
+			return nil
+		})
+
+	createExtractorTemplateCli.
+		Arg("module-ids", "The module IDs to include in the template").
+		Required().
+		StringsVar(&args.moduleIds)
+}
+
 // Execute runs the command.
-func (cmd CreateExtractorTemplate) Execute(ctx context.Context) error {
-	defer ioutils.TryClose(cmd.writer)
+func (cmd CreateExtractorTemplateCmd) Execute(ctx context.Context) error {
 	var (
 		jsonData []byte
 		err      error
 	)
 
-	err = ExecuteWithMessage("Creating extractor template...", func() error {
-		if len(cmd.moduleIds) == 0 {
-			return errors.New("At least one module ID must be specified")
-		}
+	if len(cmd.ModuleIds) == 0 {
+		return errors.New("At least one module ID must be specified")
+	}
 
-		allModules, err := cmd.client.GetAll(ctx)
-		if err != nil {
-			return err
-		}
-
-		specifedModules, err := cmd.getSpecifiedModules(allModules)
-		if err != nil {
-			return err
-		}
-
-		template := cmd.buildExtractorTemplateFor(specifedModules)
-
-		jsonData, err = json.MarshalIndent(template, "", "  ")
-
-		if err != nil {
-			return errors.WithMessage(err, "Unable to create template")
-		}
-
-		return nil
-	})
-
+	allModules, err := cmd.Client.GetAll(ctx)
 	if err != nil {
 		return err
 	}
 
-	_, err = cmd.writer.Write(jsonData)
+	specifedModules, err := cmd.getSpecifiedModules(allModules)
+	if err != nil {
+		return err
+	}
+
+	template := cmd.buildExtractorTemplateFor(specifedModules)
+
+	jsonData, err = json.MarshalIndent(template, "", "  ")
+
+	if err != nil {
+		return errors.WithMessage(err, "Unable to create template")
+	}
+
+	_, err = cmd.Output.Write(jsonData)
 
 	return err
 }
 
-func (cmd CreateExtractorTemplate) getSpecifiedModules(existingModules ch360.ModuleList) (ch360.ModuleList, error) {
+func (cmd CreateExtractorTemplateCmd) getSpecifiedModules(existingModules ch360.ModuleList) (ch360.ModuleList, error) {
 	var (
-		missingModules = []string{}
+		missingModules []string
 		presentModules ch360.ModuleList
 	)
 
 	// annoyingly we can't use a map here, since we want a case-insensitive search.
-	for _, requestedModuleID := range cmd.moduleIds {
+	for _, requestedModuleID := range cmd.ModuleIds {
 		if existingModule := existingModules.Find(requestedModuleID); existingModule != nil {
 			presentModules = append(presentModules, *existingModule)
 		} else {
@@ -88,13 +107,9 @@ func (cmd CreateExtractorTemplate) getSpecifiedModules(existingModules ch360.Mod
 	return presentModules, nil
 }
 
-func (cmd CreateExtractorTemplate) Usage() string {
-	return CreateExtractorTemplateCommand
-}
-
 // buildExtractorTemplateFor builds a ch360.ExtractorTemplate instance from a
 // specified ch360.ModuleList.
-func (cmd CreateExtractorTemplate) buildExtractorTemplateFor(modules ch360.ModuleList) ch360.ExtractorTemplate {
+func (cmd CreateExtractorTemplateCmd) buildExtractorTemplateFor(modules ch360.ModuleList) ch360.ExtractorTemplate {
 	template := ch360.ExtractorTemplate{}
 
 	for _, module := range modules {
@@ -117,10 +132,18 @@ func (cmd CreateExtractorTemplate) buildExtractorTemplateFor(modules ch360.Modul
 	return template
 }
 
-func NewCreateExtractorTemplate(moduleIds []string, client ModuleGetter, out io.Writer) *CreateExtractorTemplate {
-	return &CreateExtractorTemplate{
-		moduleIds: moduleIds,
-		client:    client,
-		writer:    out,
+func (cmd *CreateExtractorTemplateCmd) initFromArgs(args *createExtractorTemplateArgs,
+	flags *config.GlobalFlags) error {
+	cmd.ModuleIds = args.moduleIds
+
+	client, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
+
+	if err != nil {
+		return err
 	}
+
+	cmd.Client = client.Modules
+	cmd.Output = os.Stdout
+
+	return nil
 }

@@ -50,12 +50,13 @@ func (suite *ListModuleSuite) TestGetAllModules_Execute_Returns_An_Error_If_The_
 	assert.Equal(suite.T(), expectedErr, actualErr)
 }
 
-func aListOfModules(names ...string) interface{} {
-	expected := make(ch360.ModuleList, len(names))
+func aListOfModules(ids ...string) interface{} {
+	expected := make(ch360.ModuleList, len(ids))
 
-	for index, name := range names {
+	for index, name := range ids {
 		expected[index] = ch360.Module{
 			Name: name,
+			ID:   name,
 		}
 	}
 
