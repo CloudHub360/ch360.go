@@ -2,18 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"os/signal"
-	"time"
-
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/ioutils"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"os"
+	"os/signal"
 )
 
 func main() {
@@ -94,25 +89,8 @@ func main() {
 		upload    = app.Command("upload", "Upload waives resources.")
 		deleteCmd = app.Command("delete", "Delete waives resources.")
 		createCmd = app.Command("create", "Create waives resources.")
-
-		createExtractor = createCmd.Command("extractor", "Create waives extractor.")
-
-		createExtractorFromModules = createExtractor.Command("from-modules", "Create waives extractor from a set of modules.")
-
-		createExtractorFromModulesName = createExtractorFromModules.Arg("name", "The name of the new extractor.").Required().String()
-		createExtractorFromModulesIds  = createExtractorFromModules.Arg("module-ids",
-			"The module ids to create the extractor from.").Required().Strings()
-
-		createExtractorFromTemplate     = createExtractor.Command("from-template", "The extractor template to create the extractor from.")
-		createExtractorFromTemplateName = createExtractorFromTemplate.Arg("name", "The name of the new extractor.").
-						Required().String()
-		createExtractorFromTemplateFile = createExtractorFromTemplate.Arg("template-file", "The extraction template file (json).").
-						Required().File()
-
-		createExtractorTemplate        = createCmd.Command("extractor-template", "Create an extractor template from the provided module ids")
-		createExtractorTemplateModules = createExtractorTemplate.Arg("module-ids", "The module IDs to include in the template").
-						Required().Strings()
 	)
+
 	ctx, canceller := context.WithCancel(context.Background())
 	go handleInterrupt(canceller)
 
@@ -124,6 +102,7 @@ func main() {
 	commands.ConfigureDeleteExtractorCmd(ctx, deleteCmd, &globalFlags)
 	commands.ConfigureDeleteClassifierCmd(ctx, deleteCmd, &globalFlags)
 	commands.ConfigureCreateClassifierCmd(ctx, createCmd, &globalFlags)
+	commands.ConfigureCreateExtractorCmd(ctx, createCmd, &globalFlags)
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
 	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
@@ -148,34 +127,7 @@ func main() {
 
 	defer ioutils.TryClose(globalFlags.LogHttp)
 
-	parsedCommand := kingpin.MustParse(app.Parse(os.Args[1:]))
-
-	var cmd commands.Command
-
-	apiClient, err := initApiClient(globalFlags.ClientId, globalFlags.ClientSecret, globalFlags.LogHttp)
-	exitOnErr(err)
-
-	switch parsedCommand {
-	case createExtractorFromModules.FullCommand():
-		cmd = commands.NewCreateExtractorFromModules(os.Stdout, apiClient.Extractors,
-			*createExtractorFromModulesName, *createExtractorFromModulesIds)
-	case createExtractorFromTemplate.FullCommand():
-		cmd, err = commands.NewCreateExtractorFromTemplate(os.Stdout, apiClient.Extractors,
-			*createExtractorFromTemplateName, *createExtractorFromTemplateFile)
-
-		exitOnErr(err)
-
-	case createExtractorTemplate.FullCommand():
-		out := os.Stdout
-
-		cmd = commands.NewCreateExtractorTemplate(*createExtractorTemplateModules,
-			apiClient.Modules, out)
-
-	}
-
-	if cmd != nil {
-		exitOnErr(cmd.Execute(ctx))
-	}
+	kingpin.MustParse(app.Parse(os.Args[1:]))
 }
 
 func handleInterrupt(canceller context.CancelFunc) {
@@ -185,35 +137,3 @@ func handleInterrupt(canceller context.CancelFunc) {
 	<-interruptChan // ctrl-c received
 	canceller()
 }
-
-func exitOnErr(err error) {
-	if err != nil && err != context.Canceled {
-
-		_, _ = fmt.Fprintln(os.Stderr, err)
-
-		os.Exit(1)
-	}
-}
-
-func initApiClient(clientIdFlag, clientSecretFlag string, logHttpFile *os.File) (*ch360.ApiClient, error) {
-	appDir, err := config.NewAppDirectory()
-	if err != nil {
-		return nil, err
-	}
-
-	credentialsResolver := &commands.CredentialsResolver{}
-
-	clientId, clientSecret, err := credentialsResolver.Resolve(clientIdFlag, clientSecretFlag, appDir)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var logSink io.Writer = nil
-	if logHttpFile != nil {
-		logSink = logHttpFile
-	}
-	return ch360.NewApiClient(DefaultHttpClient, ch360.ApiAddress, clientId, clientSecret, logSink), nil
-}
-
-var DefaultHttpClient = &http.Client{Timeout: time.Minute * 2}

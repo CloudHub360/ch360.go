@@ -4,92 +4,132 @@ import (
 	"context"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
+	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/net"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"io"
+	"gopkg.in/alecthomas/kingpin.v2"
+	"os"
 	"strings"
 )
 
-const CreateExtractorCommand = "create extractor"
-
-type CreateExtractor struct {
-	writer        io.Writer
-	creator       ExtractorCreator
-	extractorName string
-	template      *ch360.ExtractorTemplate
+type CreateExtractorCmd struct {
+	Creator       ExtractorCreator
+	ExtractorName string
+	Template      *ch360.ExtractorTemplate
 }
 
-func NewCreateExtractor(writer io.Writer,
-	creator ExtractorCreator,
-	extractorName string,
-	template *ch360.ExtractorTemplate) *CreateExtractor {
-	return &CreateExtractor{
-		writer:        writer,
-		creator:       creator,
-		template:      template,
-		extractorName: extractorName,
+type createExtractorArgs struct {
+	extractorName    string
+	moduleIds        []string
+	templateFilename string
+}
+
+// ConfigureCreateExtractorCmd configures kingpin with the 'create extractor' commands.
+func ConfigureCreateExtractorCmd(ctx context.Context, createCmd *kingpin.CmdClause,
+	flags *config.GlobalFlags) {
+	args := &createExtractorArgs{}
+	createExtractorCmd := &CreateExtractorCmd{}
+	createExtractorCli := createCmd.Command("extractor", "Create waives extractor.")
+
+	createExtractorFromModulesCli := createExtractorCli.
+		Command("from-modules", "Create waives extractor from a set of modules.")
+	createExtractorFromModulesCli.
+		Arg("name", "The name of the new extractor.").
+		Required().
+		StringVar(&args.extractorName)
+	createExtractorFromModulesCli.
+		Arg("module-ids", "The module ids to create the extractor from.").
+		Required().
+		StringsVar(&args.moduleIds)
+
+	createExtractorFromTemplateCli := createExtractorCli.Command("from-template",
+		"The extractor template to create the extractor from.")
+	createExtractorFromTemplateCli.
+		Arg("name", "The name of the new extractor.").
+		Required().
+		StringVar(&args.extractorName)
+	createExtractorFromTemplateCli.
+		Arg("template-file", "The extraction template file (json).").
+		Required().
+		StringVar(&args.templateFilename)
+
+	createExtractorFromModulesCli.
+		Action(func(parseContext *kingpin.ParseContext) error {
+			msg := fmt.Sprintf("Creating extractor '%s'... ", args.extractorName)
+
+			exitOnErr(createExtractorCmd.initFromModuleIdArgs(args, flags))
+			exitOnErr(ExecuteWithMessage(msg, func() error {
+				return createExtractorCmd.Execute(ctx)
+			}))
+			return nil
+		})
+
+	createExtractorFromTemplateCli.
+		Action(func(parseContext *kingpin.ParseContext) error {
+			msg := fmt.Sprintf("Creating extractor '%s'... ", args.extractorName)
+
+			exitOnErr(createExtractorCmd.initFromTemplateArgs(args, flags))
+			exitOnErr(ExecuteWithMessage(msg, func() error {
+				return createExtractorCmd.Execute(ctx)
+			}))
+			return nil
+		})
+}
+
+// Execute runs the 'create extractor' command.
+func (cmd *CreateExtractorCmd) Execute(ctx context.Context) error {
+	err := cmd.Creator.CreateFromModules(ctx, cmd.ExtractorName, *cmd.Template)
+
+	if err != nil {
+		if detailedResponse, ok := err.(*net.DetailedErrorResponse); ok {
+			return buildDetailedErrorMessage(*detailedResponse)
+		}
 	}
+
+	return err
 }
 
-func NewCreateExtractorFromModules(writer io.Writer,
-	creator ExtractorCreator,
-	extractorName string,
-	modules []string) *CreateExtractor {
-
+func (cmd *CreateExtractorCmd) initFromModuleIdArgs(args *createExtractorArgs, flags *config.GlobalFlags) error {
 	var template = new(ch360.ExtractorTemplate)
 
-	for _, moduleId := range modules {
+	for _, moduleId := range args.moduleIds {
 		template.Modules = append(template.Modules, ch360.ModuleTemplate{
 			ID: moduleId,
 		})
 	}
 
-	return NewCreateExtractor(writer,
-		creator,
-		extractorName,
-		template)
+	cmd.Template = template
+
+	return cmd.initFromArgs(args, flags)
 }
 
-func NewCreateExtractorFromTemplate(out io.Writer,
-	client ExtractorCreator, extractorName string, templateFile io.Reader) (*CreateExtractor,
-	error) {
-
-	var (
-		err      error
-		template = new(ch360.ExtractorTemplate)
-	)
-
-	template, err = ch360.NewModulesTemplateFromJson(templateFile)
+func (cmd *CreateExtractorCmd) initFromTemplateArgs(args *createExtractorArgs, flags *config.GlobalFlags) error {
+	templateFile, err := os.Open(args.templateFilename)
 
 	if err != nil {
-		return nil, errors.WithMessagef(err,
-			"Error when reading json template")
+		return err
 	}
 
-	return NewCreateExtractor(out,
-		client,
-		extractorName,
-		template), nil
+	cmd.Template, err = ch360.NewModulesTemplateFromJson(templateFile)
+
+	if err != nil {
+		return errors.WithMessagef(err, "Error when reading json template")
+	}
+
+	return cmd.initFromArgs(args, flags)
 }
 
-func (cmd *CreateExtractor) Execute(ctx context.Context) error {
-	return ExecuteWithMessage(fmt.Sprintf("Creating extractor '%s'... ", cmd.extractorName), func() error {
-		err := cmd.creator.CreateFromModules(ctx, cmd.extractorName, *cmd.template)
+func (cmd *CreateExtractorCmd) initFromArgs(args *createExtractorArgs, flags *config.GlobalFlags) error {
+	client, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
 
-		if err != nil {
-			if detailedResponse, ok := err.(*net.DetailedErrorResponse); ok {
-				return buildDetailedErrorMessage(*detailedResponse)
-			}
-		}
-
+	if err != nil {
 		return err
-	})
+	}
 
-}
-
-func (cmd CreateExtractor) Usage() string {
-	return CreateExtractorCommand
+	cmd.Creator = client.Extractors
+	cmd.ExtractorName = args.extractorName
+	return nil
 }
 
 func buildDetailedErrorMessage(errorResponse net.DetailedErrorResponse) error {
