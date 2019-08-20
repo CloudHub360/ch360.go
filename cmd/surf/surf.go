@@ -90,8 +90,7 @@ func main() {
 		app = kingpin.New("surf", "surf - the official command line client for waives.io.").
 			Version(ch360.Version)
 
-		list           = app.Command("list", "List waives resources.")
-		listExtractors = list.Command("extractors", "List all available extractors.")
+		list = app.Command("list", "List waives resources.")
 
 		upload = app.Command("upload", "Upload waives resources.")
 
@@ -131,6 +130,7 @@ func main() {
 	commands.ConfigureLoginCommand(ctx, app, &globalFlags)
 	commands.ConfigureListModulesCommand(ctx, list, &globalFlags)
 	commands.ConfigureListClassifiersCmd(ctx, list, &globalFlags)
+	commands.ConfigureListExtractorsCmd(ctx, list, &globalFlags)
 	commands.ConfigureUploadExtractorCommand(ctx, upload, &globalFlags)
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
@@ -164,8 +164,6 @@ func main() {
 	exitOnErr(err)
 
 	switch parsedCommand {
-	case listExtractors.FullCommand():
-		cmd = commands.NewListExtractors(apiClient.Extractors, os.Stdout)
 	case deleteExtractor.FullCommand():
 		cmd = commands.NewDeleteExtractor(*deleteExtractorName, os.Stdout, apiClient.Extractors)
 	case deleteClassifier.FullCommand():
