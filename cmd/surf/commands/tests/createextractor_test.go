@@ -19,7 +19,7 @@ type CreateExtractorSuite struct {
 	suite.Suite
 	output          *bytes.Buffer
 	creator         *mocks.ExtractorCreator
-	sut             *commands.CreateExtractor
+	sut             *commands.CreateExtractorCmd
 	modulesTemplate *ch360.ExtractorTemplate
 	extractorName   string
 	ctx             context.Context
@@ -33,10 +33,11 @@ func (suite *CreateExtractorSuite) SetupTest() {
 
 	suite.modulesTemplate = aModulesTemplate()
 	suite.extractorName = generators.String("extractor-name")
-	suite.sut = commands.NewCreateExtractor(suite.output,
-		suite.creator,
-		suite.extractorName,
-		suite.modulesTemplate)
+	suite.sut = &commands.CreateExtractorCmd{
+		Creator:       suite.creator,
+		ExtractorName: suite.extractorName,
+		Template:      suite.modulesTemplate,
+	}
 
 	suite.creator.On("CreateFromModules", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	suite.ctx = context.Background()
