@@ -49,35 +49,6 @@ func main() {
 	//
 	//	// Replace slashes with OS-specific path separators
 	//	usage = usage + filepath.FromSlash(filenameExamples)
-	//
-	//	args, err := docopt.ParseArgs(usage, nil, ch360.Version)
-	//	exitOnErr(err)
-	//
-	//	runParams, err := config.NewRunParamsFromArgs(args)
-	//	exitOnErr(err)
-	//
-	//	ctx, canceller := context.WithCancel(context.Background())
-	//	go handleInterrupt(canceller)
-	//
-	//	appDir, err := config.NewAppDirectory()
-	//	exitOnErr(err)
-	//
-	//	var (
-	//		cmd       commands.Command
-	//		apiClient *ch360.ApiClient
-	//	)
-	//
-	//	if login, _ := args.Bool("login"); login {
-	//		tokenRetriever := ch360.NewTokenRetriever(DefaultHttpClient, ch360.ApiAddress)
-	//		cmd = commands.NewLoginFrom(runParams, os.Stdout, appDir, tokenRetriever)
-	//	} else {
-	//		apiClient, err = initApiClient(runParams)
-	//		exitOnErr(err)
-	//		cmd, err = commands.CommandFor(runParams, apiClient)
-	//	}
-	//	exitOnErr(err)
-	//
-	//	exitOnErr(cmd.Execute(ctx))
 
 	var (
 		globalFlags = config.GlobalFlags{}
@@ -85,28 +56,30 @@ func main() {
 		app = kingpin.New("surf", "surf - the official command line client for waives.io.").
 			Version(ch360.Version)
 
-		list      = app.Command("list", "List waives resources.")
-		upload    = app.Command("upload", "Upload waives resources.")
+		listCmd   = app.Command("list", "List waives resources.")
+		uploadCmd = app.Command("upload", "Upload waives resources.")
 		deleteCmd = app.Command("delete", "Delete waives resources.")
 		createCmd = app.Command("create", "Create waives resources.")
+
+		ctx, canceller = context.WithCancel(context.Background())
 	)
 
-	ctx, canceller := context.WithCancel(context.Background())
 	go handleInterrupt(canceller)
 
 	commands.ConfigureLoginCommand(ctx, app, &globalFlags)
-	commands.ConfigureListModulesCommand(ctx, list, &globalFlags)
-	commands.ConfigureListClassifiersCmd(ctx, list, &globalFlags)
-	commands.ConfigureListExtractorsCmd(ctx, list, &globalFlags)
-	commands.ConfigureUploadExtractorCommand(ctx, upload, &globalFlags)
+	commands.ConfigureListModulesCommand(ctx, listCmd, &globalFlags)
+	commands.ConfigureListClassifiersCmd(ctx, listCmd, &globalFlags)
+	commands.ConfigureListExtractorsCmd(ctx, listCmd, &globalFlags)
+	commands.ConfigureUploadExtractorCommand(ctx, uploadCmd, &globalFlags)
 	commands.ConfigureDeleteExtractorCmd(ctx, deleteCmd, &globalFlags)
 	commands.ConfigureDeleteClassifierCmd(ctx, deleteCmd, &globalFlags)
 	commands.ConfigureCreateClassifierCmd(ctx, createCmd, &globalFlags)
 	commands.ConfigureCreateExtractorCmd(ctx, createCmd, &globalFlags)
+	commands.ConfigureCreateExtractorTemplateCmd(ctx, createCmd, &globalFlags)
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
 	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
-	commands.ConfigureUploadClassifierCommand(ctx, upload, &globalFlags)
+	commands.ConfigureUploadClassifierCommand(ctx, uploadCmd, &globalFlags)
 
 	app.Flag("client-id", "Client ID").Short('i').
 		Short('i').
