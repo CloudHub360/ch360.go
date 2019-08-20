@@ -20,7 +20,7 @@ type CreateClassifierSuite struct {
 	deleter        *mocks.ClassifierDeleter
 	trainer        *mocks.ClassifierTrainer
 	creator        *mocks.ClassifierCreator
-	sut            *commands.CreateClassifier
+	sut            *commands.CreateClassifierCmd
 	classifierName string
 	samplesArchive *os.File
 	ctx            context.Context
@@ -43,13 +43,14 @@ func (suite *CreateClassifierSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *CreateClassifierSuite) aClassifierCommandWithSamplesArchive(samplesArchive *os.File) *commands.CreateClassifier {
-	return commands.NewCreateClassifier(suite.output,
-		suite.creator,
-		suite.trainer,
-		suite.deleter,
-		suite.classifierName,
-		samplesArchive)
+func (suite *CreateClassifierSuite) aClassifierCommandWithSamplesArchive(samplesArchive *os.File) *commands.CreateClassifierCmd {
+	return &commands.CreateClassifierCmd{
+		Creator:        suite.creator,
+		Deleter:        suite.deleter,
+		Trainer:        suite.trainer,
+		ClassifierName: suite.classifierName,
+		SamplesArchive: samplesArchive,
+	}
 }
 
 func TestCreateClassifierSuiteRunner(t *testing.T) {
