@@ -3,41 +3,51 @@ package commands
 import (
 	"context"
 	"fmt"
-	"io"
+	"github.com/CloudHub360/ch360.go/config"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const ListClassifiersCommand = "list classifiers"
-
-type ListClassifiers struct {
-	client ClassifierGetter
-	writer io.Writer
+type ListClassifiersCmd struct {
+	Client ClassifierGetter
 }
 
-func NewListClassifiers(client ClassifierGetter, out io.Writer) *ListClassifiers {
-	return &ListClassifiers{
-		client: client,
-		writer: out,
-	}
+// Configures kingpin with the 'list classifiers' command
+func ConfigureListClassifiersCmd(ctx context.Context, parentCmd *kingpin.CmdClause, flags *config.GlobalFlags) {
+	listClassifiersCmd := &ListClassifiersCmd{}
+	parentCmd.Command("classifiers", "List all available classifiers.").
+		Action(func(parseContext *kingpin.ParseContext) error {
+			exitOnErr(listClassifiersCmd.initFromArgs(flags))
+			exitOnErr(listClassifiersCmd.Execute(ctx))
+			return nil
+		})
 }
 
-func (cmd *ListClassifiers) Execute(ctx context.Context) error {
-	classifiers, err := cmd.client.GetAll(ctx)
+// Executes the command.
+func (cmd *ListClassifiersCmd) Execute(ctx context.Context) error {
+	classifiers, err := cmd.Client.GetAll(ctx)
 	if err != nil {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err
 	}
 
 	if !classifiers.Any() {
-		fmt.Fprintln(cmd.writer, "No classifiers found.")
+		fmt.Println("No classifiers found.")
 	}
 
 	for _, classifier := range classifiers {
-		fmt.Fprintln(cmd.writer, classifier.Name)
+		fmt.Println(classifier.Name)
 	}
 
 	return nil
 }
 
-func (cmd ListClassifiers) Usage() string {
-	return ListClassifiersCommand
+func (cmd *ListClassifiersCmd) initFromArgs(flags *config.GlobalFlags) error {
+	var err error
+	apiClient, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
+
+	if err != nil {
+		return err
+	}
+
+	cmd.Client = apiClient.Classifiers
+	return nil
 }
