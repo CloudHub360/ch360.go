@@ -93,13 +93,9 @@ func main() {
 		list      = app.Command("list", "List waives resources.")
 		upload    = app.Command("upload", "Upload waives resources.")
 		deleteCmd = app.Command("delete", "Delete waives resources.")
-		create    = app.Command("create", "Create waives resources.")
+		createCmd = app.Command("create", "Create waives resources.")
 
-		createClassifier     = create.Command("classifier", "Create waives classifier from a set of samples.")
-		createClassifierName = createClassifier.Arg("name", "The name of the new classifier.").Required().String()
-		createClassifierFile = createClassifier.Arg("samples-zip", "The zip file containing training samples.").Required().File()
-
-		createExtractor = create.Command("extractor", "Create waives extractor.")
+		createExtractor = createCmd.Command("extractor", "Create waives extractor.")
 
 		createExtractorFromModules = createExtractor.Command("from-modules", "Create waives extractor from a set of modules.")
 
@@ -113,7 +109,7 @@ func main() {
 		createExtractorFromTemplateFile = createExtractorFromTemplate.Arg("template-file", "The extraction template file (json).").
 						Required().File()
 
-		createExtractorTemplate        = create.Command("extractor-template", "Create an extractor template from the provided module ids")
+		createExtractorTemplate        = createCmd.Command("extractor-template", "Create an extractor template from the provided module ids")
 		createExtractorTemplateModules = createExtractorTemplate.Arg("module-ids", "The module IDs to include in the template").
 						Required().Strings()
 	)
@@ -127,6 +123,7 @@ func main() {
 	commands.ConfigureUploadExtractorCommand(ctx, upload, &globalFlags)
 	commands.ConfigureDeleteExtractorCmd(ctx, deleteCmd, &globalFlags)
 	commands.ConfigureDeleteClassifierCmd(ctx, deleteCmd, &globalFlags)
+	commands.ConfigureCreateClassifierCmd(ctx, createCmd, &globalFlags)
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
 	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
@@ -159,10 +156,6 @@ func main() {
 	exitOnErr(err)
 
 	switch parsedCommand {
-	case createClassifier.FullCommand():
-		cmd = commands.NewCreateClassifier(os.Stdout, apiClient.Classifiers,
-			apiClient.Classifiers, apiClient.Classifiers, *createClassifierName, *createClassifierFile)
-		defer (*createClassifierFile).Close()
 	case createExtractorFromModules.FullCommand():
 		cmd = commands.NewCreateExtractorFromModules(os.Stdout, apiClient.Extractors,
 			*createExtractorFromModulesName, *createExtractorFromModulesIds)
