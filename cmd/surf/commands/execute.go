@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Execute prints the provided message to out, runs fn(), then
+// Execute prints the provided message to stderr, runs fn(), then
 // prints [OK] or [FAILED] depending on fn's success.
 func ExecuteWithMessage(message string, fn func() error) error {
 	if !strings.HasSuffix(message, " ") {

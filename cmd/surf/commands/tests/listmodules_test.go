@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360"
@@ -15,17 +14,17 @@ import (
 
 type ListModuleSuite struct {
 	suite.Suite
-	sut    *commands.ListModules
+	sut    *commands.ListModulesCmd
 	client *mocks.ModuleGetter
-	output *bytes.Buffer
 	ctx    context.Context
 }
 
 func (suite *ListModuleSuite) SetupTest() {
 	suite.client = new(mocks.ModuleGetter)
-	suite.output = &bytes.Buffer{}
 
-	suite.sut = commands.NewListModules(suite.client, suite.output)
+	suite.sut = &commands.ListModulesCmd{
+		Client: suite.client,
+	}
 	suite.ctx = context.Background()
 }
 
@@ -57,7 +56,6 @@ func aListOfModules(names ...string) interface{} {
 	for index, name := range names {
 		expected[index] = ch360.Module{
 			Name: name,
-			ID:   name,
 		}
 	}
 
