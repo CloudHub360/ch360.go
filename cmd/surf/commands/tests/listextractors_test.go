@@ -15,7 +15,7 @@ import (
 
 type ListExtractorSuite struct {
 	suite.Suite
-	sut    *commands.ListExtractors
+	sut    *commands.ListExtractorsCmd
 	client *mocks.ExtractorGetter
 	output *bytes.Buffer
 	ctx    context.Context
@@ -25,7 +25,9 @@ func (suite *ListExtractorSuite) SetupTest() {
 	suite.client = new(mocks.ExtractorGetter)
 	suite.output = &bytes.Buffer{}
 
-	suite.sut = commands.NewListExtractors(suite.client, suite.output)
+	suite.sut = &commands.ListExtractorsCmd{
+		Client: suite.client,
+	}
 	suite.ctx = context.Background()
 }
 

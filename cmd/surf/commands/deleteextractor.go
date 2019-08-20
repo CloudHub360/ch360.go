@@ -10,6 +10,12 @@ import (
 
 const DeleteExtractorCommand = "delete extractor"
 
+//go:generate mockery -name "ExtractorDeleterGetter"
+type ExtractorDeleterGetter interface {
+	ExtractorDeleter
+	ExtractorGetter
+}
+
 type DeleteExtractor struct {
 	client        ExtractorDeleterGetter
 	writer        io.Writer
