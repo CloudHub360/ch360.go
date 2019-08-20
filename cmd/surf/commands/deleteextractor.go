@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/config"
-	"io"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
-
-const DeleteExtractorCommand = "delete extractor"
 
 //go:generate mockery -name "ExtractorDeleterGetter"
 type ExtractorDeleterGetter interface {
@@ -16,49 +14,62 @@ type ExtractorDeleterGetter interface {
 	ExtractorGetter
 }
 
-type DeleteExtractor struct {
-	client        ExtractorDeleterGetter
-	writer        io.Writer
+type deleteExtractorArgs struct {
 	extractorName string
 }
 
-func NewDeleteExtractor(extractorName string, writer io.Writer, client ExtractorDeleterGetter) *DeleteExtractor {
-	return &DeleteExtractor{
-		writer:        writer,
-		client:        client,
-		extractorName: extractorName,
-	}
+type DeleteExtractorCmd struct {
+	Client        ExtractorDeleterGetter
+	ExtractorName string
 }
 
-func NewDeleteExtractorFromArgs(params *config.RunParams, client ExtractorDeleterGetter, writer io.Writer) (*DeleteExtractor, error) {
-	return NewDeleteExtractor(params.Name, writer, client), nil
+// ConfigureDeleteExtractorCmd configures kingpin with the 'delete extractor' command.
+func ConfigureDeleteExtractorCmd(ctx context.Context, deleteCmd *kingpin.CmdClause, flags *config.
+	GlobalFlags) {
+	args := &deleteExtractorArgs{}
+	deleteExtractorCmd := &DeleteExtractorCmd{}
+
+	deleteExtractorCli := deleteCmd.Command("extractor", "Delete waives extractor.").
+		Action(func(parseContext *kingpin.ParseContext) error {
+			exitOnErr(deleteExtractorCmd.initFromArgs(args, flags))
+
+			exitOnErr(
+				ExecuteWithMessage(fmt.Sprintf("Deleting extractor '%s'... ", args.extractorName),
+					func() error {
+						return deleteExtractorCmd.Execute(ctx)
+					}))
+			return nil
+		})
+
+	deleteExtractorCli.
+		Arg("name", "The name of the extractor to delete.").
+		Required().
+		StringVar(&args.extractorName)
 }
 
-func (cmd *DeleteExtractor) Execute(ctx context.Context) error {
-	fmt.Fprintf(cmd.writer, "Deleting extractor '%s'... ", cmd.extractorName)
-
-	extractors, err := cmd.client.GetAll(ctx)
+func (cmd *DeleteExtractorCmd) Execute(ctx context.Context) error {
+	extractors, err := cmd.Client.GetAll(ctx)
 
 	if err != nil {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err
 	}
 
-	if !extractors.Contains(cmd.extractorName) {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
-		return errors.New("There is no extractor named '" + cmd.extractorName + "'")
+	if !extractors.Contains(cmd.ExtractorName) {
+		return errors.New("There is no extractor named '" + cmd.ExtractorName + "'")
 	}
 
-	err = cmd.client.Delete(ctx, cmd.extractorName)
+	return cmd.Client.Delete(ctx, cmd.ExtractorName)
+}
+
+func (cmd *DeleteExtractorCmd) initFromArgs(args *deleteExtractorArgs, flags *config.GlobalFlags) error {
+	cmd.ExtractorName = args.extractorName
+
+	client, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
+
 	if err != nil {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err
 	}
 
-	fmt.Fprintln(cmd.writer, "[OK]")
+	cmd.Client = client.Extractors
 	return nil
-}
-
-func (cmd *DeleteExtractor) Usage() string {
-	return DeleteExtractorCommand
 }
