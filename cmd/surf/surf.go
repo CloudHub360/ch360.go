@@ -12,44 +12,6 @@ import (
 )
 
 func main() {
-	//	usage := `surf - the official command line client for waives.io.
-	//
-	//Usage:
-	//  surf login [options]
-	//  surf ` + new(commands.ClassifyCommand).Usage() + ` <file> <classifier> [options]
-	//  surf ` + new(commands.Extract).Usage() + ` <file> <extractor> [options]
-	//  surf ` + new(commands.Read).Usage() + ` <file> (pdf|txt|wvdoc) [options]
-	//  surf -h | --help
-	//  surf -v | --version
-	//
-	//Options:
-	//  -h, --help                       : Show this help message
-	//  -v, --version                    : Show application version
-	//  -i, --client-id <id>             : Client ID
-	//  -s, --client-secret <secret>     : Client secret
-	//  -f, --output-format <format>     : Output format for classification and extraction results.
-	//                                     Allowed values: table, csv, json [default: table]
-	//  -o, --output-file <file>         : Write all results to the specified file
-	//  -m, --multiple-files             : Write results output to multiple files with the same
-	//                                   : basename as the input
-	//  -p, --progress                   : Show progress when classifying files. Only visible when
-	//                                     redirecting stdout or in conjunction with -m or -o.
-	//  -t, --from-template <template>   : The extractor modules template to use when creating an
-	//                                     extractor from modules.
-	//  --log-http <file>                : Log HTTP requests and responses as they happen, to a file.
-	//`
-	//
-	//	filenameExamples := `
-	//Filename and glob pattern examples:
-	//  file1.pdf        : Specific file
-	//  *.*              : All files in the current folder
-	//  *.pdf            : All PDFs in the current folder
-	//  foo/*.tif        : All TIFs in folder foo
-	//  bar/**/*.*       : All files in subfolders of folder bar`
-	//
-	//	// Replace slashes with OS-specific path separators
-	//	usage = usage + filepath.FromSlash(filenameExamples)
-
 	var (
 		globalFlags = config.GlobalFlags{}
 
