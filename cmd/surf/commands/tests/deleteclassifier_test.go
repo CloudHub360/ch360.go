@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360"
@@ -15,8 +14,7 @@ import (
 
 type DeleteClassifierSuite struct {
 	suite.Suite
-	sut            *commands.DeleteClassifier
-	output         *bytes.Buffer
+	sut            *commands.DeleteClassifierCmd
 	client         *mocks.ClassifierDeleterGetter
 	classifierName string
 	ctx            context.Context
@@ -28,10 +26,12 @@ func (suite *DeleteClassifierSuite) SetupTest() {
 		AListOfClassifiers("charlie", "jo", "chris"), nil)
 
 	suite.client.On("Delete", mock.Anything, mock.Anything).Return(nil)
-	suite.output = &bytes.Buffer{}
 
 	suite.classifierName = "charlie"
-	suite.sut = commands.NewDeleteClassifier(suite.classifierName, suite.output, suite.client)
+	suite.sut = &commands.DeleteClassifierCmd{
+		Client:         suite.client,
+		ClassifierName: suite.classifierName,
+	}
 	suite.ctx = context.Background()
 }
 

@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
-	"io"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-//go:generate mockery -name "ClassifierDeleter|ClassifierGetter|ClassifierDeleterGetter|ClassifierCommand"
-
-const DeleteClassifierCommand = "delete classifier"
+//go:generate mockery -name "ClassifierDeleter|ClassifierGetter|ClassifierDeleterGetter"
 
 type ClassifierDeleter interface {
 	Delete(ctx context.Context, name string) error
@@ -26,53 +24,63 @@ type ClassifierDeleterGetter interface {
 	ClassifierGetter
 }
 
-type DeleteClassifier struct {
-	client         ClassifierDeleterGetter
-	writer         io.Writer
+type DeleteClassifierCmd struct {
+	Client         ClassifierDeleterGetter
+	ClassifierName string
+}
+
+type deleteClassifierArgs struct {
 	classifierName string
 }
 
-func NewDeleteClassifier(classifierName string, writer io.Writer, client ClassifierDeleterGetter) *DeleteClassifier {
-	return &DeleteClassifier{
-		writer:         writer,
-		client:         client,
-		classifierName: classifierName,
-	}
+func ConfigureDeleteClassifierCmd(ctx context.Context, deleteCmd *kingpin.CmdClause,
+	flags *config.GlobalFlags) {
+	args := &deleteClassifierArgs{}
+	deleteClassifierCmd := &DeleteClassifierCmd{}
+
+	deleteClassifierCli := deleteCmd.Command("classifier", "Delete waives classifier.").
+		Action(func(parseContext *kingpin.ParseContext) error {
+			exitOnErr(deleteClassifierCmd.initFromArgs(args, flags))
+
+			exitOnErr(
+				ExecuteWithMessage(fmt.Sprintf("Deleting classifier '%s'... ", args.classifierName),
+					func() error {
+						return deleteClassifierCmd.Execute(ctx)
+					}))
+			return nil
+		})
+
+	deleteClassifierCli.
+		Arg("name", "The name of the classifier to delete.").
+		Required().
+		StringVar(&args.classifierName)
 }
 
-func NewDeleteClassifierFromArgs(params *config.RunParams, client ClassifierDeleterGetter, out io.Writer) (*DeleteClassifier, error) {
-	return &DeleteClassifier{
-		client:         client,
-		writer:         out,
-		classifierName: params.Name,
-	}, nil
-}
-
-func (cmd *DeleteClassifier) Execute(ctx context.Context) error {
-	fmt.Fprintf(cmd.writer, "Deleting classifier '%s'... ", cmd.classifierName)
-
-	classifiers, err := cmd.client.GetAll(ctx)
+// Execute runs the 'delete classifier' command.
+func (cmd *DeleteClassifierCmd) Execute(ctx context.Context) error {
+	classifiers, err := cmd.Client.GetAll(ctx)
 
 	if err != nil {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err
 	}
 
-	if !classifiers.Contains(cmd.classifierName) {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
-		return errors.New("There is no classifier named '" + cmd.classifierName + "'")
+	if !classifiers.Contains(cmd.ClassifierName) {
+		return errors.New("There is no classifier named '" + cmd.ClassifierName + "'")
 	}
 
-	err = cmd.client.Delete(ctx, cmd.classifierName)
+	return cmd.Client.Delete(ctx, cmd.ClassifierName)
+}
+
+func (cmd *DeleteClassifierCmd) initFromArgs(args *deleteClassifierArgs,
+	flags *config.GlobalFlags) error {
+	cmd.ClassifierName = args.classifierName
+
+	client, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
+
 	if err != nil {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
 		return err
 	}
 
-	fmt.Fprintln(cmd.writer, "[OK]")
+	cmd.Client = client.Classifiers
 	return nil
-}
-
-func (cmd DeleteClassifier) Usage() string {
-	return DeleteClassifierCommand
 }

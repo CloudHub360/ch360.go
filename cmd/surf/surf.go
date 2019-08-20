@@ -93,11 +93,8 @@ func main() {
 		list      = app.Command("list", "List waives resources.")
 		upload    = app.Command("upload", "Upload waives resources.")
 		deleteCmd = app.Command("delete", "Delete waives resources.")
+		create    = app.Command("create", "Create waives resources.")
 
-		deleteClassifier     = deleteCmd.Command("classifier", "Delete waives classifier.")
-		deleteClassifierName = deleteClassifier.Arg("name", "The name of the classifier to delete.").Required().String()
-
-		create               = app.Command("create", "Create waives resources.")
 		createClassifier     = create.Command("classifier", "Create waives classifier from a set of samples.")
 		createClassifierName = createClassifier.Arg("name", "The name of the new classifier.").Required().String()
 		createClassifierFile = createClassifier.Arg("samples-zip", "The zip file containing training samples.").Required().File()
@@ -129,6 +126,7 @@ func main() {
 	commands.ConfigureListExtractorsCmd(ctx, list, &globalFlags)
 	commands.ConfigureUploadExtractorCommand(ctx, upload, &globalFlags)
 	commands.ConfigureDeleteExtractorCmd(ctx, deleteCmd, &globalFlags)
+	commands.ConfigureDeleteClassifierCmd(ctx, deleteCmd, &globalFlags)
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
 	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
@@ -161,8 +159,6 @@ func main() {
 	exitOnErr(err)
 
 	switch parsedCommand {
-	case deleteClassifier.FullCommand():
-		cmd = commands.NewDeleteClassifier(*deleteClassifierName, os.Stdout, apiClient.Classifiers)
 	case createClassifier.FullCommand():
 		cmd = commands.NewCreateClassifier(os.Stdout, apiClient.Classifiers,
 			apiClient.Classifiers, apiClient.Classifiers, *createClassifierName, *createClassifierFile)
