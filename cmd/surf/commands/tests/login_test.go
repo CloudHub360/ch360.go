@@ -40,8 +40,8 @@ func (suite *LoginSuite) SetupTest() {
 	suite.tokenRetriever.On("RetrieveToken", mock.Anything, mock.Anything).Return(&auth.AccessToken{}, nil)
 
 	suite.flags = &config.GlobalFlags{
-		ClientId:     generators.String("clientid"),
-		ClientSecret: generators.String("clientsecret"),
+		ClientId:     suite.clientId,
+		ClientSecret: suite.clientSecret,
 	}
 
 	suite.output = &bytes.Buffer{}
