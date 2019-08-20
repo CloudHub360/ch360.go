@@ -90,13 +90,9 @@ func main() {
 		app = kingpin.New("surf", "surf - the official command line client for waives.io.").
 			Version(ch360.Version)
 
-		list = app.Command("list", "List waives resources.")
-
-		upload = app.Command("upload", "Upload waives resources.")
-
-		deleteCmd           = app.Command("delete", "Delete waives resources.")
-		deleteExtractor     = deleteCmd.Command("extractor", "Delete waives extractor.")
-		deleteExtractorName = deleteExtractor.Arg("name", "The name of the extractor to delete.").Required().String()
+		list      = app.Command("list", "List waives resources.")
+		upload    = app.Command("upload", "Upload waives resources.")
+		deleteCmd = app.Command("delete", "Delete waives resources.")
 
 		deleteClassifier     = deleteCmd.Command("classifier", "Delete waives classifier.")
 		deleteClassifierName = deleteClassifier.Arg("name", "The name of the classifier to delete.").Required().String()
@@ -132,6 +128,7 @@ func main() {
 	commands.ConfigureListClassifiersCmd(ctx, list, &globalFlags)
 	commands.ConfigureListExtractorsCmd(ctx, list, &globalFlags)
 	commands.ConfigureUploadExtractorCommand(ctx, upload, &globalFlags)
+	commands.ConfigureDeleteExtractorCmd(ctx, deleteCmd, &globalFlags)
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
 	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
@@ -164,8 +161,6 @@ func main() {
 	exitOnErr(err)
 
 	switch parsedCommand {
-	case deleteExtractor.FullCommand():
-		cmd = commands.NewDeleteExtractor(*deleteExtractorName, os.Stdout, apiClient.Extractors)
 	case deleteClassifier.FullCommand():
 		cmd = commands.NewDeleteClassifier(*deleteClassifierName, os.Stdout, apiClient.Classifiers)
 	case createClassifier.FullCommand():

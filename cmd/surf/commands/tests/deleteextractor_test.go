@@ -14,7 +14,7 @@ import (
 
 type DeleteExtractorSuite struct {
 	suite.Suite
-	sut           *commands.DeleteExtractor
+	sut           *commands.DeleteExtractorCmd
 	output        *bytes.Buffer
 	client        *mocks.ExtractorDeleterGetter
 	extractorName string
@@ -31,7 +31,10 @@ func (suite *DeleteExtractorSuite) SetupTest() {
 
 	suite.extractorName = "charlie"
 
-	suite.sut = commands.NewDeleteExtractor(suite.extractorName, suite.output, suite.client)
+	suite.sut = &commands.DeleteExtractorCmd{
+		Client:        suite.client,
+		ExtractorName: suite.extractorName,
+	}
 	suite.ctx = context.Background()
 }
 
