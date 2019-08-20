@@ -91,7 +91,6 @@ func main() {
 			Version(ch360.Version)
 
 		list            = app.Command("list", "List waives resources.")
-		listModules     = list.Command("modules", "List all available extractor modules.")
 		listClassifiers = list.Command("classifiers", "List all available classifiers.")
 		listExtractors  = list.Command("extractors", "List all available extractors.")
 
@@ -131,6 +130,7 @@ func main() {
 	go handleInterrupt(canceller)
 
 	commands.ConfigureLoginCommand(ctx, app, &globalFlags)
+	commands.ConfigureListModulesCommand(ctx, list, &globalFlags)
 	commands.ConfigureUploadExtractorCommand(ctx, upload, &globalFlags)
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
@@ -164,8 +164,6 @@ func main() {
 	exitOnErr(err)
 
 	switch parsedCommand {
-	case listModules.FullCommand():
-		cmd = commands.NewListModules(apiClient.Modules, os.Stdout)
 	case listClassifiers.FullCommand():
 		cmd = commands.NewListClassifiers(apiClient.Classifiers, os.Stdout)
 	case listExtractors.FullCommand():

@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
+	"github.com/CloudHub360/ch360.go/config"
 	"github.com/olekukonko/tablewriter"
-	"io"
+	"gopkg.in/alecthomas/kingpin.v2"
+	"os"
 )
 
 //go:generate mockery -name "ModuleGetter"
@@ -16,31 +18,47 @@ type ModuleGetter interface {
 	GetAll(ctx context.Context) (ch360.ModuleList, error)
 }
 
-type ListModules struct {
-	client ModuleGetter
-	writer io.Writer
+type ListModulesCmd struct {
+	Client ModuleGetter
 }
 
-func NewListModules(client ModuleGetter, out io.Writer) *ListModules {
-	return &ListModules{
-		client: client,
-		writer: out,
-	}
+func ConfigureListModulesCommand(ctx context.Context,
+	listCmd *kingpin.CmdClause, globalFlags *config.GlobalFlags) {
+	cmd := &ListModulesCmd{}
+
+	listCmd.Command("modules", "List all available extractor modules.").
+		Action(func(parseContext *kingpin.ParseContext) error {
+			exitOnErr(cmd.initFromArgs(globalFlags))
+			exitOnErr(cmd.Execute(ctx))
+
+			return nil
+		})
 }
 
-func (cmd *ListModules) Execute(ctx context.Context) error {
-	modules, err := cmd.client.GetAll(ctx)
+func (cmd *ListModulesCmd) initFromArgs(flags *config.GlobalFlags) error {
+	var err error
+	apiClient, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
+
 	if err != nil {
-		fmt.Fprintln(cmd.writer, "[FAILED]")
+		return err
+	}
+
+	cmd.Client = apiClient.Modules
+	return nil
+}
+
+func (cmd *ListModulesCmd) Execute(ctx context.Context) error {
+	modules, err := cmd.Client.GetAll(ctx)
+	if err != nil {
 		return err
 	}
 
 	if len(modules) == 0 {
-		fmt.Fprintln(cmd.writer, "No modules found.")
+		fmt.Println("No modules found.")
 		return nil
 	}
 
-	table := tablewriter.NewWriter(cmd.writer)
+	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "ID", "Summary"})
 	table.SetBorder(false)
 	table.SetAutoFormatHeaders(false)
@@ -57,6 +75,6 @@ func (cmd *ListModules) Execute(ctx context.Context) error {
 	return nil
 }
 
-func (cmd ListModules) Usage() string {
+func (cmd ListModulesCmd) Usage() string {
 	return ListModulesCommandString
 }
