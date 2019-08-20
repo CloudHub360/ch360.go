@@ -15,7 +15,7 @@ import (
 
 type ListClassifierSuite struct {
 	suite.Suite
-	sut    *commands.ListClassifiers
+	sut    *commands.ListClassifiersCmd
 	client *mocks.ClassifierGetter
 	output *bytes.Buffer
 	ctx    context.Context
@@ -25,7 +25,9 @@ func (suite *ListClassifierSuite) SetupTest() {
 	suite.client = new(mocks.ClassifierGetter)
 	suite.output = &bytes.Buffer{}
 
-	suite.sut = commands.NewListClassifiers(suite.client, suite.output)
+	suite.sut = &commands.ListClassifiersCmd{
+		Client: suite.client,
+	}
 }
 
 func TestListClassifierSuiteRunner(t *testing.T) {
