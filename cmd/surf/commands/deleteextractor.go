@@ -31,14 +31,16 @@ func ConfigureDeleteExtractorCmd(ctx context.Context, deleteCmd *kingpin.CmdClau
 
 	deleteExtractorCli := deleteCmd.Command("extractor", "Delete waives extractor.").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			exitOnErr(deleteExtractorCmd.initFromArgs(args, flags))
+			return ExecuteWithMessage(fmt.Sprintf("Deleting extractor '%s'... ", args.extractorName),
+				func() error {
 
-			exitOnErr(
-				ExecuteWithMessage(fmt.Sprintf("Deleting extractor '%s'... ", args.extractorName),
-					func() error {
-						return deleteExtractorCmd.Execute(ctx)
-					}))
-			return nil
+					err := deleteExtractorCmd.initFromArgs(args, flags)
+					if err != nil {
+
+						return err
+					}
+					return deleteExtractorCmd.Execute(ctx)
+				})
 		})
 
 	deleteExtractorCli.

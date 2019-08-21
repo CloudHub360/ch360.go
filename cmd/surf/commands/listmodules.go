@@ -28,10 +28,12 @@ func ConfigureListModulesCommand(ctx context.Context,
 
 	listCmd.Command("modules", "List all available extractor modules.").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			exitOnErr(cmd.initFromArgs(globalFlags))
-			exitOnErr(cmd.Execute(ctx))
+			err := cmd.initFromArgs(globalFlags)
 
-			return nil
+			if err != nil {
+				return err
+			}
+			return cmd.Execute(ctx)
 		})
 }
 

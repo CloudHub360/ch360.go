@@ -25,18 +25,15 @@ func ConfigureUploadClassifierCommand(ctx context.Context,
 	uploadClassifierCli := uploadCmd.Command("classifier",
 		"Upload waives classifier (.clf file).").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			err := cmd.initFromArgs(args, globalFlags)
-			exitOnErr(err)
+			msg := fmt.Sprintf("Creating classifier '%s' from '%s'... ", args.name, args.classifierFile)
+			return ExecuteWithMessage(msg, func() error {
+				err := cmd.initFromArgs(args, globalFlags)
+				if err != nil {
+					return err
+				}
 
-			msg := fmt.Sprintf("Creating classifier '%s' from '%s'... ", args.name,
-				args.classifierFile)
-
-			// execute the command
-			exitOnErr(ExecuteWithMessage(msg, func() error {
 				return cmd.Execute(ctx)
-			}))
-
-			return nil
+			})
 		})
 
 	uploadClassifierCli.

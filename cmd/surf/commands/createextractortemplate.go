@@ -12,10 +12,6 @@ import (
 	"strings"
 )
 
-const CreateExtractorTemplateCommand = "create extractor-template"
-
-var _ Command = (*CreateExtractorTemplateCmd)(nil)
-
 // CreateExtractorTemplate is a command which accepts a list of module ids,
 // retrieves their descriptions from waives and generates a template json
 // from them.
@@ -39,10 +35,13 @@ func ConfigureCreateExtractorTemplateCmd(ctx context.Context, createCmd *kingpin
 	createExtractorTemplateCli := createCmd.Command("extractor-template",
 		"Create an extractor template from the provided module ids.").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			exitOnErr(createExtractorTemplateCmd.initFromArgs(args, flags))
+			err := createExtractorTemplateCmd.initFromArgs(args, flags)
 
-			exitOnErr(createExtractorTemplateCmd.Execute(ctx))
-			return nil
+			if err != nil {
+				return err
+			}
+
+			return createExtractorTemplateCmd.Execute(ctx)
 		})
 
 	createExtractorTemplateCli.

@@ -19,10 +19,11 @@ func ConfigureLoginCommand(ctx context.Context,
 		Action(func(parseContext *kingpin.ParseContext) error {
 			// execute the command
 			return ExecuteWithMessage("Logging in... ", func() error {
-				exitOnErr(loginCmd.initFromArgs(globalFlags))
-				exitOnErr(loginCmd.Execute(ctx, globalFlags))
-
-				return nil
+				err := loginCmd.initFromArgs(globalFlags)
+				if err != nil {
+					return err
+				}
+				return loginCmd.Execute(ctx, globalFlags)
 			})
 		})
 }

@@ -14,11 +14,11 @@ function New-Extractor([string]$extractorName, [Io.FileInfo]$extractorDefinition
 
 function New-ExtractorFromModules([string]$extractorName,
     [parameter(Position=0, ValueFromRemainingArguments=$true)] $moduleIds) {
-    Invoke-App create extractor $extractorName @moduleIds 2>&1
+    Invoke-App create extractor from-modules $extractorName @moduleIds 2>&1
 }
 
 function New-ExtractorFromTemplate([string]$extractorName, [Io.FileInfo]$extractorTemplate) {
-    Invoke-App create extractor $extractorName --from-template $extractorTemplate 2>&1
+    Invoke-App create extractor from-template $extractorName $extractorTemplate 2>&1
 }
 
 function Get-Extractors {
@@ -68,7 +68,10 @@ The file supplied is not a valid extractor configuration file.
 
     It "should not be created from a non-existent fpxlc definition file" {
         $extractorDefinition = (Join-Path $PSScriptRoot "non-existent.fpxlc")
-        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be "The file '$extractorDefinition' could not be found."
+        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
+Uploading extractor 'test-extractor'... [FAILED]
+The file '$extractorDefinition' could not be found.
+"@
         $LASTEXITCODE | Should -Be 1
 
         # Verify
@@ -107,6 +110,7 @@ Creating extractor '$extractorName'... [OK]
     It "should not be created from a missing extractor template" {
         $extractorTemplate = "missing.json"
         New-ExtractorFromTemplate $extractorName $extractorTemplate | Format-MultilineOutput | Should -Be @"
+Creating extractor 'test-extractor'... [FAILED]
 Error when opening template file 'missing.json': no such file or directory
 "@
         $LASTEXITCODE | Should -Be 1
@@ -115,6 +119,7 @@ Error when opening template file 'missing.json': no such file or directory
     It "should not be created from invalid json" {
         $extractorTemplate = (Join-Path $PSScriptRoot "invalid.json")
         New-ExtractorFromTemplate $extractorName $extractorTemplate | Format-MultilineOutput | Should -Be @"
+Creating extractor 'test-extractor'... [FAILED]
 Error when reading json template '$extractorTemplate': invalid character 'b' looking for beginning of value
 "@
         $LASTEXITCODE | Should -Be 1
@@ -156,12 +161,12 @@ Describe "extraction" {
     )
     {
         if ($file -ne $null) {
-            Invoke-App extract $($file.FullName) $extractorName
+            Invoke-App extract $extractorName $($file.FullName)
         } else {
             if ($outputFile -ne $null) {
-                Invoke-App extract "`"$filePattern`"" $extractorName -o $outputFile -f $Format
+                Invoke-App extract $extractorName "`"$filePattern`"" -o $outputFile -f $Format
             } else {
-                Invoke-App extract "`"$filePattern`"" $extractorName -m -f $Format
+                Invoke-App extract $extractorName "`"$filePattern`"" -m -f $Format
             }
         }
     }

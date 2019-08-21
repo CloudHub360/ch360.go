@@ -16,9 +16,11 @@ func ConfigureListClassifiersCmd(ctx context.Context, parentCmd *kingpin.CmdClau
 	listClassifiersCmd := &ListClassifiersCmd{}
 	parentCmd.Command("classifiers", "List all available classifiers.").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			exitOnErr(listClassifiersCmd.initFromArgs(flags))
-			exitOnErr(listClassifiersCmd.Execute(ctx))
-			return nil
+			err := listClassifiersCmd.initFromArgs(flags)
+			if err != nil {
+				return err
+			}
+			return listClassifiersCmd.Execute(ctx)
 		})
 }
 

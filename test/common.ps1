@@ -55,7 +55,7 @@ function Login-Surf() {
 
     $configFilePath = Join-Path -Path $applicationFolderPath -ChildPath "config.yaml"
 
-    surf login --client-id="$ClientId" --client-secret="$ClientSecret" | Should -Be "Logging in... [OK]"
+    Invoke-App login --client-id="$ClientId" --client-secret="$ClientSecret" 2>&1 | Should -Be "Logging in... [OK]"
     $LASTEXITCODE | Should -Be 0
 
     Get-Content -Path $configFilePath | Format-MultilineOutput | Should -BeLike "*clientId: $ClientId*"

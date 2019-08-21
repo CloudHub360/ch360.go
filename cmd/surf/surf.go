@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
@@ -15,8 +16,7 @@ func main() {
 	var (
 		globalFlags = config.GlobalFlags{}
 
-		app = kingpin.New("surf", "surf - the official command line client for waives.io.").
-			Version(ch360.Version)
+		app = kingpin.New("surf", "surf - the official command line client for waives.io.")
 
 		listCmd   = app.Command("list", "List waives resources.")
 		uploadCmd = app.Command("upload", "Upload waives resources.")
@@ -59,10 +59,18 @@ func main() {
 	app.Flag("output-file", "Write all results to the specified file").
 		Short('o').
 		StringVar(&globalFlags.OutputFile)
+	app.Flag("version", "Show the application version.").
+		PreAction(func(parseContext *kingpin.ParseContext) error {
+			fmt.Println(ch360.Version)
+			os.Exit(0)
+			return nil
+		}).
+		Bool()
 
 	defer ioutils.TryClose(globalFlags.LogHttp)
 
-	kingpin.MustParse(app.Parse(os.Args[1:]))
+	_, err := app.Parse(os.Args[1:])
+	exitOnErr(err)
 }
 
 func handleInterrupt(canceller context.CancelFunc) {
@@ -71,4 +79,13 @@ func handleInterrupt(canceller context.CancelFunc) {
 
 	<-interruptChan // ctrl-c received
 	canceller()
+}
+
+func exitOnErr(err error) {
+	if err != nil && err != context.Canceled {
+
+		_, _ = fmt.Fprintln(os.Stderr, err)
+
+		os.Exit(1)
+	}
 }
