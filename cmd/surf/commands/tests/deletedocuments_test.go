@@ -22,15 +22,15 @@ type DeleteDocumentSuite struct {
 
 func (suite *DeleteDocumentSuite) SetupTest() {
 	suite.client = new(mocks.DocumentDeleterGetter)
+	suite.documentIds = []string{"charlie", "jo", "chris"}
 	suite.client.
 		On("GetAll", mock.Anything).
-		Return(aListOfDocuments("charlie", "jo", "chris"), nil)
+		Return(aListOfDocuments(suite.documentIds...), nil)
 
 	suite.client.
 		On("Delete", mock.Anything, mock.Anything).
 		Return(nil)
 
-	suite.documentIds = []string{"charlie", "jo", "chris"}
 	suite.deleteAll = false
 
 	suite.sut = &commands.DeleteDocumentCmd{
@@ -48,7 +48,7 @@ func TestDeleteDocumentSuiteRunner(t *testing.T) {
 func (suite *DeleteDocumentSuite) TestDeleteDocument_Execute_Deletes_The_Named_Document() {
 	_ = suite.sut.Execute(suite.ctx)
 
-	suite.client.AssertNotCalled(suite.T(), "GetAll", suite.ctx)
+	suite.client.AssertCalled(suite.T(), "GetAll", suite.ctx)
 	suite.client.AssertCalled(suite.T(), "Delete", suite.ctx, "charlie")
 }
 

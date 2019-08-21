@@ -1,7 +1,6 @@
 package ch360
 
 import (
-	"bytes"
 	"context"
 	"github.com/CloudHub360/ch360.go/ch360/results"
 	"io"
@@ -25,15 +24,9 @@ func NewFileClassifier(creator DocumentCreator, classifier DocumentClassifier,
 func (f *FileClassifier) Classify(ctx context.Context, fileContents io.Reader,
 	classifierName string) (*results.ClassificationResult, error) {
 
-	buf := bytes.Buffer{}
-	_, err := buf.ReadFrom(fileContents)
-	if err != nil {
-		return nil, err
-	}
-
 	// Use a different context here so we don't cancel this req on ctrl-c. We need
 	// the docId result to perform cleanup
-	documentId, err := f.docCreator.Create(context.Background(), buf.Bytes())
+	documentId, err := f.docCreator.Create(context.Background(), fileContents)
 	if err != nil {
 		return nil, err
 	}
