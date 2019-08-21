@@ -23,8 +23,8 @@ type ParallelExtractionService struct {
 	parallelFilesProcessor ParallelFilesProcessor
 }
 
-// NewParallelExtractorService constructs a new ParallelExtractionService.
-func NewParallelExtractorService(fileExtractor FileExtractor,
+// NewParallelExtractionService constructs a new ParallelExtractionService.
+func NewParallelExtractionService(fileExtractor FileExtractor,
 	documentGetter ch360.DocumentGetter,
 	progressHandler ProgressHandler) *ParallelExtractionService {
 
