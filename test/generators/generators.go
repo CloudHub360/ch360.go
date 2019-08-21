@@ -5,9 +5,13 @@ import (
 	"time"
 )
 
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+
+}
+
 func Bytes() []byte {
 	token := make([]byte, 100)
-	rand.Seed(time.Now().UTC().UnixNano())
 	rand.Read(token)
 	return token
 }
@@ -16,7 +20,6 @@ const lettersAndNumbers = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0
 
 func String(root string) string {
 	b := make([]byte, 8)
-	rand.Seed(time.Now().UTC().UnixNano())
 
 	for i := range b {
 		b[i] = lettersAndNumbers[rand.Intn(len(lettersAndNumbers))]
@@ -25,10 +28,13 @@ func String(root string) string {
 }
 
 func Bool() bool {
-	rand.Seed(time.Now().UTC().UnixNano())
 	if i := rand.Intn(100); i > 50 {
 		return true
 	} else {
 		return false
 	}
+}
+
+func Int() int {
+	return rand.Int()
 }
