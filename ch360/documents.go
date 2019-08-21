@@ -29,11 +29,14 @@ type DocumentClassifier interface {
 }
 
 type DocumentGetter interface {
-	GetAll(ctx context.Context) ([]Document, error)
+	GetAll(ctx context.Context) (DocumentList, error)
 }
 
 type Document struct {
-	Id string
+	Id       string
+	Size     int
+	Sha256   string
+	FileType string
 }
 
 type getAllDocumentsResponse struct {
@@ -41,7 +44,15 @@ type getAllDocumentsResponse struct {
 }
 
 type getDocumentResponse struct {
-	Id string `json:"id"`
+	Id       string `json:"id"`
+	Embedded struct {
+		Files []struct {
+			ID       string `json:"id"`
+			FileType string `json:"file_type"`
+			Size     int    `json:"size"`
+			Sha256   string `json:"sha256"`
+		} `json:"files"`
+	} `json:"_embedded"`
 }
 
 type createDocumentResponse struct {
@@ -167,7 +178,7 @@ func (client *DocumentsClient) Extract(ctx context.Context, documentId string, e
 	return &extractResponse, nil
 }
 
-func (client *DocumentsClient) GetAll(ctx context.Context) ([]Document, error) {
+func (client *DocumentsClient) GetAll(ctx context.Context) (DocumentList, error) {
 	response, err := newRequest(ctx, "GET",
 		client.baseUrl+"/documents", nil).
 		issue(client.requestSender)
@@ -193,8 +204,16 @@ func (client *DocumentsClient) GetAll(ctx context.Context) ([]Document, error) {
 
 	var docs []Document
 	for _, doc := range allDocsResponse.Documents {
-		docs = append(docs, Document{Id: doc.Id})
+		file := doc.Embedded.Files[0]
+		docs = append(docs, Document{
+			Id:       doc.Id,
+			FileType: file.FileType,
+			Sha256:   file.Sha256,
+			Size:     file.Size,
+		})
 	}
 
 	return docs, nil
 }
+
+type DocumentList []Document

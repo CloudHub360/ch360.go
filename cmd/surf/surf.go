@@ -33,6 +33,7 @@ func main() {
 	commands.ConfigureListModulesCommand(ctx, listCmd, &globalFlags)
 	commands.ConfigureListClassifiersCmd(ctx, listCmd, &globalFlags)
 	commands.ConfigureListExtractorsCmd(ctx, listCmd, &globalFlags)
+	commands.ConfigureListDocumentsCmd(ctx, listCmd, &globalFlags)
 	commands.ConfigureUploadExtractorCommand(ctx, uploadCmd, &globalFlags)
 	commands.ConfigureDeleteExtractorCmd(ctx, deleteCmd, &globalFlags)
 	commands.ConfigureDeleteClassifierCmd(ctx, deleteCmd, &globalFlags)
