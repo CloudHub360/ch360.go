@@ -7,13 +7,14 @@ import (
 	"errors"
 	"github.com/CloudHub360/ch360.go/ch360/results"
 	"github.com/CloudHub360/ch360.go/net"
+	"io"
 )
 
 var TotalDocumentSlots = 10
 
 //go:generate mockery -name "DocumentCreator|DocumentDeleter|DocumentClassifier|DocumentGetter|DocumentExtractor"
 type DocumentCreator interface {
-	Create(ctx context.Context, fileContents []byte) (string, error)
+	Create(ctx context.Context, fileContents io.Reader) (string, error)
 }
 
 type DocumentExtractor interface {
@@ -88,9 +89,8 @@ type classifyDocumentResponse struct {
 	} `json:"classification_results"`
 }
 
-func (client *DocumentsClient) Create(ctx context.Context, fileContents []byte) (string, error) {
-	body := bytes.NewBuffer(fileContents)
-	response, err := newRequest(ctx, "POST", client.baseUrl+"/documents", body).
+func (client *DocumentsClient) Create(ctx context.Context, fileContents io.Reader) (string, error) {
+	response, err := newRequest(ctx, "POST", client.baseUrl+"/documents", fileContents).
 		issue(client.requestSender)
 
 	if err != nil {
