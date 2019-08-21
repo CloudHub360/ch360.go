@@ -7,6 +7,7 @@ import (
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/ioutils"
+	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"os/signal"
@@ -70,6 +71,15 @@ func main() {
 		"Only available in combination with the read, extract and classify commands.").
 		Short('p').
 		BoolVar(&globalFlags.ShowProgress)
+
+	app.Validate(func(application *kingpin.Application) error {
+		// Only show the progress bar if stdout is redirected, or -o or -m are used
+		if globalFlags.ShowProgress && !globalFlags.CanShowProgressBar() {
+			return errors.New("The --progress / -p option can only be used when " +
+				"redirecting stdout, or in combination with -o or -m.")
+		}
+		return nil
+	})
 
 	defer ioutils.TryClose(globalFlags.LogHttp)
 

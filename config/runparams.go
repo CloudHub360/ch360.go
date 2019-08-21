@@ -38,6 +38,10 @@ const (
 	ExtractorTemplate
 )
 
+func (r *GlobalFlags) CanShowProgressBar() bool {
+	return r.IsOutputSpecified() || IsOutputRedirected()
+}
+
 func IsOutputRedirected() bool {
 	fd := os.Stdout.Fd()
 	return !isatty.IsTerminal(fd) &&
