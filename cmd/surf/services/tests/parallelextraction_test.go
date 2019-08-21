@@ -67,7 +67,7 @@ func (suite *parallelExtractionSuite) SetupTest() {
 		On("Extract", mock.Anything, mock.Anything, mock.Anything).
 		Return(nil, nil)
 
-	suite.sut = services.NewParallelExtractorService(suite.fileExtractor, suite.documentGetter,
+	suite.sut = services.NewParallelExtractionService(suite.fileExtractor, suite.documentGetter,
 		suite.progressHandler)
 }
 
