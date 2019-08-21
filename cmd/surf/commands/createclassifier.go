@@ -40,14 +40,17 @@ func ConfigureCreateClassifierCmd(ctx context.Context, createCmd *kingpin.CmdCla
 
 	createClassifierCli := createCmd.Command("classifier", "Create waives classifier from a set of samples.").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			exitOnErr(createClassifierCmd.initFromArgs(args, flags))
+			return ExecuteWithMessage(fmt.Sprintf("Creating classifier '%s'... ",
+				args.classifierName),
+				func() error {
+					err := createClassifierCmd.initFromArgs(args, flags)
 
-			exitOnErr(
-				ExecuteWithMessage(fmt.Sprintf("Creating classifier '%s'... ", args.classifierName),
-					func() error {
-						return createClassifierCmd.Execute(ctx)
-					}))
-			return nil
+					if err != nil {
+						return err
+					}
+
+					return createClassifierCmd.Execute(ctx)
+				})
 		})
 
 	createClassifierCli.
@@ -83,7 +86,10 @@ func (cmd *CreateClassifierCmd) initFromArgs(args *createClassifierArgs, flags *
 	var err error
 	cmd.SamplesArchive, err = os.Open(args.samplesArchiveFilename)
 	if err != nil {
-		return errors.Errorf("The file '%s' could not be read.", args.samplesArchiveFilename)
+		// err is guaranteed to be os.PathError
+		pathErr := err.(*os.PathError)
+		return errors.Errorf("Error when opening samples archive '%s': %v",
+			args.samplesArchiveFilename, pathErr.Err.Error())
 	}
 
 	client, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)

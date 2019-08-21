@@ -49,13 +49,15 @@ func ConfigureUploadExtractorCommand(ctx context.Context,
 		StringVar(&args.extractorFile)
 
 	uploadExtractorCommand.Action(func(parseContext *kingpin.ParseContext) error {
-		return ExecuteWithMessage(fmt.Sprintf("Uploading extractor '%s' from '%s'... ",
-			args.extractorName, args.extractorFile),
+		return ExecuteWithMessage(
+			fmt.Sprintf("Uploading extractor '%s'... ", args.extractorName),
 			func() error {
-				exitOnErr(cmd.initFromArgs(args, globalFlags))
-				exitOnErr(cmd.Execute(ctx))
+				err := cmd.initFromArgs(args, globalFlags)
+				if err != nil {
+					return err
+				}
 
-				return nil
+				return cmd.Execute(ctx)
 			})
 	})
 }
@@ -72,7 +74,7 @@ func (cmd *UploadExtractorCmd) initFromArgs(args *uploadExtractorArgs,
 	var err error
 	cmd.ExtractorContent, err = os.Open(args.extractorFile)
 	if err != nil {
-		return errors.Errorf("The file '%s' could not be read.", args.extractorFile)
+		return errors.Errorf("The file '%s' could not be found.", args.extractorFile)
 	}
 
 	client, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
@@ -82,5 +84,6 @@ func (cmd *UploadExtractorCmd) initFromArgs(args *uploadExtractorArgs,
 	}
 
 	cmd.ExtractorCreator = client.Extractors
+	cmd.ExtractorName = args.extractorName
 	return nil
 }

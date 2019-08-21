@@ -83,9 +83,11 @@ func ConfigureReadCommand(ctx context.Context,
 	cliCmd := app.
 		Command("read", "Perform OCR on a file or set of files.").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			exitOnErr(readCmd.initFromArgs(readArgs, globalFlags))
-			exitOnErr(readCmd.Execute(ctx))
-			return nil
+			err := readCmd.initFromArgs(readArgs, globalFlags)
+			if err != nil {
+				return err
+			}
+			return readCmd.Execute(ctx)
 		})
 
 	cliCmd.Flag("format", "The output format. Allowed values: pdf, wvdoc, txt [default: txt].").

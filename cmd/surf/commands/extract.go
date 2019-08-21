@@ -21,7 +21,6 @@ func ConfigureExtractCommand(ctx context.Context,
 	app *kingpin.Application,
 	globalFlags *config.GlobalFlags) {
 	extractArgs := &ExtractArgs{}
-
 	cmd := app.
 		Command("extract", "Perform data extraction on a file or set of files.").
 		Action(func(parseContext *kingpin.ParseContext) error {

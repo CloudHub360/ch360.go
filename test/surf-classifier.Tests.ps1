@@ -37,12 +37,12 @@ function Invoke-Classifier(
     [string]$Format = "csv")
 {
     if ($file -ne $null) {
-        Invoke-App classify $($file.FullName) $classifierName
+        Invoke-App classify $classifierName $($file.FullName)
     } else {
         if ($outputFile -ne $null) {
-            Invoke-App classify "`"$filePattern`"" $classifierName -o $outputFile -f $Format
+            Invoke-App classify $classifierName "`"$filePattern`"" -o $outputFile -f $Format
         } else {
-            Invoke-App classify "`"$filePattern`"" $classifierName -m -f $Format
+            Invoke-App classify $classifierName "`"$filePattern`"" -m -f $Format
         }
     }
 }
@@ -67,7 +67,6 @@ Describe "classifiers" {
         $samples = (Join-Path $PSScriptRoot "samples.zip")
         New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Be @"
 Creating classifier '$classifierName'... [OK]
-Adding samples from file '$samples'... [OK]
 "@
         $LASTEXITCODE | Should -Be 0
 
@@ -78,8 +77,7 @@ Adding samples from file '$samples'... [OK]
     It "should not be created from an invalid zip file of samples" {
         $samples = (Join-Path $PSScriptRoot "invalid.zip")
         New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Match (String-Starting @"
-Creating classifier '$classifierName'... [OK]
-Adding samples from file '$samples'... [FAILED]
+Creating classifier '$classifierName'... [FAILED]
 "@)
 
         $LASTEXITCODE | Should -Be 1
@@ -88,7 +86,8 @@ Adding samples from file '$samples'... [FAILED]
     It "should not be created from a non-existent zip file of samples" {
         $samples = (Join-Path $PSScriptRoot "non-existent.zip")
         New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Be @"
-The file '$samples' could not be found.
+Creating classifier 'test-classifier'... [FAILED]
+Error when opening samples archive '$samples': no such file or directory
 "@
 
         $LASTEXITCODE | Should -Be 1

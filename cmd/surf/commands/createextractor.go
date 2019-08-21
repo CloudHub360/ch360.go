@@ -58,22 +58,27 @@ func ConfigureCreateExtractorCmd(ctx context.Context, createCmd *kingpin.CmdClau
 		Action(func(parseContext *kingpin.ParseContext) error {
 			msg := fmt.Sprintf("Creating extractor '%s'... ", args.extractorName)
 
-			exitOnErr(createExtractorCmd.initFromModuleIdArgs(args, flags))
-			exitOnErr(ExecuteWithMessage(msg, func() error {
+			return ExecuteWithMessage(msg, func() error {
+				err := createExtractorCmd.initFromModuleIdArgs(args, flags)
+				if err != nil {
+					return err
+				}
 				return createExtractorCmd.Execute(ctx)
-			}))
-			return nil
+			})
 		})
 
 	createExtractorFromTemplateCli.
 		Action(func(parseContext *kingpin.ParseContext) error {
 			msg := fmt.Sprintf("Creating extractor '%s'... ", args.extractorName)
+			return ExecuteWithMessage(msg, func() error {
+				err := createExtractorCmd.initFromTemplateArgs(args, flags)
+				if err != nil {
 
-			exitOnErr(createExtractorCmd.initFromTemplateArgs(args, flags))
-			exitOnErr(ExecuteWithMessage(msg, func() error {
+					return err
+				}
+
 				return createExtractorCmd.Execute(ctx)
-			}))
-			return nil
+			})
 		})
 }
 
@@ -108,13 +113,15 @@ func (cmd *CreateExtractorCmd) initFromTemplateArgs(args *createExtractorArgs, f
 	templateFile, err := os.Open(args.templateFilename)
 
 	if err != nil {
-		return err
+		// err is guaranteed to be os.PathError
+		pathErr := err.(*os.PathError)
+		return errors.Errorf("Error when opening template file '%s': %v", args.templateFilename, pathErr.Err.Error())
 	}
 
 	cmd.Template, err = ch360.NewModulesTemplateFromJson(templateFile)
 
 	if err != nil {
-		return errors.WithMessagef(err, "Error when reading json template")
+		return errors.WithMessagef(err, "Error when reading json template '%s'", args.templateFilename)
 	}
 
 	return cmd.initFromArgs(args, flags)

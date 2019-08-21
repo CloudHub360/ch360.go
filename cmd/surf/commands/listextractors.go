@@ -30,9 +30,11 @@ func ConfigureListExtractorsCmd(ctx context.Context, listCmd *kingpin.CmdClause,
 
 	listCmd.Command("extractors", "List all available extractors.").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			exitOnErr(listExtractorsCmd.initFromArgs(flags))
-			exitOnErr(listExtractorsCmd.Execute(ctx))
-			return nil
+			err := listExtractorsCmd.initFromArgs(flags)
+			if err != nil {
+				return err
+			}
+			return listExtractorsCmd.Execute(ctx)
 		})
 }
 

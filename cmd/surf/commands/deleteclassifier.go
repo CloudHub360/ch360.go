@@ -40,14 +40,14 @@ func ConfigureDeleteClassifierCmd(ctx context.Context, deleteCmd *kingpin.CmdCla
 
 	deleteClassifierCli := deleteCmd.Command("classifier", "Delete waives classifier.").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			exitOnErr(deleteClassifierCmd.initFromArgs(args, flags))
-
-			exitOnErr(
-				ExecuteWithMessage(fmt.Sprintf("Deleting classifier '%s'... ", args.classifierName),
-					func() error {
-						return deleteClassifierCmd.Execute(ctx)
-					}))
-			return nil
+			return ExecuteWithMessage(fmt.Sprintf("Deleting classifier '%s'... ", args.classifierName),
+				func() error {
+					err := deleteClassifierCmd.initFromArgs(args, flags)
+					if err != nil {
+						return err
+					}
+					return deleteClassifierCmd.Execute(ctx)
+				})
 		})
 
 	deleteClassifierCli.
