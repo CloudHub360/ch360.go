@@ -17,16 +17,6 @@ type ProgressHandler struct {
 	started       bool
 }
 
-//func NewProgressHandlerFor(params *config.GlobalFlags, progressOut io.Writer) (*ProgressHandler, error) {
-//	resultsWriter, err := resultsWriters.NewResultsWriterFor(params)
-//
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return NewProgressHandler(resultsWriter, params.ShowProgress, progressOut), nil
-//}
-
 func NewProgressHandler(resultsWriter resultsWriters.ResultsWriter, showProgress bool, progressOut io.Writer) *ProgressHandler {
 	progress := uiprogress.New()
 	progress.SetOut(progressOut)
