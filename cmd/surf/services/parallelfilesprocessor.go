@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/CloudHub360/ch360.go/pool"
-	"github.com/mattn/go-zglob"
 )
 
 var ErrGlobMatchesNoFiles = errors.New("file pattern does not match any files")
@@ -21,25 +20,6 @@ type ParallelFilesProcessor struct {
 }
 
 type ProcessorFuncFactory func(ctx context.Context, filename string) pool.ProcessorFunc
-
-// TODO remove
-func (p *ParallelFilesProcessor) RunWithGlob(ctx context.Context,
-	filesPatterns []string,
-	parallelism int,
-	processorFuncFactory ProcessorFuncFactory) error {
-
-	var files []string
-	for _, filePattern := range filesPatterns {
-		globResult, _ := zglob.Glob(filePattern)
-		files = append(files, globResult...)
-	}
-	fileCount := len(files)
-	if fileCount == 0 {
-		return ErrGlobMatchesNoFiles
-	}
-
-	return p.Run(ctx, files, parallelism, processorFuncFactory)
-}
 
 func (p *ParallelFilesProcessor) Run(ctx context.Context,
 	files []string,

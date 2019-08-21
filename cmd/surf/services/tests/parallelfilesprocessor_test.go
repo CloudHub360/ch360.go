@@ -58,21 +58,6 @@ func TestParallelFilesProcessorSuiteRunner(t *testing.T) {
 	suite.Run(t, new(ParallelFilesProcessorSuite))
 }
 
-func (suite *ParallelFilesProcessorSuite) Test_Err_Returned_When_Files_Glob_Matches_No_Files() {
-	err := suite.sut.RunWithGlob(suite.ctx, []string{"not-present/*.pdf"}, rand.Int(),
-		suite.processorFactory)
-
-	suite.Assert().Equal(services.ErrGlobMatchesNoFiles, err)
-}
-
-func (suite *ParallelFilesProcessorSuite) Test_Err_Returned_When_File_Is_Not_Present() {
-
-	err := suite.sut.RunWithGlob(suite.ctx, []string{"not-present.pdf"}, rand.Int(),
-		suite.processorFactory)
-
-	suite.Assert().Equal(services.ErrGlobMatchesNoFiles, err)
-}
-
 func (suite *ParallelFilesProcessorSuite) Test_ProcessorFunc_Called_Once_Per_File() {
 	// Arrange
 	var (
