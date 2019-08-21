@@ -43,10 +43,10 @@ func main() {
 	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
 	commands.ConfigureUploadClassifierCommand(ctx, uploadCmd, &globalFlags)
 
-	app.Flag("client-id", "Client ID").Short('i').
+	app.Flag("client-id", "Client ID").
 		Short('i').
 		StringVar(&globalFlags.ClientId)
-	app.Flag("client-secret", "Client secret").Short('s').
+	app.Flag("client-secret", "Client secret").
 		Short('s').
 		StringVar(&globalFlags.ClientSecret)
 	app.Flag("log-http", "Log HTTP requests and responses as they happen, "+

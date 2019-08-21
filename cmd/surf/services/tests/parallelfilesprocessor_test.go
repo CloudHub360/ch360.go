@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CloudHub360/ch360.go/cmd/surf/services"
-	mocks2 "github.com/CloudHub360/ch360.go/cmd/surf/services/mocks"
+	"github.com/CloudHub360/ch360.go/cmd/surf/services/mocks"
 	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -19,7 +19,7 @@ import (
 type ParallelFilesProcessorSuite struct {
 	suite.Suite
 	sut              *services.ParallelFilesProcessor
-	progressHandler  *mocks2.ProgressHandler
+	progressHandler  *mocks.ProgressHandler
 	processorFactory services.ProcessorFuncFactory
 
 	processorFunc pool.ProcessorFunc
@@ -33,7 +33,7 @@ func (suite *ParallelFilesProcessorSuite) SetupTest() {
 		return suite.processorFunc
 	}
 
-	suite.progressHandler = new(mocks2.ProgressHandler)
+	suite.progressHandler = new(mocks.ProgressHandler)
 
 	suite.sut = &services.ParallelFilesProcessor{
 		ProgressHandler: suite.progressHandler,

@@ -53,10 +53,10 @@ func (suite *ListModuleSuite) TestGetAllModules_Execute_Returns_An_Error_If_The_
 func aListOfModules(ids ...string) interface{} {
 	expected := make(ch360.ModuleList, len(ids))
 
-	for index, name := range ids {
+	for index, id := range ids {
 		expected[index] = ch360.Module{
-			Name: name,
-			ID:   name,
+			Name: id,
+			ID:   id,
 		}
 	}
 
