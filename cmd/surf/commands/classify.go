@@ -11,63 +11,80 @@ import (
 	"os"
 )
 
-type ClassifyArgs struct {
+type classifyArgs struct {
 	classifierName string
 	outputFormat   string
 	filePatterns   []string
 }
 
+//go:generate mockery -name "ClassificationService"
+type ClassificationService interface {
+	ClassifyAll(ctx context.Context, files []string, classifierName string) error
+}
+
+type ClassifyCmd struct {
+	ClassificationService ClassificationService
+	FilePaths             []string
+	ClassifierName        string
+}
+
 func ConfigureClassifyCommand(ctx context.Context,
 	app *kingpin.Application,
 	globalFlags *config.GlobalFlags) {
-	classifyArgs := &ClassifyArgs{}
+	classifyArgs := &classifyArgs{}
+	classifyCmd := &ClassifyCmd{}
 
-	cmd := app.
+	classifyCli := app.
 		Command("classify", "Perform content classification on a file or set of files.").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			// execute the command
-			return ExecuteClassify(ctx, classifyArgs, globalFlags)
+			err := classifyCmd.initWithArgs(classifyArgs, globalFlags)
+			if err != nil {
+				return err
+			}
+
+			return classifyCmd.Execute(ctx)
 		})
 
-	cmd.Flag("format", "The output format. Allowed values: table, csv, json [default: table].").
+	classifyCli.Flag("format", "The output format. Allowed values: table, csv, json [default: table].").
 		Short('f').
 		Default("table").
 		EnumVar(&classifyArgs.outputFormat, "table", "csv", "json")
 
-	cmd.Arg("classifier-name", "The name of the classifier to use.").
+	classifyCli.Arg("classifier-name", "The name of the classifier to use.").
 		Required().
 		StringVar(&classifyArgs.classifierName)
 
-	cmd.Arg("files", "The files to read.").
+	classifyCli.Arg("files", "The files to read.").
 		Required().
 		StringsVar(&classifyArgs.filePatterns)
 }
 
-// ExecuteClassify is the main entry point for the 'classify' command. It has to do a lot of
-// setup / instantiation before actually performing classification on the specified files.
-func ExecuteClassify(ctx context.Context, classifyArgs *ClassifyArgs,
-	globalFlags *config.GlobalFlags) error {
+// ExecuteClassify is the main entry point for the 'classify' command.
+func (cmd *ClassifyCmd) Execute(ctx context.Context) error {
+	return cmd.ClassificationService.ClassifyAll(ctx, cmd.FilePaths, cmd.ClassifierName)
+}
 
-	resultsWriter, err := resultsWriters.NewClassificationResultsWriter(globalFlags.MultiFileOut,
-		globalFlags.OutputFile,
-		classifyArgs.outputFormat)
+func (cmd *ClassifyCmd) initWithArgs(args *classifyArgs, flags *config.GlobalFlags) error {
+	resultsWriter, err := resultsWriters.NewClassificationResultsWriter(flags.MultiFileOut,
+		flags.OutputFile,
+		args.outputFormat)
 
 	if err != nil {
 		return err
 	}
 
 	progressHandler := progress.NewProgressHandler(resultsWriter,
-		globalFlags.ShowProgress, os.Stderr)
+		flags.ShowProgress, os.Stderr)
 
-	filePaths, err := GlobMany(classifyArgs.filePatterns)
+	cmd.FilePaths, err = GlobMany(args.filePatterns)
 
 	if err != nil {
 		return err
 	}
 
-	client, err := initApiClient(globalFlags.ClientId,
-		globalFlags.ClientSecret,
-		globalFlags.LogHttp)
+	client, err := initApiClient(flags.ClientId,
+		flags.ClientSecret,
+		flags.LogHttp)
 
 	if err != nil {
 		return err
@@ -75,6 +92,10 @@ func ExecuteClassify(ctx context.Context, classifyArgs *ClassifyArgs,
 
 	fileClassifier := ch360.NewFileClassifier(client.Documents, client.Documents, client.Documents)
 
-	return services.NewParallelClassificationService(fileClassifier, client.Documents,
-		progressHandler).ClassifyAll(ctx, filePaths, classifyArgs.classifierName)
+	cmd.ClassificationService = services.NewParallelClassificationService(fileClassifier,
+		client.Documents,
+		progressHandler)
+	cmd.ClassifierName = args.classifierName
+
+	return nil
 }

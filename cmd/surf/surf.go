@@ -66,6 +66,10 @@ func main() {
 			return nil
 		}).
 		Bool()
+	app.Flag("progress", "Show a progress bar."+
+		"Only available in combination with the read, extract and classify commands.").
+		Short('p').
+		BoolVar(&globalFlags.ShowProgress)
 
 	defer ioutils.TryClose(globalFlags.LogHttp)
 
