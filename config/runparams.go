@@ -14,30 +14,6 @@ type GlobalFlags struct {
 	LogHttp      *os.File
 }
 
-//go:generate stringer -type=Verb
-type Verb int
-
-const (
-	Extract Verb = iota
-	Classify
-	Login
-	List
-	Create
-	Delete
-	Upload
-	Read
-)
-
-//go:generate stringer -type=Noun
-type Noun int
-
-const (
-	Classifier Noun = iota
-	Extractor
-	Module
-	ExtractorTemplate
-)
-
 func (r *GlobalFlags) CanShowProgressBar() bool {
 	return r.IsOutputSpecified() || IsOutputRedirected()
 }
