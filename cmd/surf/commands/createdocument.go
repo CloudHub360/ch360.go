@@ -25,7 +25,8 @@ func ConfigureCreateDocumentCmd(ctx context.Context, createCmd *kingpin.CmdClaus
 	args := &createDocumentArgs{}
 	createDocumentCmd := &CreateDocumentCmd{}
 
-	createDocumentCli := createCmd.Command("document", "Create waives document from a file.").
+	createDocumentCli := createCmd.Command("document",
+		"Create one or more waives documents from files.").
 		Alias("documents").
 		Action(func(parseContext *kingpin.ParseContext) error {
 			msg := "Creating document... "
