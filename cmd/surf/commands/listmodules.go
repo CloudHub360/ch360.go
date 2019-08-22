@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/olekukonko/tablewriter"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 )
@@ -60,15 +59,7 @@ func (cmd *ListModulesCmd) Execute(ctx context.Context) error {
 		return nil
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "ID", "Summary"})
-	table.SetBorder(false)
-	table.SetAutoFormatHeaders(false)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("-")
-	table.SetAutoWrapText(false)
-	table.SetColumnSeparator("")
-
+	table := NewTable(os.Stdout, []string{"Name", "ID", "Summary"})
 	for _, module := range modules {
 		table.Append([]string{module.Name, module.ID, module.Summary})
 	}
