@@ -52,7 +52,6 @@ func (cmd *ListDocumentsCmd) Execute(ctx context.Context) error {
 }
 
 func (cmd *ListDocumentsCmd) initFromArgs(flags *config.GlobalFlags) error {
-	var err error
 	apiClient, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
 
 	if err != nil {
