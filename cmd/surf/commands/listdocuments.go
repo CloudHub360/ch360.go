@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
-	"github.com/olekukonko/tablewriter"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"strconv"
@@ -40,14 +39,7 @@ func (cmd *ListDocumentsCmd) Execute(ctx context.Context) error {
 		return nil
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"ID", "Size", "Type", "SHA256"})
-	table.SetBorder(false)
-	table.SetAutoFormatHeaders(false)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("-")
-	table.SetAutoWrapText(false)
-	table.SetColumnSeparator("")
+	table := NewTable(os.Stdout, []string{"ID", "Size", "Type", "SHA256"})
 
 	for _, document := range documents {
 		table.Append([]string{document.Id, strconv.Itoa(document.Size), document.FileType,

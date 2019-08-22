@@ -2,11 +2,13 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"github.com/CloudHub360/ch360.go/ch360"
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
+	"strconv"
 )
 
 type CreateDocumentCmd struct {
@@ -30,16 +32,14 @@ func ConfigureCreateDocumentCmd(ctx context.Context, createCmd *kingpin.CmdClaus
 			if len(args.documentPaths) > 1 {
 				msg = "Creating documents... "
 			}
-			return ExecuteWithMessage(msg,
-				func() error {
-					err := createDocumentCmd.initFromArgs(args, flags)
+			_, _ = fmt.Fprintln(os.Stderr, msg)
+			err := createDocumentCmd.initFromArgs(args, flags)
 
-					if err != nil {
-						return err
-					}
+			if err != nil {
+				return err
+			}
 
-					return createDocumentCmd.Execute(ctx)
-				})
+			return createDocumentCmd.Execute(ctx)
 		})
 
 	createDocumentCli.
@@ -49,30 +49,36 @@ func ConfigureCreateDocumentCmd(ctx context.Context, createCmd *kingpin.CmdClaus
 }
 
 func (cmd *CreateDocumentCmd) Execute(ctx context.Context) error {
+	table := NewTable(os.Stdout, []string{"File", "ID", "Size", "Type", "SHA256"})
+
 	for _, documentPath := range cmd.DocumentPaths {
-		err := cmd.createFromFile(ctx, documentPath)
+		doc, err := cmd.createFromFile(ctx, documentPath)
 		if err != nil {
 			return err
 		}
+		table.Append([]string{documentPath, doc.Id, strconv.Itoa(doc.Size), doc.FileType, doc.Sha256})
 	}
+	table.Render()
 
 	return nil
 }
 
-func (cmd *CreateDocumentCmd) createFromFile(ctx context.Context, documentPath string) error {
+func (cmd *CreateDocumentCmd) createFromFile(ctx context.Context,
+	documentPath string) (*ch360.Document, error) {
 	documentFile, err := os.Open(documentPath)
 	if err != nil {
 		pathErr := err.(*os.PathError)
-		return errors.Errorf("Unable to create document from file '%s': %s", documentPath, pathErr.Err.Error())
+		return nil, errors.Errorf("Unable to create document from file '%s': %s", documentPath,
+			pathErr.Err.Error())
 	}
 	defer documentFile.Close()
 
-	_, err = cmd.Creator.Create(ctx, documentFile)
+	doc, err := cmd.Creator.Create(ctx, documentFile)
 	if err != nil {
-		return errors.Wrapf(err, "Unable to create document from file '%s'",
+		return nil, errors.Wrapf(err, "Unable to create document from file '%s'",
 			documentPath)
 	}
-	return nil
+	return &doc, nil
 }
 
 func (cmd *CreateDocumentCmd) initFromArgs(args *createDocumentArgs, flags *config.GlobalFlags) error {
