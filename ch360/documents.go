@@ -14,7 +14,7 @@ var TotalDocumentSlots = 10
 
 //go:generate mockery -name "DocumentCreator|DocumentDeleter|DocumentClassifier|DocumentGetter|DocumentExtractor"
 type DocumentCreator interface {
-	Create(ctx context.Context, fileContents io.Reader) (string, error)
+	Create(ctx context.Context, fileContents io.Reader) (Document, error)
 }
 
 type DocumentExtractor interface {
@@ -40,11 +40,22 @@ type Document struct {
 	FileType string
 }
 
-type getAllDocumentsResponse struct {
-	Documents []getDocumentResponse `json:"documents"`
+func documentFromDocResponse(response *documentResponse) Document {
+	file := response.Embedded.Files[0]
+
+	return Document{
+		Id:       response.Id,
+		FileType: file.FileType,
+		Sha256:   file.Sha256,
+		Size:     file.Size,
+	}
 }
 
-type getDocumentResponse struct {
+type getAllDocumentsResponse struct {
+	Documents []documentResponse `json:"documents"`
+}
+
+type documentResponse struct {
 	Id       string `json:"id"`
 	Embedded struct {
 		Files []struct {
@@ -54,10 +65,6 @@ type getDocumentResponse struct {
 			Sha256   string `json:"sha256"`
 		} `json:"files"`
 	} `json:"_embedded"`
-}
-
-type createDocumentResponse struct {
-	Id string `json:"id"`
 }
 
 type DocumentsClient struct {
@@ -89,28 +96,29 @@ type classifyDocumentResponse struct {
 	} `json:"classification_results"`
 }
 
-func (client *DocumentsClient) Create(ctx context.Context, fileContents io.Reader) (string, error) {
+func (client *DocumentsClient) Create(ctx context.Context, fileContents io.Reader) (Document,
+	error) {
 	response, err := newRequest(ctx, "POST", client.baseUrl+"/documents", fileContents).
 		issue(client.requestSender)
 
 	if err != nil {
-		return "", err
+		return Document{}, err
 	}
 
 	buf := bytes.Buffer{}
 	_, err = buf.ReadFrom(response.Body)
 
 	if err != nil {
-		return "", err
+		return Document{}, err
 	}
 
-	documentResponse := createDocumentResponse{}
+	documentResponse := documentResponse{}
 	err = json.Unmarshal(buf.Bytes(), &documentResponse)
 	if err != nil {
-		return "", errors.New("Could not retrieve document ID from Create Document response")
+		return Document{}, errors.New("Could not retrieve document ID from Create Document response")
 	}
 
-	return documentResponse.Id, nil
+	return documentFromDocResponse(&documentResponse), nil
 }
 
 func (client *DocumentsClient) Delete(ctx context.Context, documentId string) error {
@@ -204,13 +212,7 @@ func (client *DocumentsClient) GetAll(ctx context.Context) (DocumentList, error)
 
 	var docs []Document
 	for _, doc := range allDocsResponse.Documents {
-		file := doc.Embedded.Files[0]
-		docs = append(docs, Document{
-			Id:       doc.Id,
-			FileType: file.FileType,
-			Sha256:   file.Sha256,
-			Size:     file.Size,
-		})
+		docs = append(docs, documentFromDocResponse(&doc))
 	}
 
 	return docs, nil

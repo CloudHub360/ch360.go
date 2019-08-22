@@ -20,7 +20,7 @@ type DocumentsClientSuite struct {
 	suite.Suite
 	sut            *ch360.DocumentsClient
 	httpClient     *mocks.HttpDoer
-	fileContents   []byte
+	fileContents   *bytes.Buffer
 	documentId     string
 	classifierName string
 	extractorName  string
@@ -36,10 +36,10 @@ func (suite *DocumentsClientSuite) SetupTest() {
 	exampleGetAllDocsHttpResponse = AnHttpResponse([]byte(exampleGetAllDocumentsResponse))
 
 	suite.httpClient = new(mocks.HttpDoer)
+	suite.fileContents = bytes.NewBuffer(generators.Bytes())
 
 	suite.sut = ch360.NewDocumentsClient(apiUrl, suite.httpClient)
 
-	suite.fileContents = generators.Bytes()
 	suite.documentId = generators.String("documentId")
 	suite.classifierName = generators.String("classifierName")
 	suite.extractorName = generators.String("extractorName")
@@ -77,16 +77,16 @@ func (suite *DocumentsClientSuite) Test_CreateDocument_Issues_Create_Document_Re
 	suite.sut.Create(context.Background(), suite.fileContents)
 
 	suite.AssertRequestIssued("POST", apiUrl+"/documents")
-	suite.AssertRequestHasBody(suite.fileContents)
+	suite.AssertRequestHasBody(suite.fileContents.Bytes())
 }
 
-func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_DocumentId() {
+func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_Document() {
 	suite.httpClient.On("Do", mock.Anything).Return(exampleCreateDocHttpResponse, nil)
 
-	documentId, err := suite.sut.Create(context.Background(), suite.fileContents)
+	document, err := suite.sut.Create(context.Background(), suite.fileContents)
 
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "exampleDocumentId", documentId)
+	assert.Equal(suite.T(), "X9wK2AgWkk-m7e4f9oD5ew", document.Id)
 }
 
 func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_Error_From_Sender() {
@@ -94,8 +94,8 @@ func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_Error_From_Sender
 
 	suite.httpClient.On("Do", mock.Anything).Return(nil, expectedErr)
 
-	documentId, err := suite.sut.Create(context.Background(), suite.fileContents)
-	assert.Equal(suite.T(), "", documentId)
+	document, err := suite.sut.Create(context.Background(), suite.fileContents)
+	assert.Equal(suite.T(), "", document.Id)
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
@@ -103,8 +103,8 @@ func (suite *DocumentsClientSuite) Test_CreateDocument_Returns_Error_If_Document
 	expectedErr := errors.New("Could not retrieve document ID from Create Document response")
 	suite.httpClient.On("Do", mock.Anything).Return(AnHttpResponse([]byte("")), nil)
 
-	documentId, err := suite.sut.Create(context.Background(), suite.fileContents)
-	assert.Equal(suite.T(), "", documentId)
+	document, err := suite.sut.Create(context.Background(), suite.fileContents)
+	assert.Equal(suite.T(), "", document.Id)
 	assert.Equal(suite.T(), expectedErr, err)
 }
 
@@ -277,8 +277,35 @@ func (suite *DocumentsClientSuite) Test_Extract_Returns_Error_From_Http_Client()
 }
 
 var exampleCreateDocumentResponse = `{
-	"id": "exampleDocumentId"
-}`
+      "id": "X9wK2AgWkk-m7e4f9oD5ew",
+      "_links": {
+        "self": {
+          "href": "/documents/X9wK2AgWkk-m7e4f9oD5ew"
+        },
+        "document:read": {
+          "href": "/documents/X9wK2AgWkk-m7e4f9oD5ew/reads"
+        },
+        "document:classify": {
+          "href": "/documents/X9wK2AgWkk-m7e4f9oD5ew/classify/{classifier_name}",
+          "templated": true
+        },
+        "document:extract": {
+          "href": "/documents/X9wK2AgWkk-m7e4f9oD5ew/extract/{extractor_name}",
+          "templated": true
+        }
+      },
+      "_embedded": {
+        "files": [
+          {
+            "id": "dKcMLW1qx0SFoQmThMKuaw",
+            "file_type": "Image:TIFF",
+            "size": 95417,
+            "sha256": "812cc714da4cb8a1346f9326bf4129a772090a416c9fc66ae58ce771508fb9a4"
+          }
+        ]
+      }
+    }
+`
 
 var exampleClassifyDocumentResponse = `
 {

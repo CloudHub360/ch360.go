@@ -26,18 +26,18 @@ func (f *FileClassifier) Classify(ctx context.Context, fileContents io.Reader,
 
 	// Use a different context here so we don't cancel this req on ctrl-c. We need
 	// the docId result to perform cleanup
-	documentId, err := f.docCreator.Create(context.Background(), fileContents)
+	document, err := f.docCreator.Create(context.Background(), fileContents)
 	if err != nil {
 		return nil, err
 	}
 
 	defer func() {
-		if documentId != "" {
+		if document.Id != "" {
 			// Always delete the document, even if Classify returns an error.
 			// Don't cancel on ctrl-c.
-			f.docDeleter.Delete(context.Background(), documentId)
+			f.docDeleter.Delete(context.Background(), document.Id)
 		}
 	}()
 
-	return f.docClassifier.Classify(ctx, documentId, classifierName)
+	return f.docClassifier.Classify(ctx, document.Id, classifierName)
 }
