@@ -90,7 +90,7 @@ func (cmd *CreateDocumentCmd) initFromArgs(args *createDocumentArgs, flags *conf
 	}
 
 	cmd.Creator = client.Documents
-	cmd.DocumentPaths = args.documentPaths
+	cmd.DocumentPaths, err = GlobMany(args.documentPaths)
 
-	return nil
+	return err
 }
