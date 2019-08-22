@@ -29,7 +29,7 @@ func ConfigureCreateDocumentCmd(ctx context.Context, createCmd *kingpin.CmdClaus
 		"Create one or more waives documents from files.").
 		Alias("documents").
 		Action(func(parseContext *kingpin.ParseContext) error {
-			msg := "Creating document... "
+			msg := "Creating document..."
 			if len(args.documentPaths) > 1 {
 				msg = "Creating documents... "
 			}
@@ -57,7 +57,10 @@ func (cmd *CreateDocumentCmd) Execute(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		table.Append([]string{documentPath, doc.Id, strconv.Itoa(doc.Size), doc.FileType, doc.Sha256})
+		table.Append([]string{
+			truncateStringLeft(documentPath, 40), doc.Id, strconv.Itoa(doc.Size),
+			doc.FileType,
+			doc.Sha256})
 	}
 	table.Render()
 
@@ -94,4 +97,16 @@ func (cmd *CreateDocumentCmd) initFromArgs(args *createDocumentArgs, flags *conf
 	cmd.DocumentPaths, err = GlobMany(args.documentPaths)
 
 	return err
+}
+
+func truncateStringLeft(str string, maxLength int) string {
+	truncated := str
+	strLen := len(str)
+	if strLen > maxLength {
+		if maxLength > 3 {
+			maxLength -= 3
+		}
+		truncated = "..." + str[strLen-maxLength:strLen]
+	}
+	return truncated
 }
