@@ -22,6 +22,7 @@ type FileExtractorSuite struct {
 	documentExtractor  *mocks.DocumentExtractor
 	documentGetter     *mocks.DocumentGetter
 	extractorName      string
+	document           ch360.Document
 	documentId         string
 	extractionResult   *results.ExtractionResult
 	testFileContent    []byte
@@ -32,6 +33,9 @@ type FileExtractorSuite struct {
 func (suite *FileExtractorSuite) SetupTest() {
 	suite.extractorName = generators.String("extractor-name")
 	suite.documentId = generators.String("documentId")
+	suite.document = ch360.Document{
+		Id: suite.documentId,
+	}
 	suite.extractionResult = &results.ExtractionResult{}
 	suite.testFileContent = generators.Bytes()
 	suite.testFileContentBuf = bytes.NewBuffer(suite.testFileContent)
@@ -40,7 +44,8 @@ func (suite *FileExtractorSuite) SetupTest() {
 	suite.documentExtractor = new(mocks.DocumentExtractor)
 	suite.documentDeleter = new(mocks.DocumentDeleter)
 	suite.documentGetter = new(mocks.DocumentGetter)
-	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return(suite.documentId, nil)
+
+	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return(suite.document, nil)
 	suite.documentExtractor.On("Extract", mock.Anything, mock.Anything, mock.Anything).Return(suite.extractionResult, nil)
 	suite.documentDeleter.On("Delete", mock.Anything, mock.Anything).Return(nil)
 	suite.documentGetter.On("GetAll", mock.Anything).Return(nil, nil)
@@ -55,12 +60,10 @@ func TestFileExtractorSuiteRunner(t *testing.T) {
 }
 
 func (suite *FileExtractorSuite) TestFileExtractor_Extract_Calls_Create_Document_With_File_Content() {
-	expectedContents := suite.testFileContent
-
 	_, err := suite.sut.Extract(suite.ctx, suite.testFileContentBuf, suite.extractorName)
 
 	assert.Nil(suite.T(), err)
-	suite.documentCreator.AssertCalled(suite.T(), "Create", mock.Anything, expectedContents)
+	suite.documentCreator.AssertCalled(suite.T(), "Create", mock.Anything, suite.testFileContentBuf)
 }
 
 func (suite *FileExtractorSuite) TestFileExtractor_Extract_Calls_Create_Document_With_Background_Context() {
@@ -94,7 +97,7 @@ func (suite *FileExtractorSuite) TestFileExtractor_Extract_Calls_Delete_With_Bac
 func (suite *FileExtractorSuite) TestFileExtractor_Extract_Returns_Error_If_CreateDocument_Fails() {
 	suite.documentCreator.ExpectedCalls = nil
 	extractErr := errors.New("simulated error")
-	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return("", extractErr)
+	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return(ch360.Document{}, extractErr)
 
 	_, err := suite.sut.Extract(suite.ctx, suite.testFileContentBuf, suite.extractorName)
 
