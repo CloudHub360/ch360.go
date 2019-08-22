@@ -23,6 +23,7 @@ type FileClassifierSuite struct {
 	documentGetter       *mocks.DocumentGetter
 	classifierName       string
 	documentId           string
+	document             ch360.Document
 	classificationResult *results.ClassificationResult
 	testFileContent      []byte
 	testFileContentBuf   *bytes.Buffer
@@ -32,6 +33,9 @@ type FileClassifierSuite struct {
 func (suite *FileClassifierSuite) SetupTest() {
 	suite.classifierName = generators.String("classifier-name")
 	suite.documentId = generators.String("documentId")
+	suite.document = ch360.Document{
+		Id: suite.documentId,
+	}
 	suite.classificationResult = &results.ClassificationResult{}
 	suite.testFileContent = generators.Bytes()
 	suite.testFileContentBuf = bytes.NewBuffer(suite.testFileContent)
@@ -40,7 +44,7 @@ func (suite *FileClassifierSuite) SetupTest() {
 	suite.documentClassifier = new(mocks.DocumentClassifier)
 	suite.documentDeleter = new(mocks.DocumentDeleter)
 	suite.documentGetter = new(mocks.DocumentGetter)
-	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return(suite.documentId, nil)
+	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return(suite.document, nil)
 	suite.documentClassifier.On("Classify", mock.Anything, mock.Anything,
 		mock.Anything).Return(suite.classificationResult, nil)
 	suite.documentDeleter.On("Delete", mock.Anything, mock.Anything).Return(nil)
@@ -56,12 +60,10 @@ func TestFileClassifierSuiteRunner(t *testing.T) {
 }
 
 func (suite *FileClassifierSuite) TestFileClassifier_Classify_Calls_Create_Document_With_File_Content() {
-	expectedContents := suite.testFileContent
-
 	_, err := suite.sut.Classify(suite.ctx, suite.testFileContentBuf, suite.classifierName)
 
 	assert.Nil(suite.T(), err)
-	suite.documentCreator.AssertCalled(suite.T(), "Create", mock.Anything, expectedContents)
+	suite.documentCreator.AssertCalled(suite.T(), "Create", mock.Anything, suite.testFileContentBuf)
 }
 
 func (suite *FileClassifierSuite) TestFileClassifier_Classify_Calls_Create_Document_With_Background_Context() {
@@ -95,7 +97,7 @@ func (suite *FileClassifierSuite) TestFileClassifier_Classify_Calls_Delete_With_
 func (suite *FileClassifierSuite) TestFileClassifier_Classify_Returns_Error_If_CreateDocument_Fails() {
 	suite.documentCreator.ExpectedCalls = nil
 	classifyErr := errors.New("simulated error")
-	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return("", classifyErr)
+	suite.documentCreator.On("Create", mock.Anything, mock.Anything).Return(ch360.Document{}, classifyErr)
 
 	_, err := suite.sut.Classify(suite.ctx, suite.testFileContentBuf, suite.classifierName)
 
