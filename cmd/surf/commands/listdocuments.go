@@ -37,6 +37,7 @@ func (cmd *ListDocumentsCmd) Execute(ctx context.Context) error {
 
 	if len(documents) == 0 {
 		fmt.Println("No documents found.")
+		return nil
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
