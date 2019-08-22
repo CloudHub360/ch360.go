@@ -37,7 +37,6 @@ func ConfigureListModulesCommand(ctx context.Context,
 }
 
 func (cmd *ListModulesCmd) initFromArgs(flags *config.GlobalFlags) error {
-	var err error
 	apiClient, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)
 
 	if err != nil {
