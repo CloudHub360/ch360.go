@@ -18,6 +18,7 @@ type ListDocumentsCmd struct {
 func ConfigureListDocumentsCmd(ctx context.Context, parentCmd *kingpin.CmdClause, flags *config.GlobalFlags) {
 	listDocumentsCmd := &ListDocumentsCmd{}
 	parentCmd.Command("documents", "List all available documents.").
+		Alias("document").
 		Action(func(parseContext *kingpin.ParseContext) error {
 			err := listDocumentsCmd.initFromArgs(flags)
 			if err != nil {
