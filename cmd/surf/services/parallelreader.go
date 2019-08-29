@@ -46,14 +46,12 @@ func NewParallelReaderService(fileReader FileReader,
 func (p *ParallelReaderService) ReadAll(ctx context.Context, files []string,
 	readMode ch360.ReadMode) error {
 
-	// Get the current number of documents, so we know how many slots are available
-	docs, err := p.documentGetter.GetAll(ctx)
+	// Limit the number of workers to the number of available doc slots
+	parallelWorkers, err := ch360.GetFreeDocSlots(ctx, p.documentGetter, ch360.TotalDocumentSlots)
+
 	if err != nil {
 		return err
 	}
-
-	// Limit the number of workers to the number of available doc slots
-	parallelWorkers := ch360.TotalDocumentSlots - len(docs)
 
 	// called in parallel, once per file
 	processorFunc := func(ctx context.Context, filename string) pool.ProcessorFunc {
