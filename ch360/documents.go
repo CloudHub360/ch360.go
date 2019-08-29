@@ -10,7 +10,7 @@ import (
 	"io"
 )
 
-var TotalDocumentSlots = 10
+var TotalDocumentSlots = 30
 
 //go:generate mockery -name "DocumentCreator|DocumentDeleter|DocumentClassifier|DocumentGetter|DocumentExtractor"
 type DocumentCreator interface {
