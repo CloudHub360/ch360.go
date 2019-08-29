@@ -7,6 +7,7 @@ import (
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/output/progress"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
+	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 )
@@ -95,5 +96,7 @@ func (cmd *ExtractCmd) initWithArgs(args *extractArgs, flags *config.GlobalFlags
 
 // ExecuteExtract is the main entry point for the 'extract' command.
 func (cmd *ExtractCmd) Execute(ctx context.Context) error {
-	return cmd.ExtractionService.ExtractAll(ctx, cmd.FilePaths, cmd.ExtractorName)
+	err := cmd.ExtractionService.ExtractAll(ctx, cmd.FilePaths, cmd.ExtractorName)
+
+	return errors.Wrap(err, "Extraction failed")
 }
