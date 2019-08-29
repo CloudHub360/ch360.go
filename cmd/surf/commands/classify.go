@@ -7,6 +7,7 @@ import (
 	"github.com/CloudHub360/ch360.go/config"
 	"github.com/CloudHub360/ch360.go/output/progress"
 	"github.com/CloudHub360/ch360.go/output/resultsWriters"
+	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 )
@@ -61,7 +62,8 @@ func ConfigureClassifyCommand(ctx context.Context,
 
 // ExecuteClassify is the main entry point for the 'classify' command.
 func (cmd *ClassifyCmd) Execute(ctx context.Context) error {
-	return cmd.ClassificationService.ClassifyAll(ctx, cmd.FilePaths, cmd.ClassifierName)
+	err := cmd.ClassificationService.ClassifyAll(ctx, cmd.FilePaths, cmd.ClassifierName)
+	return errors.Wrap(err, "Classification failed")
 }
 
 func (cmd *ClassifyCmd) initWithArgs(args *classifyArgs, flags *config.GlobalFlags) error {
