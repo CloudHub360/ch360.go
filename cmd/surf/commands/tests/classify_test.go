@@ -2,10 +2,10 @@ package tests
 
 import (
 	"context"
-	"errors"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
 	"github.com/CloudHub360/ch360.go/cmd/surf/commands/mocks"
 	"github.com/CloudHub360/ch360.go/test/generators"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -56,6 +56,5 @@ func (suite *classifyCommandSuite) Test_ClassificationService_ClassifyAll_Called
 
 func (suite *classifyCommandSuite) Test_Error_Returned_From_ClassificationService() {
 	actualErr := suite.sut.Execute(suite.ctx)
-
-	assert.EqualError(suite.T(), actualErr, suite.expectedErr.Error())
+	assert.EqualError(suite.T(), errors.Cause(actualErr), suite.expectedErr.Error())
 }
