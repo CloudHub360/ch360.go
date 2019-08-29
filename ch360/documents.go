@@ -10,8 +10,6 @@ import (
 	"io"
 )
 
-var TotalDocumentSlots = 30
-
 //go:generate mockery -name "DocumentCreator|DocumentDeleter|DocumentClassifier|DocumentGetter|DocumentExtractor"
 type DocumentCreator interface {
 	Create(ctx context.Context, fileContents io.Reader) (Document, error)

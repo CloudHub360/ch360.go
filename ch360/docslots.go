@@ -5,6 +5,8 @@ import (
 	"errors"
 )
 
+var TotalDocumentSlots = 30
+
 var ErrDocSlotsFull = errors.New("all document slots are full")
 
 // GetFreeDocSlots is a helper function to retrieve the number of available document slots in
@@ -19,7 +21,10 @@ func GetFreeDocSlots(ctx context.Context, getter DocumentGetter, totalSlots int)
 
 	slots := totalSlots - len(documentList)
 
-	if slots == 0 {
+	// since the total doc slots is currently hardcoded,
+	// it's possible (even likely) that the actual number
+	// of documents in waives can be be greater than TotalDocumentSlots.
+	if slots <= 0 {
 		return slots, ErrDocSlotsFull
 	}
 
