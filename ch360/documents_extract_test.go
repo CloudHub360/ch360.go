@@ -16,12 +16,11 @@ import (
 
 type DocumentsClientExtractSuite struct {
 	suite.Suite
-	sut            *ch360.DocumentsClient
-	httpClient     *mocks.HttpDoer
-	fileContents   *bytes.Buffer
-	documentId     string
-	classifierName string
-	extractorName  string
+	sut           *ch360.DocumentsClient
+	httpClient    *mocks.HttpDoer
+	fileContents  *bytes.Buffer
+	documentId    string
+	extractorName string
 }
 
 func (suite *DocumentsClientExtractSuite) SetupTest() {

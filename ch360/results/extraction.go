@@ -1,5 +1,7 @@
 package results
 
+import "github.com/CloudHub360/ch360.go/ch360/request"
+
 type InnerResult struct {
 	Text           string      `json:"text"`
 	Value          interface{} `json:"value"`
@@ -43,23 +45,4 @@ type ExtractionResult struct {
 // ExtractForRedactionResult represents the json returned by waives' 'extract document' endpoint
 // when the 'Accept' header is set to 'application/vnd.waives.requestformats.redact+json' - ie,
 // the same format as the 'get redact PDF' request.
-type ExtractForRedactionResult RedactedPdfRequest
-type RedactedPdfRequest struct {
-	Marks      []RedactionMark     `json:"marks"`
-	ApplyMarks bool                `json:"apply_marks"`
-	Bookmarks  []RedactionBookmark `json:"bookmarks"`
-}
-type RedactionArea struct {
-	Top        float32 `json:"top"`
-	Left       float32 `json:"left"`
-	Bottom     float32 `json:"bottom"`
-	Right      float32 `json:"right"`
-	PageNumber float32 `json:"page_number"`
-}
-type RedactionMark struct {
-	Area RedactionArea `json:"area"`
-}
-type RedactionBookmark struct {
-	Text       string `json:"text"`
-	PageNumber int    `json:"page_number"`
-}
+type ExtractForRedactionResult request.RedactedPdfRequest
