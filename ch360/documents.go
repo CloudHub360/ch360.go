@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/CloudHub360/ch360.go/ch360/request"
 	"github.com/CloudHub360/ch360.go/ch360/results"
 	"github.com/CloudHub360/ch360.go/net"
 	"io"
@@ -37,6 +38,7 @@ type Document struct {
 	Sha256   string
 	FileType string
 }
+type DocumentList []Document
 
 func documentFromDocResponse(response *documentResponse) Document {
 	file := response.Embedded.Files[0]
@@ -250,4 +252,24 @@ func (client *DocumentsClient) GetAll(ctx context.Context) (DocumentList, error)
 	return docs, nil
 }
 
-type DocumentList []Document
+// Redact requests a redacted PDF of the given document.
+func (client *DocumentsClient) Redact(ctx context.Context,
+	documentId string, redactRequest request.RedactedPdfRequest) (io.ReadCloser, error) {
+	bodyBytes, err := json.Marshal(&redactRequest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	bodyBuffer := bytes.NewBuffer(bodyBytes)
+
+	response, err := newRequest(ctx, "POST",
+		client.baseUrl+"/documents/"+documentId+"/redact", bodyBuffer).
+		issue(client.requestSender)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Body, nil
+}
