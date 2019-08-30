@@ -164,24 +164,58 @@ func (client *DocumentsClient) Classify(ctx context.Context, documentId string, 
 }
 
 func (client *DocumentsClient) Extract(ctx context.Context, documentId string, extractorName string) (*results.ExtractionResult, error) {
-	response, err := newRequest(ctx, "POST",
-		client.baseUrl+"/documents/"+documentId+"/extract/"+extractorName, nil).
-		issue(client.requestSender)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer response.Body.Close()
-
 	extractResponse := results.ExtractionResult{}
-	err = json.NewDecoder(response.Body).Decode(&extractResponse)
+
+	err := client.extract(ctx,
+		documentId,
+		extractorName,
+		"application/vnd.waives.resultformats.extractdata+json", &extractResponse)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &extractResponse, nil
+}
+
+// ExtractForRedaction performs extracton on a document, and returns the results in a format
+// the "get redacted pdf" http endpoint will accept,
+// namely "application/vnd.waives.requestformats.redact+json".
+func (client *DocumentsClient) ExtractForRedaction(ctx context.Context,
+	documentId string,
+	extractorName string) (*results.ExtractForRedactionResult, error) {
+
+	result := results.ExtractForRedactionResult{}
+
+	err := client.extract(ctx,
+		documentId,
+		extractorName,
+		"application/vnd.waives.requestformats.redact+json", &result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (client *DocumentsClient) extract(ctx context.Context,
+	documentId, extractorName, acceptHeader string,
+	result interface{}) error {
+	response, err := newRequest(ctx, "POST",
+		client.baseUrl+"/documents/"+documentId+"/extract/"+extractorName, nil).
+		withHeaders(map[string]string{
+			"Accept": acceptHeader,
+		}).
+		issue(client.requestSender)
+
+	if err != nil {
+		return err
+	}
+
+	defer response.Body.Close()
+
+	return json.NewDecoder(response.Body).Decode(result)
 }
 
 func (client *DocumentsClient) GetAll(ctx context.Context) (DocumentList, error) {
