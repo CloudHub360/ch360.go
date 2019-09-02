@@ -55,12 +55,22 @@ func NewClassificationResultsWriter(multiFileOut bool,
 	return newResultsWriter(multiFileOut, outputFile, fileExtension, resultsFormatter)
 }
 
-// NewReaderResultsWriter constructs a ResultsWriter configured for extraction.
+// NewReaderResultsWriter constructs a ResultsWriter configured for reading.
 func NewReaderResultsWriter(multiFileOut bool,
 	outputFile, outputFormat string) (ResultsWriter, error) {
 	fileExtension := ".ocr." + outputFormat
 
-	var resultsFormatter formatters.ResultsFormatter = formatters.NewReadResultsFormatter()
+	var resultsFormatter formatters.ResultsFormatter = formatters.NewNoopResultsFormatter()
+
+	return newResultsWriter(multiFileOut, outputFile, fileExtension, resultsFormatter)
+}
+
+// NewReaderResultsWriter constructs a ResultsWriter configured for reading.
+func NewRedactResultsWriter(multiFileOut bool,
+	outputFile string) (ResultsWriter, error) {
+	fileExtension := ".redacted.pdf"
+
+	var resultsFormatter formatters.ResultsFormatter = formatters.NewNoopResultsFormatter()
 
 	return newResultsWriter(multiFileOut, outputFile, fileExtension, resultsFormatter)
 }
