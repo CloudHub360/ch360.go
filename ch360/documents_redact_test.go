@@ -75,6 +75,7 @@ func (suite *DocumentsClientRedactSuite) Test_Redact_Issues_Correct_Request() {
 	_, _ = suite.sut.Redact(context.Background(), suite.documentId, suite.pdfRequest)
 
 	suite.AssertRequestIssued("POST", apiUrl+"/documents/"+suite.documentId+"/redact")
+	assert.Equal(suite.T(), "application/json", suite.request().Header.Get("Content-Type"))
 }
 
 func (suite *DocumentsClientRedactSuite) AssertRequestIssued(method string, urlPath string) {
