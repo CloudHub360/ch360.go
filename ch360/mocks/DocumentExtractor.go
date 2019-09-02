@@ -33,3 +33,26 @@ func (_m *DocumentExtractor) Extract(ctx context.Context, documentId string, ext
 
 	return r0, r1
 }
+
+// ExtractForRedaction provides a mock function with given fields: ctx, documentId, extractorName
+func (_m *DocumentExtractor) ExtractForRedaction(ctx context.Context, documentId string, extractorName string) (*results.ExtractForRedactionResult, error) {
+	ret := _m.Called(ctx, documentId, extractorName)
+
+	var r0 *results.ExtractForRedactionResult
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *results.ExtractForRedactionResult); ok {
+		r0 = rf(ctx, documentId, extractorName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*results.ExtractForRedactionResult)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, documentId, extractorName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

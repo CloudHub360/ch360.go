@@ -11,13 +11,19 @@ import (
 	"io"
 )
 
-//go:generate mockery -name "DocumentCreator|DocumentDeleter|DocumentClassifier|DocumentGetter|DocumentExtractor"
+//go:generate mockery -name "DocumentCreator|DocumentDeleter|DocumentClassifier|DocumentGetter|DocumentExtractor|DocumentRedactor"
+
 type DocumentCreator interface {
 	Create(ctx context.Context, fileContents io.Reader) (Document, error)
 }
 
 type DocumentExtractor interface {
 	Extract(ctx context.Context, documentId string, extractorName string) (*results.ExtractionResult, error)
+	ExtractForRedaction(ctx context.Context, documentId string, extractorName string) (*results.ExtractForRedactionResult, error)
+}
+
+type DocumentRedactor interface {
+	Redact(ctx context.Context, documentId string, redactRequest request.RedactedPdfRequest) (io.ReadCloser, error)
 }
 
 type DocumentDeleter interface {
@@ -265,6 +271,9 @@ func (client *DocumentsClient) Redact(ctx context.Context,
 
 	response, err := newRequest(ctx, "POST",
 		client.baseUrl+"/documents/"+documentId+"/redact", bodyBuffer).
+		withHeaders(map[string]string{
+			"Content-Type": "application/json",
+		}).
 		issue(client.requestSender)
 
 	if err != nil {
