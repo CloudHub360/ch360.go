@@ -11,7 +11,7 @@ var _ ResultsFormatter = (*NoopResultsFormatter)(nil)
 type NoopResultsFormatter struct {
 }
 
-func NewReadResultsFormatter() *NoopResultsFormatter {
+func NewNoopResultsFormatter() *NoopResultsFormatter {
 	return &NoopResultsFormatter{}
 }
 

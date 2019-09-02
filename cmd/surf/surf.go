@@ -46,6 +46,7 @@ func main() {
 	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
 	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
 	commands.ConfigureUploadClassifierCommand(ctx, uploadCmd, &globalFlags)
+	commands.ConfigureRedactWithExtractionCommand(ctx, app, &globalFlags)
 
 	app.Flag("client-id", "Client ID").
 		Short('i').
