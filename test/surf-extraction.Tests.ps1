@@ -12,28 +12,6 @@ function New-Extractor([string]$extractorName, [Io.FileInfo]$extractorDefinition
     Invoke-App upload extractor $extractorName $extractorDefinition 2>&1
 }
 
-function New-ExtractorFromModules([string]$extractorName,
-    [parameter(Position=0, ValueFromRemainingArguments=$true)] $moduleIds) {
-    Invoke-App create extractor from-modules $extractorName @moduleIds 2>&1
-}
-
-function New-ExtractorFromTemplate([string]$extractorName, [Io.FileInfo]$extractorTemplate) {
-    Invoke-App create extractor from-template $extractorName $extractorTemplate 2>&1
-}
-
-function Get-Extractors {
-    Invoke-App list extractors 2>&1
-}
-
-function Remove-Extractor([Parameter(ValueFromPipeline=$true)]$extractorName) {
-    Write-Debug "Deleting extractor: $extractorName"
-    Invoke-App delete extractor $extractorName 2>&1
-}
-
-function Remove-UserExtractors() {
-    Get-Extractors | Where-Object { !$_.StartsWith("waives.") } | Remove-Extractor
-}
-
 Describe "extractors" {
     BeforeAll {
         Login-Surf

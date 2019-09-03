@@ -62,3 +62,27 @@ function Login-Surf() {
     Get-Content -Path $configFilePath | Format-MultilineOutput | Should -BeLike "*clientSecret: $ClientSecret*"
     Write-Host "Ran surf login"
 }
+
+function New-ExtractorFromModules([string]$extractorName,
+    [parameter(Position=0, ValueFromRemainingArguments=$true)] $moduleIds) {
+    Invoke-App create extractor from-modules $extractorName @moduleIds 2>&1
+}
+
+function Remove-UserExtractors() {
+    Get-Extractors | Where-Object { !$_.StartsWith("waives.") } | Remove-Extractor
+}
+
+function Get-Extractors {
+    Invoke-App list extractors 2>&1
+}
+
+function Remove-Extractor([Parameter(ValueFromPipeline=$true)]$extractorName) {
+    Write-Debug "Deleting extractor: $extractorName"
+    Invoke-App delete extractor $extractorName 2>&1
+}
+
+function Test-PDFFile($file) {
+    [System.Byte[]]$actualHeader = (Get-Content $file -AsByteStream -Raw)[0..4]
+    [System.Byte[]]$pdfHeader = 0x25, 0x50, 0x44, 0x46, 0x2d
+    return $null -eq (Compare-Object -ReferenceObject $pdfHeader -DifferenceObject $actualHeader)
+}
