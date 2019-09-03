@@ -177,7 +177,7 @@ func (client *DocumentsClient) Extract(ctx context.Context, documentId string, e
 	err := client.extract(ctx,
 		documentId,
 		extractorName,
-		"application/vnd.waives.resultformats.extractdata+json", &extractResponse)
+		request.RedactContentType, &extractResponse)
 
 	if err != nil {
 		return nil, err
@@ -198,7 +198,7 @@ func (client *DocumentsClient) ExtractForRedaction(ctx context.Context,
 	err := client.extract(ctx,
 		documentId,
 		extractorName,
-		"application/vnd.waives.requestformats.redact+json", &result)
+		request.RedactContentType, &result)
 
 	if err != nil {
 		return nil, err
