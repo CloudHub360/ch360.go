@@ -32,8 +32,10 @@ func Test_GetFreeDocSlots(t *testing.T) {
 			expectedErr:   ch360.ErrDocSlotsFull,
 			ctx:           context.Background(),
 		}, {
-			totalSlots:    2,
-			presentDocs:   aListOfDocuments("1", "2", "3"),
+			totalSlots:  2,
+			presentDocs: aListOfDocuments("1", "2", "3"),
+			// it's expected that the slot count could be <0,
+			// since the total slots is currently hardcoded to ch360.TotalDocumentSlots (30).
 			expectedSlots: -1,
 			expectedErr:   ch360.ErrDocSlotsFull,
 			ctx:           context.Background(),
