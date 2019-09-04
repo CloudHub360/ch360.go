@@ -178,7 +178,7 @@ func (client *DocumentsClient) Extract(ctx context.Context, documentId string, e
 	err := client.extract(ctx,
 		documentId,
 		extractorName,
-		request.RedactContentType, &extractResponse)
+		request.ExtractContentType, &extractResponse)
 
 	if err != nil {
 		return nil, err

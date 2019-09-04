@@ -19,5 +19,3 @@ type RedactionBookmark struct {
 	Text       string `json:"text"`
 	PageNumber int    `json:"page_number"`
 }
-
-const RedactContentType = "application/vnd.waives.resultformats.extractdata+json"
