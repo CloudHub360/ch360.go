@@ -24,32 +24,31 @@ func NewFileRedactor(creator DocumentCreator, extractor DocumentExtractor,
 	}
 }
 
+// Redact creates a document from the fileContents, performs extraction on it,
+// then redacts it with the results of the extraction.
 func (f *FileRedactor) Redact(ctx context.Context, fileContents io.Reader,
 	extractorName string) (io.ReadCloser, error) {
+	var (
+		redacted io.ReadCloser
+		err      error
+	)
 
-	// Use a different context here so we don't cancel this req on ctrl-c. We need
-	// the docId result to perform cleanup
-	document, err := f.docCreator.Create(context.Background(), fileContents)
-	if err != nil {
-		return nil, err
-	}
+	err = CreateDocumentFor(fileContents, f.docCreator, f.docDeleter,
+		func(document Document) error {
+			// use the results from extraction...
+			extractionResult, err := f.docExtractor.ExtractForRedaction(ctx, document.Id,
+				extractorName)
 
-	defer func() {
-		if document.Id != "" {
-			// Always delete the document, even if extract / redact returned an error.
-			// Don't cancel on ctrl-c.
-			_ = f.docDeleter.Delete(context.Background(), document.Id)
-		}
-	}()
+			if err != nil {
+				return err
+			}
 
-	// use the results from extraction...
-	extractionResult, err := f.docExtractor.ExtractForRedaction(ctx, document.Id, extractorName)
+			// ...as the input to redaction
+			redactRequest := (*request.RedactedPdfRequest)(extractionResult)
+			redacted, err = f.docRedactor.Redact(ctx, document.Id, *redactRequest)
 
-	if err != nil {
-		return nil, err
-	}
+			return err
+		})
 
-	// ...as the input to redaction
-	redactRequest := (*request.RedactedPdfRequest)(extractionResult)
-	return f.docRedactor.Redact(ctx, document.Id, *redactRequest)
+	return redacted, err
 }
