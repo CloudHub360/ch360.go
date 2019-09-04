@@ -12,6 +12,10 @@ function New-Extractor([string]$extractorName, [Io.FileInfo]$extractorDefinition
     Invoke-App upload extractor $extractorName $extractorDefinition 2>&1
 }
 
+function New-ExtractorFromTemplate([string]$extractorName, [Io.FileInfo]$extractorTemplate) {
+    Invoke-App create extractor from-template $extractorName $extractorTemplate 2>&1
+}
+
 Describe "extractors" {
     BeforeAll {
         Login-Surf
