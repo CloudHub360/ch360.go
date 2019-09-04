@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"net/http"
 	"testing"
 )
 
@@ -100,6 +101,20 @@ func (suite *DocumentsClientExtractSuite) Test_ExtractForRedaction_Returns_Error
 	assert.Equal(suite.T(), expectedErr, receivedErr)
 }
 
+func (suite *DocumentsClientExtractSuite) Test_ExtractForRedaction_Issues_Correct_Request() {
+	suite.httpClient.
+		On("Do", mock.Anything).
+		Return(AnHttpResponse(generators.Bytes()), nil)
+
+	_, _ = suite.sut.ExtractForRedaction(context.Background(), suite.documentId, suite.extractorName)
+
+	expectedUrl := apiUrl + "/documents/" + suite.documentId + "/extract/" + suite.extractorName
+	actualAcceptHeader := suite.request().Header.Get("Accept")
+	expectedRequestHeader := "application/vnd.waives.requestformats.redact+json"
+	suite.assertRequestIssued("POST", expectedUrl)
+	assert.Equal(suite.T(), expectedRequestHeader, actualAcceptHeader)
+}
+
 func (suite *DocumentsClientExtractSuite) Test_ExtractForRedaction_Returns_Correct_Result_From_Response() {
 	suite.httpClient.
 		On("Do", mock.Anything).
@@ -111,6 +126,20 @@ func (suite *DocumentsClientExtractSuite) Test_ExtractForRedaction_Returns_Corre
 	assert.NoError(suite.T(), actualErr)
 	assert.Equal(suite.T(), 2, len(actualResult.Marks))
 	assert.Equal(suite.T(), 1, len(actualResult.Bookmarks))
+}
+
+func (suite *DocumentsClientExtractSuite) assertRequestIssued(method string, urlPath string) {
+	assert.Equal(suite.T(), method, suite.request().Method)
+	assert.Equal(suite.T(), urlPath, suite.request().URL.Path)
+}
+
+func (suite *DocumentsClientExtractSuite) request() *http.Request {
+	require.Len(suite.T(), suite.httpClient.Calls, 1)
+
+	call := suite.httpClient.Calls[0]
+	require.Len(suite.T(), call.Arguments, 1)
+
+	return (call.Arguments[0]).(*http.Request)
 }
 
 var exampleExtractDocumentResponseWithNullResult = `{
