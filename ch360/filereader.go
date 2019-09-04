@@ -21,30 +21,22 @@ func NewFileReader(creator DocumentCreator, reader DocumentReader, deleter Docum
 	}
 }
 
+// Read creates a document from fileContents, performs a read,
+// then returns the read results in the format according to mode.
 func (f *FileReader) Read(ctx context.Context, fileContents io.Reader, mode ReadMode) (io.ReadCloser, error) {
-	// Use a different context here so we don't cancel this req on ctrl-c. We need
-	// the docId result to perform cleanup
-	document, err := f.docCreator.Create(context.Background(), fileContents)
-	if err != nil {
-		return nil, err
-	}
-
 	var (
-		result  io.ReadCloser
-		readErr error
+		result io.ReadCloser
+		err    error
 	)
-	if readErr = f.docReader.Read(ctx, document.Id); readErr == nil {
-		result, readErr = f.docReader.ReadResult(ctx, document.Id, mode)
-	}
 
-	// Always delete the document, even if Read returned an error.
-	// Don't cancel on ctrl-c.
-	err = f.docDeleter.Delete(context.Background(), document.Id)
+	err = CreateDocumentFor(fileContents, f.docCreator, f.docDeleter,
+		func(document Document) error {
+			if err = f.docReader.Read(ctx, document.Id); err == nil {
+				result, err = f.docReader.ReadResult(ctx, document.Id, mode)
+			}
 
-	// Return the read err if we have one
-	if readErr != nil {
-		return nil, readErr
-	}
+			return err
+		})
 
 	return result, err
 }
