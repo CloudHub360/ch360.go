@@ -20,26 +20,20 @@ func NewFileExtractor(creator DocumentCreator, extractor DocumentExtractor, dele
 	}
 }
 
+// Extract creates a document, performs extraction, deletes the doc,
+// then returns the extraction result.
 func (f *FileExtractor) Extract(ctx context.Context, fileContents io.Reader, extractorName string) (*results.ExtractionResult, error) {
-	// Use a different context here so we don't cancel this req on ctrl-c. We need
-	// the docId result to perform cleanup
-	document, err := f.docCreator.Create(context.Background(), fileContents)
-	if err != nil {
-		return nil, err
-	}
+	var (
+		extractionResult *results.ExtractionResult
+		err              error
+	)
 
-	result, extractErr := f.docExtractor.Extract(ctx, document.Id, extractorName)
+	err = CreateDocumentFor(fileContents, f.docCreator, f.docDeleter,
+		func(document Document) error {
+			extractionResult, err = f.docExtractor.Extract(ctx, document.Id, extractorName)
+			return err
 
-	if document.Id != "" {
-		// Always delete the document, even if Extract returned an error.
-		// Don't cancel on ctrl-c.
-		err = f.docDeleter.Delete(context.Background(), document.Id)
-	}
+		})
 
-	// Return the extract err if we have one
-	if extractErr != nil {
-		return nil, extractErr
-	}
-
-	return result, nil
+	return extractionResult, err
 }
