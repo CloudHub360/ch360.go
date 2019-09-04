@@ -12,7 +12,8 @@ import (
 )
 
 //go:generate mockery -name "DocumentCreator|DocumentDeleter|DocumentClassifier|DocumentGetter|DocumentExtractor|DocumentRedactor"
-
+//go:generate pegomock generate --use-experimental-model-gen -m --output-dir=mocks DocumentCreator
+//go:generate pegomock generate --use-experimental-model-gen -m --output-dir=mocks DocumentDeleter
 type DocumentCreator interface {
 	Create(ctx context.Context, fileContents io.Reader) (Document, error)
 }

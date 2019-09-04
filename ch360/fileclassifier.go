@@ -24,20 +24,15 @@ func NewFileClassifier(creator DocumentCreator, classifier DocumentClassifier,
 func (f *FileClassifier) Classify(ctx context.Context, fileContents io.Reader,
 	classifierName string) (*results.ClassificationResult, error) {
 
-	// Use a different context here so we don't cancel this req on ctrl-c. We need
-	// the docId result to perform cleanup
-	document, err := f.docCreator.Create(context.Background(), fileContents)
-	if err != nil {
-		return nil, err
-	}
+	var (
+		result *results.ClassificationResult
+		err    error
+	)
+	err = CreateDocumentFor(fileContents, f.docCreator, f.docDeleter,
+		func(document Document) error {
+			result, err = f.docClassifier.Classify(ctx, document.Id, classifierName)
+			return err
+		})
 
-	defer func() {
-		if document.Id != "" {
-			// Always delete the document, even if Classify returns an error.
-			// Don't cancel on ctrl-c.
-			f.docDeleter.Delete(context.Background(), document.Id)
-		}
-	}()
-
-	return f.docClassifier.Classify(ctx, document.Id, classifierName)
+	return result, err
 }
