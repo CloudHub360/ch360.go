@@ -11,6 +11,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"os/signal"
+	"strings"
 )
 
 func main() {
@@ -87,8 +88,11 @@ func handleInterrupt(canceller context.CancelFunc) {
 
 func exitOnErr(err error) {
 	if err != nil && errors.Cause(err) != context.Canceled {
-
-		_, _ = fmt.Fprintln(os.Stderr, err)
+		msg := "Error: " + err.Error()
+		if !strings.HasSuffix(msg, ".") {
+			msg = msg + "."
+		}
+		_, _ = fmt.Fprintln(os.Stderr, msg)
 
 		os.Exit(1)
 	}
