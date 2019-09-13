@@ -81,6 +81,11 @@ func (cmd *RedactWithExtractorCmd) initWithArgs(args *redactWithExtractorArgs, f
 		return err
 	}
 
+	if !config.IsOutputRedirected() &&
+		!flags.IsOutputSpecified() {
+		return errors.New("you must use '-o' or '-m' or redirect stdout when redacting files")
+	}
+
 	fileRedactor := ch360.NewFileRedactor(client.Documents, client.Documents, client.Documents,
 		client.Documents)
 
