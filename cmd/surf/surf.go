@@ -50,20 +50,16 @@ func main() {
 
 	app.Flag("client-id", "Client ID").
 		Short('i').
+		PlaceHolder("id").
 		StringVar(&globalFlags.ClientId)
 	app.Flag("client-secret", "Client secret").
 		Short('s').
+		PlaceHolder("secret").
 		StringVar(&globalFlags.ClientSecret)
 	app.Flag("log-http", "Log HTTP requests and responses as they happen, "+
 		"to a file.").
+		PlaceHolder("file").
 		OpenFileVar(&globalFlags.LogHttp, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	app.Flag("multiple-files",
-		"Write results output to multiple files with the same basename as the input").
-		Short('m').
-		BoolVar(&globalFlags.MultiFileOut)
-	app.Flag("output-file", "Write all results to the specified file").
-		Short('o').
-		StringVar(&globalFlags.OutputFile)
 	app.Flag("version", "Show the application version.").
 		PreAction(func(parseContext *kingpin.ParseContext) error {
 			fmt.Println(ch360.Version)
@@ -71,19 +67,9 @@ func main() {
 			return nil
 		}).
 		Bool()
-	app.Flag("progress", "Show a progress bar."+
-		"Only available in combination with the read, extract and classify commands.").
-		Short('p').
-		BoolVar(&globalFlags.ShowProgress)
 
-	app.Validate(func(application *kingpin.Application) error {
-		// Only show the progress bar if stdout is redirected, or -o or -m are used
-		if globalFlags.ShowProgress && !globalFlags.CanShowProgressBar() {
-			return errors.New("The --progress / -p option can only be used when " +
-				"redirecting stdout, or in combination with -o or -m.")
-		}
-		return nil
-	})
+	app.UsageTemplate(kingpin.CompactUsageTemplate)
+	app.HelpFlag.Hidden()
 
 	defer ioutils.TryClose(globalFlags.LogHttp)
 

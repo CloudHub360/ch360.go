@@ -98,6 +98,8 @@ func ConfigureReadCommand(ctx context.Context,
 	cliCmd.Arg("files", "The files to read.").
 		Required().
 		StringsVar(&readArgs.filePatterns)
+
+	addFileHandlingFlagsTo(globalFlags, cliCmd)
 }
 
 // Execute is the main entry point for the 'read' command.

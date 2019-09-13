@@ -58,6 +58,8 @@ func ConfigureClassifyCommand(ctx context.Context,
 	classifyCli.Arg("files", "The files to read.").
 		Required().
 		StringsVar(&classifyArgs.filePatterns)
+
+	addFileHandlingFlagsTo(globalFlags, classifyCli)
 }
 
 // ExecuteClassify is the main entry point for the 'classify' command.

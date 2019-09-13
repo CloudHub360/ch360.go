@@ -57,6 +57,8 @@ func ConfigureExtractCommand(ctx context.Context,
 	extractCli.Arg("files", "The files to read.").
 		Required().
 		StringsVar(&args.filePatterns)
+
+	addFileHandlingFlagsTo(globalFlags, extractCli)
 }
 
 func (cmd *ExtractCmd) initWithArgs(args *extractArgs, flags *config.GlobalFlags) error {
