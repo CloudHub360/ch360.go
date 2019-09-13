@@ -65,7 +65,7 @@ func (cmd *DeleteClassifierCmd) Execute(ctx context.Context) error {
 	}
 
 	if !classifiers.Contains(cmd.ClassifierName) {
-		return errors.New("There is no classifier named '" + cmd.ClassifierName + "'")
+		return errors.New("there is no classifier named '" + cmd.ClassifierName + "'")
 	}
 
 	return cmd.Client.Delete(ctx, cmd.ClassifierName)

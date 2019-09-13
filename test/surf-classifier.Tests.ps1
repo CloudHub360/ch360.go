@@ -87,7 +87,7 @@ Creating classifier '$classifierName'... [FAILED]
         $samples = (Join-Path $PSScriptRoot "non-existent.zip")
         New-Classifier $classifierName $samples | Format-MultilineOutput | Should -Be @"
 Creating classifier 'test-classifier'... [FAILED]
-Error when opening samples archive '$samples': no such file or directory
+Error: failed to open samples archive '$samples': no such file or directory.
 "@
 
         $LASTEXITCODE | Should -Be 1

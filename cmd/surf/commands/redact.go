@@ -99,5 +99,5 @@ func (cmd *RedactWithExtractorCmd) initWithArgs(args *redactWithExtractorArgs, f
 func (cmd *RedactWithExtractorCmd) Execute(ctx context.Context) error {
 	err := cmd.RedactionService.RedactAllWithExtractor(ctx, cmd.FilePaths, cmd.ExtractorName)
 
-	return errors.Wrap(err, "Redaction failed")
+	return errors.Wrap(err, "redaction failed")
 }

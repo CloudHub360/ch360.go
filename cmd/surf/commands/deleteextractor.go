@@ -57,7 +57,7 @@ func (cmd *DeleteExtractorCmd) Execute(ctx context.Context) error {
 	}
 
 	if !extractors.Contains(cmd.ExtractorName) {
-		return errors.New("There is no extractor named '" + cmd.ExtractorName + "'")
+		return errors.New("there is no extractor named '" + cmd.ExtractorName + "'")
 	}
 
 	return cmd.Client.Delete(ctx, cmd.ExtractorName)

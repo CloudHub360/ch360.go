@@ -58,7 +58,7 @@ func (cmd CreateExtractorTemplateCmd) Execute(ctx context.Context) error {
 	)
 
 	if len(cmd.ModuleIds) == 0 {
-		return errors.New("At least one module ID must be specified")
+		return errors.New("at least one module ID must be specified")
 	}
 
 	allModules, err := cmd.Client.GetAll(ctx)
@@ -76,7 +76,7 @@ func (cmd CreateExtractorTemplateCmd) Execute(ctx context.Context) error {
 	jsonData, err = json.MarshalIndent(template, "", "  ")
 
 	if err != nil {
-		return errors.WithMessage(err, "Unable to create template")
+		return errors.WithMessage(err, "unable to create template")
 	}
 
 	_, err = cmd.Output.Write(jsonData)
@@ -100,7 +100,8 @@ func (cmd CreateExtractorTemplateCmd) getSpecifiedModules(existingModules ch360.
 	}
 
 	if len(missingModules) > 0 {
-		return nil, errors.Errorf("The following modules could not be found: %s", strings.Join(missingModules, ", "))
+		return nil, errors.Errorf("the following modules could not be found: %s",
+			strings.Join(missingModules, ", "))
 	}
 
 	return presentModules, nil

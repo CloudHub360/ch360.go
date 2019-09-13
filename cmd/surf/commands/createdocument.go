@@ -72,14 +72,14 @@ func (cmd *CreateDocumentCmd) createFromFile(ctx context.Context,
 	documentFile, err := os.Open(documentPath)
 	if err != nil {
 		pathErr := err.(*os.PathError)
-		return nil, errors.Errorf("Unable to create document from file '%s': %s", documentPath,
+		return nil, errors.Errorf("unable to create document from file '%s': %s", documentPath,
 			pathErr.Err.Error())
 	}
 	defer documentFile.Close()
 
 	doc, err := cmd.Creator.Create(ctx, documentFile)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Unable to create document from file '%s'",
+		return nil, errors.Wrapf(err, "unable to create document from file '%s'",
 			documentPath)
 	}
 	return &doc, nil

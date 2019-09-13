@@ -144,7 +144,7 @@ func (cmd *DeleteDocumentCmd) checkProvidedDocuments(allDocs []string) error {
 	}
 
 	if len(missingDocIds) > 0 {
-		return errors.Errorf("The following documents could not be found: %s",
+		return errors.Errorf("the following documents could not be found: %s",
 			strings.Join(missingDocIds, ", "))
 	}
 	return nil

@@ -65,7 +65,7 @@ func ConfigureClassifyCommand(ctx context.Context,
 // ExecuteClassify is the main entry point for the 'classify' command.
 func (cmd *ClassifyCmd) Execute(ctx context.Context) error {
 	err := cmd.ClassificationService.ClassifyAll(ctx, cmd.FilePaths, cmd.ClassifierName)
-	return errors.Wrap(err, "Classification failed")
+	return errors.Wrap(err, "classification failed")
 }
 
 func (cmd *ClassifyCmd) initWithArgs(args *classifyArgs, flags *config.GlobalFlags) error {

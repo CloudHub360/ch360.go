@@ -100,5 +100,5 @@ func (cmd *ExtractCmd) initWithArgs(args *extractArgs, flags *config.GlobalFlags
 func (cmd *ExtractCmd) Execute(ctx context.Context) error {
 	err := cmd.ExtractionService.ExtractAll(ctx, cmd.FilePaths, cmd.ExtractorName)
 
-	return errors.Wrap(err, "Extraction failed")
+	return errors.Wrap(err, "extraction failed")
 }

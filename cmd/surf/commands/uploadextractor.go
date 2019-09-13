@@ -74,7 +74,7 @@ func (cmd *UploadExtractorCmd) initFromArgs(args *uploadExtractorArgs,
 	var err error
 	cmd.ExtractorContent, err = os.Open(args.extractorFile)
 	if err != nil {
-		return errors.Errorf("The file '%s' could not be found.", args.extractorFile)
+		return errors.Errorf("the file '%s' could not be found", args.extractorFile)
 	}
 
 	client, err := initApiClient(flags.ClientId, flags.ClientSecret, flags.LogHttp)

@@ -115,13 +115,15 @@ func (cmd *CreateExtractorCmd) initFromTemplateArgs(args *createExtractorArgs, f
 	if err != nil {
 		// err is guaranteed to be os.PathError
 		pathErr := err.(*os.PathError)
-		return errors.Errorf("Error when opening template file '%s': %v", args.templateFilename, pathErr.Err.Error())
+		return errors.Errorf("failed to open template file '%s': %v", args.templateFilename,
+			pathErr.Err.Error())
 	}
 
 	cmd.Template, err = ch360.NewModulesTemplateFromJson(templateFile)
 
 	if err != nil {
-		return errors.WithMessagef(err, "Error when reading json template '%s'", args.templateFilename)
+		return errors.WithMessagef(err, "failed to read json template '%s'",
+			args.templateFilename)
 	}
 
 	return cmd.initFromArgs(args, flags)
@@ -153,7 +155,7 @@ func buildDetailedErrorMessage(errorResponse net.DetailedErrorResponse) error {
 	err := mapstructure.Decode(errorResponse.Errors, &detailedErrs)
 
 	if err != nil {
-		return errors.WithMessage(&errorResponse, "Could not deserialise response from server")
+		return errors.WithMessage(&errorResponse, "could not deserialise response from server")
 	}
 
 	sb := strings.Builder{}
