@@ -88,7 +88,7 @@ func (cmd *CreateClassifierCmd) initFromArgs(args *createClassifierArgs, flags *
 	if err != nil {
 		// err is guaranteed to be os.PathError
 		pathErr := err.(*os.PathError)
-		return errors.Errorf("Error when opening samples archive '%s': %v",
+		return errors.Errorf("failed to open samples archive '%s': %v",
 			args.samplesArchiveFilename, pathErr.Err.Error())
 	}
 

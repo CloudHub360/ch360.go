@@ -68,7 +68,7 @@ func (cmd *UploadClassifierCmd) initFromArgs(args *uploadClassifierArgs, flags *
 	var err error
 	cmd.ClassifierContents, err = os.Open(args.classifierFile)
 	if err != nil {
-		return errors.New(fmt.Sprintf("The file '%s' could not be found.", args.classifierFile))
+		return errors.New(fmt.Sprintf("the file '%s' could not be found", args.classifierFile))
 	}
 
 	cmd.ClassifierName = args.name

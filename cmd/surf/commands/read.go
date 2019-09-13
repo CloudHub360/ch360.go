@@ -105,7 +105,7 @@ func ConfigureReadCommand(ctx context.Context,
 // Execute is the main entry point for the 'read' command.
 func (cmd *ReadCmd) Execute(ctx context.Context) error {
 	err := cmd.ReaderService.ReadAll(ctx, cmd.FilePaths, cmd.ReadMode)
-	return errors.Wrap(err, "Read failed")
+	return errors.Wrap(err, "read failed")
 }
 
 var readModes = map[string]ch360.ReadMode{

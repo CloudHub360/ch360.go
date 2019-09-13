@@ -40,7 +40,7 @@ Uploading extractor '$extractorName'... [OK]
        $extractorDefinition = (Join-Path $PSScriptRoot "invalid.fpxlc")
        New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
 Uploading extractor 'test-extractor'... [FAILED]
-The file supplied is not a valid extractor configuration file.
+Error: The file supplied is not a valid extractor configuration file.
 "@
        $LASTEXITCODE | Should -Be 1
 
@@ -52,7 +52,7 @@ The file supplied is not a valid extractor configuration file.
         $extractorDefinition = (Join-Path $PSScriptRoot "non-existent.fpxlc")
         New-Extractor $extractorName $extractorDefinition | Format-MultilineOutput | Should -Be @"
 Uploading extractor 'test-extractor'... [FAILED]
-The file '$extractorDefinition' could not be found.
+Error: the file '$extractorDefinition' could not be found.
 "@
         $LASTEXITCODE | Should -Be 1
 
@@ -93,7 +93,7 @@ Creating extractor '$extractorName'... [OK]
         $extractorTemplate = "missing.json"
         New-ExtractorFromTemplate $extractorName $extractorTemplate | Format-MultilineOutput | Should -Be @"
 Creating extractor 'test-extractor'... [FAILED]
-Error when opening template file 'missing.json': no such file or directory
+Error: failed to open template file 'missing.json': no such file or directory.
 "@
         $LASTEXITCODE | Should -Be 1
     }
@@ -102,7 +102,7 @@ Error when opening template file 'missing.json': no such file or directory
         $extractorTemplate = (Join-Path $PSScriptRoot "invalid.json")
         New-ExtractorFromTemplate $extractorName $extractorTemplate | Format-MultilineOutput | Should -Be @"
 Creating extractor 'test-extractor'... [FAILED]
-Error when reading json template '$extractorTemplate': invalid character 'b' looking for beginning of value
+Error: failed to read json template '$extractorTemplate': invalid character 'b' looking for beginning of value.
 "@
         $LASTEXITCODE | Should -Be 1
     }
