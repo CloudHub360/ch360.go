@@ -53,6 +53,8 @@ func ConfigureRedactWithExtractionCommand(ctx context.Context,
 	redactWithExtractorCli.Arg("files", "The files to read.").
 		Required().
 		StringsVar(&args.filePatterns)
+
+	addFileHandlingFlagsTo(globalFlags, redactCli)
 }
 
 func (cmd *RedactWithExtractorCmd) initWithArgs(args *redactWithExtractorArgs, flags *config.GlobalFlags) error {

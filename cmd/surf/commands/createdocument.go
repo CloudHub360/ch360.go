@@ -44,7 +44,7 @@ func ConfigureCreateDocumentCmd(ctx context.Context, createCmd *kingpin.CmdClaus
 		})
 
 	createDocumentCli.
-		Arg("documents", "The file(s) to create documents from.").
+		Arg("files", "The file(s) to create documents from.").
 		Required().
 		StringsVar(&args.documentPaths)
 }
