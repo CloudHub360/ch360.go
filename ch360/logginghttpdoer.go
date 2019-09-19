@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/net"
+	"github.com/waives/surf/net"
 	"io"
 	"io/ioutil"
 	"net/http"

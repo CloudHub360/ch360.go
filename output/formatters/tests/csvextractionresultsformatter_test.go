@@ -3,12 +3,12 @@ package tests
 import (
 	"bytes"
 	"encoding/csv"
-	"github.com/CloudHub360/ch360.go/ch360/results"
-	"github.com/CloudHub360/ch360.go/output/formatters"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/ch360/results"
+	"github.com/waives/surf/output/formatters"
+	"github.com/waives/surf/test/generators"
 	"strings"
 	"testing"
 )

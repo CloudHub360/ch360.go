@@ -2,9 +2,9 @@ package net
 
 import (
 	"errors"
-	"github.com/CloudHub360/ch360.go/net/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/waives/surf/net/mocks"
 	"net/http"
 	"testing"
 )

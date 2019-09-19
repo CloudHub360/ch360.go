@@ -1,8 +1,8 @@
 package ch360
 
 import (
-	"github.com/CloudHub360/ch360.go/auth"
-	"github.com/CloudHub360/ch360.go/net"
+	"github.com/waives/surf/auth"
+	"github.com/waives/surf/net"
 	"io"
 )
 

@@ -2,7 +2,7 @@ package ch360
 
 import (
 	"context"
-	"github.com/CloudHub360/ch360.go/net"
+	"github.com/waives/surf/net"
 	"io"
 	"net/http"
 )

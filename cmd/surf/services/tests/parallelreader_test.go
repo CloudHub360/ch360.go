@@ -3,13 +3,13 @@ package tests
 import (
 	"context"
 	"errors"
-	"github.com/CloudHub360/ch360.go/ch360"
-	ch360mocks "github.com/CloudHub360/ch360.go/ch360/mocks"
-	"github.com/CloudHub360/ch360.go/cmd/surf/services"
-	"github.com/CloudHub360/ch360.go/cmd/surf/services/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/ch360"
+	ch360mocks "github.com/waives/surf/ch360/mocks"
+	"github.com/waives/surf/cmd/surf/services"
+	"github.com/waives/surf/cmd/surf/services/mocks"
 	"testing"
 )
 

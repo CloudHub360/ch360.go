@@ -34,7 +34,7 @@ Task Build PackageRestore, {
 
     $version="${BuildDate}-${GitRev}-${BuildNumber}"
 
-    exec { go install -ldflags "-X github.com/CloudHub360/ch360.go/ch360.Version=$version" ./cmd/surf }
+    exec { go install -ldflags "-X github.com/waives/surf/ch360.Version=$version" ./cmd/surf }
   } finally {
     popd
   }

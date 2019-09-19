@@ -2,13 +2,13 @@ package progress_test
 
 import (
 	"bytes"
-	"github.com/CloudHub360/ch360.go/ch360/results"
-	"github.com/CloudHub360/ch360.go/output/progress"
-	"github.com/CloudHub360/ch360.go/output/resultsWriters/mocks"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/ch360/results"
+	"github.com/waives/surf/output/progress"
+	"github.com/waives/surf/output/resultsWriters/mocks"
+	"github.com/waives/surf/test/generators"
 	"math/rand"
 	"testing"
 	"time"

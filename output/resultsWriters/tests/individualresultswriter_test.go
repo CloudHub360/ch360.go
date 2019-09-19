@@ -2,15 +2,15 @@ package tests
 
 import (
 	"errors"
-	"github.com/CloudHub360/ch360.go/ch360/results"
-	"github.com/CloudHub360/ch360.go/output/formatters"
-	formatterMocks "github.com/CloudHub360/ch360.go/output/formatters/mocks"
-	"github.com/CloudHub360/ch360.go/output/resultsWriters"
-	sinkMocks "github.com/CloudHub360/ch360.go/output/sinks/mocks"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/ch360/results"
+	"github.com/waives/surf/output/formatters"
+	formatterMocks "github.com/waives/surf/output/formatters/mocks"
+	"github.com/waives/surf/output/resultsWriters"
+	sinkMocks "github.com/waives/surf/output/sinks/mocks"
+	"github.com/waives/surf/test/generators"
 	"testing"
 )
 

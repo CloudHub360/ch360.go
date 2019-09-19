@@ -2,10 +2,10 @@ package services
 
 import (
 	"context"
-	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/ch360/results"
-	"github.com/CloudHub360/ch360.go/pool"
 	"github.com/pkg/errors"
+	"github.com/waives/surf/ch360"
+	"github.com/waives/surf/ch360/results"
+	"github.com/waives/surf/pool"
 	"io"
 	"os"
 )

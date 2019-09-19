@@ -3,8 +3,8 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/CloudHub360/ch360.go/net"
 	"github.com/pkg/errors"
+	"github.com/waives/surf/net"
 	"net/http"
 	"net/url"
 	"strings"

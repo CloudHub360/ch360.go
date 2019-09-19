@@ -2,7 +2,7 @@ package net
 
 import (
 	"bytes"
-	"github.com/CloudHub360/ch360.go/ioutils"
+	"github.com/waives/surf/ioutils"
 	"io/ioutil"
 	"net/http"
 )

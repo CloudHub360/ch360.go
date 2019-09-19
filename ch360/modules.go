@@ -3,7 +3,7 @@ package ch360
 import (
 	"context"
 	"encoding/json"
-	"github.com/CloudHub360/ch360.go/net"
+	"github.com/waives/surf/net"
 	"strings"
 )
 

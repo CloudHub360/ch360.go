@@ -2,7 +2,7 @@
 
 package mocks
 
-import formatters "github.com/CloudHub360/ch360.go/output/formatters"
+import formatters "github.com/waives/surf/output/formatters"
 import io "io"
 import mock "github.com/stretchr/testify/mock"
 

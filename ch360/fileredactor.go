@@ -2,7 +2,7 @@ package ch360
 
 import (
 	"context"
-	"github.com/CloudHub360/ch360.go/ch360/request"
+	"github.com/waives/surf/ch360/request"
 	"io"
 )
 

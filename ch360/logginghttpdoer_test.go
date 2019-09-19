@@ -3,8 +3,8 @@ package ch360
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/CloudHub360/ch360.go/net/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/waives/surf/net/mocks"
 	"io/ioutil"
 	"net/http"
 	"testing"

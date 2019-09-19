@@ -1,6 +1,6 @@
 package results
 
-import "github.com/CloudHub360/ch360.go/ch360/request"
+import "github.com/waives/surf/ch360/request"
 
 type InnerResult struct {
 	Text           string      `json:"text"`

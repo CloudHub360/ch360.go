@@ -2,12 +2,12 @@ package tests
 
 import (
 	"fmt"
-	"github.com/CloudHub360/ch360.go/output/sinks"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/output/sinks"
+	"github.com/waives/surf/test/generators"
 	"testing"
 )
 

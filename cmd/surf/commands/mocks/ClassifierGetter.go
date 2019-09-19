@@ -2,7 +2,7 @@
 
 package mocks
 
-import ch360 "github.com/CloudHub360/ch360.go/ch360"
+import ch360 "github.com/waives/surf/ch360"
 
 import context "context"
 import mock "github.com/stretchr/testify/mock"

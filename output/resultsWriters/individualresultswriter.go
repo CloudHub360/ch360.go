@@ -1,8 +1,8 @@
 package resultsWriters
 
 import (
-	"github.com/CloudHub360/ch360.go/output/formatters"
-	"github.com/CloudHub360/ch360.go/output/sinks"
+	"github.com/waives/surf/output/formatters"
+	"github.com/waives/surf/output/sinks"
 )
 
 var _ ResultsWriter = (*IndividualResultsWriter)(nil)

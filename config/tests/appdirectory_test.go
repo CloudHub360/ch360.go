@@ -1,11 +1,11 @@
 package tests
 
 import (
-	"github.com/CloudHub360/ch360.go/config"
-	assertThat "github.com/CloudHub360/ch360.go/test/assertions"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/config"
+	assertThat "github.com/waives/surf/test/assertions"
+	"github.com/waives/surf/test/generators"
 	"path/filepath"
 	"runtime"
 	"testing"

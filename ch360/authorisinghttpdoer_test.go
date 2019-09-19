@@ -2,14 +2,14 @@ package ch360_test
 
 import (
 	"errors"
-	"github.com/CloudHub360/ch360.go/auth"
-	mockauth "github.com/CloudHub360/ch360.go/auth/mocks"
-	"github.com/CloudHub360/ch360.go/ch360"
-	mocknet "github.com/CloudHub360/ch360.go/net/mocks"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/auth"
+	mockauth "github.com/waives/surf/auth/mocks"
+	"github.com/waives/surf/ch360"
+	mocknet "github.com/waives/surf/net/mocks"
+	"github.com/waives/surf/test/generators"
 	"net/http"
 	"testing"
 )

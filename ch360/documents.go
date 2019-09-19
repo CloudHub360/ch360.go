@@ -5,9 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/CloudHub360/ch360.go/ch360/request"
-	"github.com/CloudHub360/ch360.go/ch360/results"
-	"github.com/CloudHub360/ch360.go/net"
+	"github.com/waives/surf/ch360/request"
+	"github.com/waives/surf/ch360/results"
+	"github.com/waives/surf/net"
 	"io"
 )
 

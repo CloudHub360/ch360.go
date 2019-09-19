@@ -2,11 +2,11 @@ package commands
 
 import (
 	"errors"
-	"github.com/CloudHub360/ch360.go/config"
-	"github.com/CloudHub360/ch360.go/config/mocks"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/config"
+	"github.com/waives/surf/config/mocks"
+	"github.com/waives/surf/test/generators"
 	"os"
 	"testing"
 )

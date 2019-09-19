@@ -2,12 +2,12 @@ package commands
 
 import (
 	"context"
-	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/cmd/surf/services"
-	"github.com/CloudHub360/ch360.go/config"
-	"github.com/CloudHub360/ch360.go/output/progress"
-	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/pkg/errors"
+	"github.com/waives/surf/ch360"
+	"github.com/waives/surf/cmd/surf/services"
+	"github.com/waives/surf/config"
+	"github.com/waives/surf/output/progress"
+	"github.com/waives/surf/output/resultsWriters"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 )

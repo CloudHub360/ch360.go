@@ -3,11 +3,11 @@ package tests
 import (
 	"bytes"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/output/sinks"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/output/sinks"
+	"github.com/waives/surf/test/generators"
 	"testing"
 )
 

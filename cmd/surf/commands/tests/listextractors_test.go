@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
-	"github.com/CloudHub360/ch360.go/cmd/surf/commands/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/ch360"
+	"github.com/waives/surf/cmd/surf/commands"
+	"github.com/waives/surf/cmd/surf/commands/mocks"
 	"testing"
 )
 
