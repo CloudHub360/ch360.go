@@ -1,9 +1,9 @@
 package resultsWriters
 
 import (
-	"github.com/CloudHub360/ch360.go/fs"
-	"github.com/CloudHub360/ch360.go/output/formatters"
-	"github.com/CloudHub360/ch360.go/output/sinks"
+	"github.com/waives/surf/fs"
+	"github.com/waives/surf/output/formatters"
+	"github.com/waives/surf/output/sinks"
 )
 
 //go:generate mockery -name ResultsWriter

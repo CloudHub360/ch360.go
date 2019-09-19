@@ -2,9 +2,9 @@ package tests
 
 import (
 	"bytes"
-	"github.com/CloudHub360/ch360.go/output/formatters"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
+	"github.com/waives/surf/output/formatters"
+	"github.com/waives/surf/test/generators"
 	"io/ioutil"
 	"testing"
 )

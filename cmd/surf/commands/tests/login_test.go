@@ -3,17 +3,17 @@ package tests
 import (
 	"bytes"
 	"context"
-	"github.com/CloudHub360/ch360.go/auth"
-	authmocks "github.com/CloudHub360/ch360.go/auth/mocks"
-	"github.com/CloudHub360/ch360.go/cmd/surf/commands"
-	"github.com/CloudHub360/ch360.go/config"
-	"github.com/CloudHub360/ch360.go/config/mocks"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/auth"
+	authmocks "github.com/waives/surf/auth/mocks"
+	"github.com/waives/surf/cmd/surf/commands"
+	"github.com/waives/surf/config"
+	"github.com/waives/surf/config/mocks"
+	"github.com/waives/surf/test/generators"
 	"testing"
 )
 

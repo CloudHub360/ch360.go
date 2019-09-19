@@ -3,8 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/fs"
 	"github.com/mitchellh/go-homedir"
+	"github.com/waives/surf/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"

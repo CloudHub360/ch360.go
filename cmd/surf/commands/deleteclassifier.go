@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/config"
+	"github.com/waives/surf/ch360"
+	"github.com/waives/surf/config"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

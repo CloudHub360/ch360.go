@@ -2,9 +2,9 @@ package formatters
 
 import (
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360/results"
 	"github.com/gosuri/uitable"
 	"github.com/pkg/errors"
+	"github.com/waives/surf/ch360/results"
 	"io"
 	"path/filepath"
 	"strings"

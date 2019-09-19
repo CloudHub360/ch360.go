@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/config"
 	"github.com/pkg/errors"
+	"github.com/waives/surf/config"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
 	"os"

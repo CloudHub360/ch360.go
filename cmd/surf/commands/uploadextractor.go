@@ -3,10 +3,10 @@ package commands
 import (
 	"context"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/ch360"
-	"github.com/CloudHub360/ch360.go/config"
-	"github.com/CloudHub360/ch360.go/ioutils"
 	"github.com/pkg/errors"
+	"github.com/waives/surf/ch360"
+	"github.com/waives/surf/config"
+	"github.com/waives/surf/ioutils"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
 	"os"

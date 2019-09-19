@@ -2,9 +2,9 @@ package progress
 
 import (
 	"fmt"
-	"github.com/CloudHub360/ch360.go/output/resultsWriters"
 	"github.com/gosuri/uiprogress"
 	"github.com/pkg/errors"
+	"github.com/waives/surf/output/resultsWriters"
 	"io"
 )
 

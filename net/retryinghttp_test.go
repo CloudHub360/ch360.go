@@ -3,11 +3,11 @@ package net
 import (
 	"bytes"
 	"context"
-	"github.com/CloudHub360/ch360.go/ioutils"
-	"github.com/CloudHub360/ch360.go/net/mocks"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/waives/surf/ioutils"
+	"github.com/waives/surf/net/mocks"
 	"net/http"
 	"testing"
 )

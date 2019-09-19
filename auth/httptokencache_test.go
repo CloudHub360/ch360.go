@@ -1,12 +1,12 @@
 package auth_test
 
 import (
-	"github.com/CloudHub360/ch360.go/auth"
-	"github.com/CloudHub360/ch360.go/auth/mocks"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/auth"
+	"github.com/waives/surf/auth/mocks"
+	"github.com/waives/surf/test/generators"
 	"sync"
 	"testing"
 	"time"

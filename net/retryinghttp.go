@@ -2,9 +2,9 @@ package net
 
 import (
 	"bytes"
-	"github.com/CloudHub360/ch360.go/ioutils"
 	"github.com/cenkalti/backoff"
 	"github.com/pkg/errors"
+	"github.com/waives/surf/ioutils"
 	"io/ioutil"
 
 	"net/http"

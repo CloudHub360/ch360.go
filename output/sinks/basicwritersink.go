@@ -1,7 +1,7 @@
 package sinks
 
 import (
-	"github.com/CloudHub360/ch360.go/ioutils"
+	"github.com/waives/surf/ioutils"
 	"io"
 )
 

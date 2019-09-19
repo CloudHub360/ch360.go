@@ -3,10 +3,10 @@ package net_test
 import (
 	"context"
 	"errors"
-	"github.com/CloudHub360/ch360.go/net"
-	"github.com/CloudHub360/ch360.go/net/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/waives/surf/net"
+	"github.com/waives/surf/net/mocks"
 	"net/http"
 	"testing"
 )

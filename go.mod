@@ -1,4 +1,4 @@
-module github.com/CloudHub360/ch360.go
+module github.com/waives/surf
 
 go 1.12
 

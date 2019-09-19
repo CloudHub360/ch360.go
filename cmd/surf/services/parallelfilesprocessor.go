@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"errors"
-	"github.com/CloudHub360/ch360.go/pool"
+	"github.com/waives/surf/pool"
 )
 
 var ErrGlobMatchesNoFiles = errors.New("file pattern does not match any files")

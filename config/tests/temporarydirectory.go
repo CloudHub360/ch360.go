@@ -2,7 +2,7 @@ package tests
 
 import (
 	"fmt"
-	"github.com/CloudHub360/ch360.go/config"
+	"github.com/waives/surf/config"
 	"io/ioutil"
 	"os"
 	"path/filepath"

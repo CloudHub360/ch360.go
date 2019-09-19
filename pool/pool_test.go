@@ -3,10 +3,10 @@ package pool_test
 import (
 	"context"
 	"errors"
-	"github.com/CloudHub360/ch360.go/pool"
-	"github.com/CloudHub360/ch360.go/test/generators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"github.com/waives/surf/pool"
+	"github.com/waives/surf/test/generators"
 	"sync/atomic"
 	"testing"
 	"time"

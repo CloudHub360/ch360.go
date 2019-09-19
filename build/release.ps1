@@ -5,7 +5,7 @@ param(
     [string]$ReleaseNotes
 )
 
-$GITHUB_RELEASES_URI = "https://api.github.com/repos/CloudHub360/ch360.go/releases"
+$GITHUB_RELEASES_URI = "https://api.github.com/repos/waives/surf/releases"
 $GO_BIN = (Join-Path $env:GOPATH bin)
 
 function Get-ParentDirectoryName([string]$path) {

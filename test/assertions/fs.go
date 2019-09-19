@@ -2,8 +2,8 @@ package assertions
 
 import (
 	"fmt"
-	"github.com/CloudHub360/ch360.go/fs"
 	"github.com/stretchr/testify/assert"
+	"github.com/waives/surf/fs"
 	"os"
 	"testing"
 )

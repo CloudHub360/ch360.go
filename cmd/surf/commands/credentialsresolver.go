@@ -3,7 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"github.com/CloudHub360/ch360.go/config"
+	"github.com/waives/surf/config"
 	"os"
 )
 
