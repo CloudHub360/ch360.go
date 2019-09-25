@@ -22,7 +22,8 @@ type CreateExtractorTemplateCmd struct {
 }
 
 type createExtractorTemplateArgs struct {
-	moduleIds []string
+	moduleIds  []string
+	outputFile string
 }
 
 // ConfigureCreateExtractorTemplateCmd configures kingpin with the 'create extractor-template'
@@ -48,6 +49,11 @@ func ConfigureCreateExtractorTemplateCmd(ctx context.Context, createCmd *kingpin
 		Arg("module-ids", "The module IDs to include in the template").
 		Required().
 		StringsVar(&args.moduleIds)
+
+	createExtractorTemplateCli.Flag("output-file", "Write all results to the specified file").
+		Short('o').
+		PlaceHolder("file").
+		StringVar(&args.outputFile)
 }
 
 // Execute runs the command.
@@ -144,6 +150,14 @@ func (cmd *CreateExtractorTemplateCmd) initFromArgs(args *createExtractorTemplat
 
 	cmd.Client = client.Modules
 	cmd.Output = os.Stdout
+
+	if args.outputFile != "" {
+		cmd.Output, err = os.Create(args.outputFile)
+
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
