@@ -48,8 +48,14 @@ type ExtractorTemplate struct {
 }
 
 type ModuleTemplate struct {
-	ID        string                 `json:"id"`
-	Arguments map[string]interface{} `json:"arguments,omitempty"`
+	ID           string                 `json:"id"`
+	Arguments    map[string]interface{} `json:"arguments,omitempty"`
+	FieldAliases []FieldAliasTemplate   `json:"field_aliases,omitempty"`
+}
+
+type FieldAliasTemplate struct {
+	Field string `json:"field"`
+	Alias string `json:"alias"`
 }
 
 func NewModulesTemplateFromJson(stream io.Reader) (*ExtractorTemplate, error) {

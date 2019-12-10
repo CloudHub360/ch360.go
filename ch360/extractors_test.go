@@ -132,7 +132,7 @@ func AListOfExtractors(names ...string) ch360.ExtractorList {
 	return expected
 }
 
-const modulesTemplateJson = `{"modules":[{"id":"waives.name"},{"id":"waives.date"}]}`
+const modulesTemplateJson = `{"modules":[{"id":"waives.reference_number","arguments":{"format":"[A-Z]"},"field_aliases":[{"field":"Reference Number","alias":"Code"}]},{"id":"waives.date"}]}`
 
 func aModulesTemplate() *ch360.ExtractorTemplate {
 	template, _ := ch360.NewModulesTemplateFromJson(bytes.NewBufferString(
