@@ -49,6 +49,11 @@ func (retriever *HttpTokenRetriever) RetrieveToken(clientId string, clientSecret
 	}
 
 	req, err := http.NewRequest("POST", retriever.apiUrl+"/oauth/token", strings.NewReader(form.Encode()))
+
+	if err != nil {
+		return nil, err
+	}
+
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := retriever.httpDoer.Do(req)
