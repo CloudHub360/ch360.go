@@ -3,15 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/waives/surf/ch360"
 	"github.com/waives/surf/cmd/surf/commands"
 	"github.com/waives/surf/config"
 	"github.com/waives/surf/ioutils"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"os"
-	"os/signal"
-	"strings"
 )
 
 func main() {
@@ -20,8 +21,8 @@ func main() {
 
 		app = kingpin.New("surf", "surf - the official command line client for waives.io.")
 
-		listCmd   = app.Command("list", "List waives resources.")
-		uploadCmd = app.Command("upload", "Upload waives resources.")
+		listCmd = app.Command("list", "List waives resources.")
+		// uploadCmd = app.Command("upload", "Upload waives resources.")
 		deleteCmd = app.Command("delete", "Delete waives resources.")
 		createCmd = app.Command("create", "Create waives resources.")
 
@@ -31,23 +32,23 @@ func main() {
 	go handleInterrupt(canceller)
 
 	commands.ConfigureLoginCommand(ctx, app, &globalFlags)
-	commands.ConfigureListModulesCommand(ctx, listCmd, &globalFlags)
-	commands.ConfigureListClassifiersCmd(ctx, listCmd, &globalFlags)
-	commands.ConfigureListExtractorsCmd(ctx, listCmd, &globalFlags)
+	// commands.ConfigureListModulesCommand(ctx, listCmd, &globalFlags)
+	// commands.ConfigureListClassifiersCmd(ctx, listCmd, &globalFlags)
+	// commands.ConfigureListExtractorsCmd(ctx, listCmd, &globalFlags)
 	commands.ConfigureListDocumentsCmd(ctx, listCmd, &globalFlags)
-	commands.ConfigureUploadExtractorCommand(ctx, uploadCmd, &globalFlags)
-	commands.ConfigureDeleteExtractorCmd(ctx, deleteCmd, &globalFlags)
-	commands.ConfigureDeleteClassifierCmd(ctx, deleteCmd, &globalFlags)
+	// commands.ConfigureUploadExtractorCommand(ctx, uploadCmd, &globalFlags)
+	// commands.ConfigureDeleteExtractorCmd(ctx, deleteCmd, &globalFlags)
+	// commands.ConfigureDeleteClassifierCmd(ctx, deleteCmd, &globalFlags)
 	commands.ConfigureDeleteDocumentCmd(ctx, deleteCmd, &globalFlags)
-	commands.ConfigureCreateClassifierCmd(ctx, createCmd, &globalFlags)
-	commands.ConfigureCreateExtractorCmd(ctx, createCmd, &globalFlags)
-	commands.ConfigureCreateExtractorTemplateCmd(ctx, createCmd, &globalFlags)
+	// commands.ConfigureCreateClassifierCmd(ctx, createCmd, &globalFlags)
+	// commands.ConfigureCreateExtractorCmd(ctx, createCmd, &globalFlags)
+	// commands.ConfigureCreateExtractorTemplateCmd(ctx, createCmd, &globalFlags)
 	commands.ConfigureCreateDocumentCmd(ctx, createCmd, &globalFlags)
 	commands.ConfigureReadCommand(ctx, app, &globalFlags)
-	commands.ConfigureExtractCommand(ctx, app, &globalFlags)
-	commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
-	commands.ConfigureUploadClassifierCommand(ctx, uploadCmd, &globalFlags)
-	commands.ConfigureRedactWithExtractionCommand(ctx, app, &globalFlags)
+	// commands.ConfigureExtractCommand(ctx, app, &globalFlags)
+	// commands.ConfigureClassifyCommand(ctx, app, &globalFlags)
+	// commands.ConfigureUploadClassifierCommand(ctx, uploadCmd, &globalFlags)
+	// commands.ConfigureRedactWithExtractionCommand(ctx, app, &globalFlags)
 
 	app.Flag("client-id", "Client ID").
 		Short('i').
