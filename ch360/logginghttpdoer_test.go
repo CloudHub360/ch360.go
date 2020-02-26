@@ -44,7 +44,7 @@ func Test_LoggingHttpDoer_Logs_To_Provided_Sink(t *testing.T) {
 			wrappedSender: &httpDoer,
 			out:           &logSink,
 		}
-		request, _ := http.NewRequest("GET", "https://api.waives.io", bytes.NewBuffer(fixture.requestBody))
+		request, _ := http.NewRequest("GET", "https://api.cloudhub360.com", bytes.NewBuffer(fixture.requestBody))
 		response := http.Response{
 			StatusCode: 200,
 			Body:       ioutil.NopCloser(bytes.NewBuffer(fixture.responseBody)),
@@ -57,7 +57,7 @@ func Test_LoggingHttpDoer_Logs_To_Provided_Sink(t *testing.T) {
 		_, _ = sut.Do(request)
 
 		// Assert
-		assert.Contains(t, logSink.String(), "GET / HTTP/1.1\r\nHost: api.waives.io")
+		assert.Contains(t, logSink.String(), "GET / HTTP/1.1\r\nHost: api.cloudhub360.com")
 		if fixture.isRequestJson {
 			assert.Contains(t, logSink.String(), formatJson(string(fixture.requestBody)))
 		}

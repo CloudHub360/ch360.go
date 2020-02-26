@@ -18,7 +18,7 @@ func TestRetryingHttpClient_Should_Return_Response_From_Wrapped_Doer_On_Success(
 		wrappedDoer            = mocks.HttpDoer{}
 		expectedResponse       = &http.Response{StatusCode: 200}
 		expectedErr      error = nil
-		request, _             = http.NewRequest("GET", "https://api.waives.io/version", nil)
+		request, _             = http.NewRequest("GET", "https://api.cloudhub360.com/version", nil)
 	)
 	wrappedDoer.On("Do", mock.Anything).Return(expectedResponse, expectedErr)
 	sut := NewRetryingHttpClient(&wrappedDoer, 0, 0.01)
@@ -40,7 +40,7 @@ func TestRetryingHttpClient_Should_Retry_On_Network_Error(t *testing.T) {
 		actualCallCount   int
 		retryAttempts     = 3
 		expectedCallCount = retryAttempts + 1
-		request, _        = http.NewRequest("GET", "https://api.waives.io/version", nil)
+		request, _        = http.NewRequest("GET", "https://api.cloudhub360.com/version", nil)
 	)
 	wrappedDoer.
 		On("Do", mock.Anything).
@@ -65,7 +65,7 @@ func TestRetryingHttpClient_Should_Retry_On_Http_500_And_Over(t *testing.T) {
 		expectedErr       error = nil
 		retryAttempts           = 3
 		expectedCallCount       = retryAttempts + 1
-		request, _              = http.NewRequest("GET", "https://api.waives.io/version", nil)
+		request, _              = http.NewRequest("GET", "https://api.cloudhub360.com/version", nil)
 		actualCallCount   int
 	)
 	wrappedDoer.
@@ -91,7 +91,7 @@ func TestRetryingHttpClient_Should_Specify_The_Same_Request_Data_On_Each_Retry(t
 		expectedErr                        = errors.New("test error")
 		expectedBody                       = []byte("test request body")
 		retryAttempts                      = 1
-		request, _                         = http.NewRequest("GET", "https://api.waives.io/version", bytes.NewBuffer(expectedBody))
+		request, _                         = http.NewRequest("GET", "https://api.cloudhub360.com/version", bytes.NewBuffer(expectedBody))
 		actualRequests      []*http.Request
 		actualRequestBodies [][]byte
 	)
@@ -125,7 +125,7 @@ func TestRetryingHttpClient_Should_Not_Retry_If_Cancelled(t *testing.T) {
 		wrappedDoer                      = mocks.HttpDoer{}
 		expectedResponse  *http.Response = nil
 		retryAttempts                    = 1
-		request, _                       = http.NewRequest("GET", "https://api.waives.io/version", nil)
+		request, _                       = http.NewRequest("GET", "https://api.cloudhub360.com/version", nil)
 		actualCallCount                  = 0
 		expectedCallCount                = 1
 		ctx, cancelFn                    = context.WithCancel(context.Background())
