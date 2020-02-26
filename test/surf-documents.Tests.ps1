@@ -33,9 +33,9 @@ Describe "documents" {
         $documentPath = (Join-Path $documentsPath "document1.pdf")
         New-Document $documentPath | Format-MultilineOutput | Should -Match @"
 Creating document...
-  File                                      ID                      Size   Type               SHA256\s*
---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  ...ocuments/classification/document1.pdf  ......................  50248  PDF:ImagePlusText  650c75913be04fa0f790abdcaddae6c9093b1d575cffbed2e098eb0de0e1d4b1..
+  File                                      ID                      Size   Type           SHA256\s*
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  ...ocuments/classification/document1.pdf  ......................  50248  PDF:ImageOnly  650c75913be04fa0f790abdcaddae6c9093b1d575cffbed2e098eb0de0e1d4b1..
 "@
         $LASTEXITCODE | Should -Be 0
     }
@@ -46,9 +46,9 @@ Creating document...
         $LASTEXITCODE | Should -Be 0
 
         Get-Documents | Format-MultilineOutput | Should -Match @"
-  ID                      Size   Type               SHA256\s*
--------------------------------------------------------------------------------------------------------------------------
-  ......................  50248  PDF:ImagePlusText  650c75913be04fa0f790abdcaddae6c9093b1d575cffbed2e098eb0de0e1d4b1\s*
+  ID                      Size   Type           SHA256\s*
+---------------------------------------------------------------------------------------------------------------------
+  ......................  50248  PDF:ImageOnly  650c75913be04fa0f790abdcaddae6c9093b1d575cffbed2e098eb0de0e1d4b1\s*
 "@
     }
 
